@@ -43,7 +43,13 @@ start_gui
 ```
 
 # When the GUI is open-
-open the project: *_ultra96v2_oob.xpr_*
+1. Open the project: **_ultra96v2_oob.xpr_**
+2. Open the block diagram of ultra96v2_oob
+3. 4 different heirarchical elements can be seen in dark blue- High_Speed_MEZZ, BD_CTL_GPIO, SYS_MGMT, Low_Speed_MEZZ
+4. **Address Editor** shows the address of all the components attached to the Processing System (PS). Each address is 40 bit long (hence XX_XXXX_XXXX)
+
+zynq_ultra_ps_e_0 -> data -> 10 components
+azi_cdma_0 -> Data --> zynq_ultra_ps_e_0, zynq_ultra_ps_e_0 -> Excluded Address Segments -> 10 components.
 
 
 
