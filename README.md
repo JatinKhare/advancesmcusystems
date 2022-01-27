@@ -43,7 +43,7 @@ start_gui
 ```
 
 # When the GUI is open-
-
+open the project: *_ultra96v2_oob.xpr_*
 
 
 
