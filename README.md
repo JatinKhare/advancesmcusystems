@@ -87,4 +87,39 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 
 5. IP Catalog -> AXI Peripheral -> CUSTOM_GPIO -> Right Click -> Edit in the Packager (opens a new project window)
 
-6. 	
+6. Change the Verilog code as required. Package the IP, and add it to the Block.
+
+
+
+## Lab 1
+
+**generate the bitstream upto the point 10**
+
+### Adding the BRAMs
+
+1. Add the axi_bram_ctrl. 
+- Number of BRAM interfaces = 1
+- Make two instances of the axi_bram_ctrl
+
+2. Add blk_mem_gen.
+- Memory type = True Dual Port RAM
+- Port A and Port B Options -> Write Depth = 8K Bytes.
+- Disable _rsta_busy_ (as they are special pins used for diagnostics) by going to Other Options -> Untick the 'Enable Safty Circuit'.
+
+3. Connect the Port A and Port B of the bram_ctrl to the blk_mem_gen.
+
+4. Run Connection Automation.
+
+5. We will see the S_AXI of axi_bram_ctrl_1 connected to M04_AXI of smartconnect_1 whos S02_AXI connects to M01_AXI of smartconnect_0. So we will remove both the wires, and connect the S_AXI of axi_bram_crtl_1 to M01_AXI of smartconnect_0.
+
+6. Go to the address editor. 
+[NOTE:] We can only edit the address of the components which are 'included'.
+- The processing system (zynq_ultra) will have access to both the BRAM ports. We will make the zynq_ultra and axi_cdma, have one BRAM port each.
+-  zynq_ultra will have the axi_bram_ctrl_0 and axi_cdma will have axi_bram_ctrl_1 included.
+-  Make sure the addresses assigned are: axi_bram_ctrl_0: 0x00_A002_8000 and axi_bram_ctrl_1: 0x00_B002_8000.
+
+7.Select all the three newly added components in the block, and create heirarchy naming it: BRAM_BLOCK.
+
+8. Generate bitstream.
+
+### Testing
