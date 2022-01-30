@@ -118,7 +118,7 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 -  zynq_ultra will have the axi_bram_ctrl_0 and axi_cdma will have axi_bram_ctrl_1 included.
 -  Make sure the addresses assigned are: axi_bram_ctrl_0: 0x00_A002_8000 and axi_bram_ctrl_1: 0x00_B002_8000.
 
-7.Select all the three newly added components in the block, and create heirarchy naming it: BRAM_BLOCK.
+7. Select all the three newly added components in the block, and create heirarchy naming it: BRAM_BLOCK.
 
 8. Generate bitstream.
 
