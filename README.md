@@ -122,4 +122,13 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 
 8. Generate bitstream.
 
+# Setting up the Board
+
+1. sudo screen -L /dev/ttyUSB1 115200
+2. wpa_passphrase SpectrumSetup-FE voyagegallon593
+3. sudo ./wifi.sh sets up the wifi 
+4. udhcpc: lease of **192.168.1.173** obtained, lease time 43200.
+
+
+
 ### Testing
