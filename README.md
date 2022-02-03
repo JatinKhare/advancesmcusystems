@@ -124,10 +124,69 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 
 # Setting up the Board
 
+## Enabling SSH access
+
 1. sudo screen -L /dev/ttyUSB1 115200
 2. wpa_passphrase SpectrumSetup-FE voyagegallon593
 3. sudo ./wifi.sh sets up the wifi 
 4. udhcpc: lease of **192.168.1.173** obtained, lease time 43200.
+
+``` bash
+
+#transfer system.bit and system.dtb files to the board.
+
+```
+5. Enable root access, and Mount the device to enable the boot access. 
+
+``` bash
+root@ultra96:/sys/firmware/devi sudi bash
+root@ultra96: mount /dev/mmcblk0p1 BOOT/
+
+Filesystem     1K-blocks     Used Available Use% Mounted on
+/dev/root       29513292 15625940  12365100  56% /
+
+```
+``` bash
+
+#copy system.bit and system.dtb files to /media/dev/.
+root@ultra96:/media/BOOT# ls
+bl31.bin   system.bit           u-boot.bin    uImage.7.19.21
+bl31.elf   system.bit.2.2.2222  u-boot.elf    uImage.broken
+BOOT.BIN   system.dtb           uboot.env     uImage.orig
+boot.scr   system.dtb.2.2.2222  uEnv.txt      vmlinux
+Image      system.dts           uEnv.txt.old  xxx.txt
+image.ub   System.map.linux     uImage        zynqmp_fsbl.elf
+pmufw.elf  system_orig.bit      uImage.5.4
+
+```
+6. fpgautil -b system.bit
+7. Halt and restart the board. 
+8. Check the device-tree at **/proc/device-tree/amba_pl@0/**-
+
+``` bash
+total 0
+drwxr-xr-x 15 root root  0 Feb  3 01:57  ./
+drwxr-xr-x 44 root root  0 Feb  3 01:57  ../
+-r--r--r--  1 root root  4 Feb  3 01:57 '#address-cells'
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'axi_bram_ctrl@a0028000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'Capture_Timer@a0030000'/
+-r--r--r--  1 root root 11 Feb  3 01:57  compatible
+drwxr-xr-x  3 root root  0 Feb  3 01:57 'dma@b0000000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0020000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0021000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0022000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0025000'/
+-r--r--r--  1 root root  8 Feb  3 01:57  name
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'PWM_w_Int@a0023000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'PWM_w_Int@a0024000'/
+-r--r--r--  1 root root  0 Feb  3 01:57  ranges
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'serial@a0000000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'serial@a0010000'/
+-r--r--r--  1 root root  4 Feb  3 01:57 '#size-cells'
+drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
+drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
+
+```
 
 
 
