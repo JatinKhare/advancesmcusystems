@@ -187,7 +187,204 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
 drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ```
+# Testing
+
+## Frequency Values
+
+1. TEST #1: Vary CPU and FPGA frequencies.
+2. TEST #2: Vary only CPU Frequency. 
+
+The 5 frequnecy values for the CPU are-
+
+I. 1499 MHz
+
+II. 1333 MHz
+
+III. 999 MHz
+
+IV. 733 MHz
+
+V. 416.6 MHz
+
+Base frequency = 33.33 MHz
+
+Hence the FBDIV and DIV2 values for each combination are given as
+
+I. 1499 MHz, 1499/33.33 = 45 ---> Hence FBDIV = 45, DIV2 = 0
+
+II. 1333 MHz, 1333/33.33 = 40 ---> Hence FBDIV = 40, DIV2 = 0
+
+III. 999 MHz, 999/33.33 = 30 ---> Hence FBDIV = 30, DIV2 = 0
+
+IV. 733 MHz, 733/33.33 = 22 ---> Hence FBDIV = 44, DIV2 = 2
+
+V. 416.6 MHz, 416.6/33.33 = 12.5 ---> Hence FBDIV = 25, DIV2 = 1
 
 
 
+##APLL_CTRL
+
+|31|30|29|28| | |
+|-|-|-|-|-|-|                      
+|0|0|0|0|| **_0_**|
+
+|27|26|25|24|||
+|-|-|-|-|-|-|
+|0|0|0|0||**_0_**|
+
+|23|22|21|20|||
+|-|-|-|-|-|-|
+|0|0|0|0||**_0_**|
+
+|19|18|17|16|||
+|-|-|-|-|-|-|
+|0|0|0|**0**||**_0_**|
+
+|15|14|13|12|11|10|9|8||||
+|-|-|-|-|-|-|-|-|-|-|-|
+|0|**0**|**1**|**0**|**1**|**1**|**0**|**1**||**_2_**|**_D_**|
+
+|7|6|5|4|||
+|-|-|-|-|-|-|
+|0|0|0|0||**_0_**|
+
+|3|2|1|0|||
+|-|-|-|-|-|-|
+|**0**|0|0|**0**||**_0_**|
+
+This makes the APLL_CTRL value as 0x0000_2D00
+
+For the five frequency values, the register values should be set to the following-
+
+I. 1499 MHz   = 0x0000_2D00 
+
+II. 1333 MHz  = 0x0000_2800
+
+III. 999 MHz  = 0x0000_1E00
+
+IV. 733 MHz   = 0x0001_2C00
+
+V. 416.6 MHz  = 0x0001_1900
+
+|19|18|17|16|||
+|-|-|-|-|-|-|
+|0|0|0|**1**||**_1_**|
+
+
+APLL_CFG values depend on the FBDIV factor. It is given as follows-
+
+1. 45 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+LOCK_DLY(7) = 63
+
+LOCK_CNT(10) = 825
+
+LFHF(2) = 3
+
+CP(4) = 3
+
+RES(4) = 12
+
+which gives us = 0x0111_1110_0110_0111_0010_1100_0110_1100 = 0x7E67_2C6C
+
+2. 40 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+LOCK_DLY(7) = 63
+ 
+LOCK_CNT(10) = 925
+
+LFHF(2) = 3
+
+CP(4) = 3
+
+RES(4) = 12
+
+which gives us = 0x0111_1110_0111_0011_1010_1100_0110_1100 = 0x7E73_AC6C
+
+3. 30 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+LOCK_DLY(7) = 63
+ 
+LOCK_CNT(10) = 1000
+
+LFHF(2) = 3
+
+CP(4) = 4
+
+RES(4) = 6
+
+which gives us = 0x0111_1110_0111_1101_0000_1100_1000_0110 = 0x7E7D_0C86
+
+4. 44 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+LOCK_DLY(7) = 63
+
+LOCK_CNT(10) = 850
+
+LFHF(2) = 3
+
+CP(4) = 3
+
+RES(4) = 12
+
+which gives us = 0x0111_1110_0110_1010_0100_1100_0110_1100 = 0x7E6A_4C6C
+
+5. 35 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+LOCK_DLY(7) = 63
+ 
+LOCK_CNT(10) = 1000
+
+LFHF(2) = 3
+
+CP(4) = 3
+
+RES(4) = 10
+
+which gives us = 0x0111_1110_0111_1101_0000_1100_0110_1010 = 0x7E7D_0C6A
+
+Hence:
+
+|Frequency (MHz)|Factor| APLL_CTRL|APLL_CFG|
+|-|-|-|-|
+|1499|45 |0x0000_2D00|0x7E67_2C6C |
+|1333|40 |0x0000_2800 | 0x7E7D_0C86|
+|999|30 |0x0000_1E00 | 0x7E7D_0C86|
+|733| 44| 0x0001_2C00| 0x7E6A_4C6C|
+|416.6| 25| 0x0001_1900|0x7E7D_0C6A |
 ### Testing
+
+
+|31|30|29|28|
+|-|-|-|-|                           
+|||||
+
+|27|26|25|24|
+|-|-|-|-|
+|||||
+
+|23|22|21|20|
+|-|-|-|-|
+|||||
+
+|19|18|17|16|
+|-|-|-|-|
+|||||
+
+|15|14|13|12|
+|-|-|-|-|
+|||||
+
+|11|10|9|8|
+|-|-|-|-|
+|||||
+
+
+|7|6|5|4|
+|-|-|-|-|
+|||||
+
+|3|2|1|0|
+|-|-|-|-|
+|||||
+
