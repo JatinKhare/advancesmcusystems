@@ -1,6 +1,13 @@
 # advancesmcusystems
 
-## 1. Setting up the environment
+### Contents
+1. [Setting up the environment](#setting-up-the-environment)
+2. [Lab 1](#lab-1)
+3. [Setting up the Board](#setting-up-the-board)
+4. [Testing](#testing)
+5. [Code for setting the register values](#code-for-setting-the-register-values)
+
+## Setting up the environment
 
 ```bash
 
@@ -191,8 +198,8 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ## Frequency Values
 
-1. TEST #1: Vary CPU and FPGA frequencies.
-2. TEST #2: Vary only CPU Frequency. 
+1. TEST #1: Vary CPU and FPGA [Frequency](#ps-frequency-table).
+2. TEST #2: Vary only CPU [Frequency](#pl-frequency-table). 
 
 The 5 frequnecy values for the CPU are-
 
@@ -222,7 +229,7 @@ V. 416.6 MHz, 416.6/33.33 = 12.5 ---> Hence FBDIV = 25, DIV2 = 1
 
 
 
-##APLL_CTRL
+## APLL_CTRL
 
 |31|30|29|28| | |
 |-|-|-|-|-|-|                      
@@ -273,7 +280,7 @@ V. 416.6 MHz  = 0x0001_1900
 
 APLL_CFG values depend on the FBDIV factor. It is given as follows-
 
-1. 45 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+**45** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
 
 LOCK_DLY(7) = 63
 
@@ -287,7 +294,8 @@ RES(4) = 12
 
 which gives us = 0x0111_1110_0110_0111_0010_1100_0110_1100 = 0x7E67_2C6C
 
-2. 40 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+**40** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
 
 LOCK_DLY(7) = 63
  
@@ -301,7 +309,8 @@ RES(4) = 12
 
 which gives us = 0x0111_1110_0111_0011_1010_1100_0110_1100 = 0x7E73_AC6C
 
-3. 30 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+**30** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
 
 LOCK_DLY(7) = 63
  
@@ -315,7 +324,8 @@ RES(4) = 6
 
 which gives us = 0x0111_1110_0111_1101_0000_1100_1000_0110 = 0x7E7D_0C86
 
-4. 44 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+**44** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
 
 LOCK_DLY(7) = 63
 
@@ -329,7 +339,8 @@ RES(4) = 12
 
 which gives us = 0x0111_1110_0110_1010_0100_1100_0110_1100 = 0x7E6A_4C6C
 
-5. 35 -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
+
+**35** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
 
 LOCK_DLY(7) = 63
  
@@ -343,7 +354,7 @@ RES(4) = 10
 
 which gives us = 0x0111_1110_0111_1101_0000_1100_0110_1010 = 0x7E7D_0C6A
 
-Hence:
+# PS Frequency Table
 
 |Frequency (MHz)|Factor| APLL_CTRL|APLL_CFG|
 |-|-|-|-|
@@ -352,39 +363,87 @@ Hence:
 |999|30 |0x0000_1E00 | 0x7E7D_0C86|
 |733| 44| 0x0001_2C00| 0x7E6A_4C6C|
 |416.6| 25| 0x0001_1900|0x7E7D_0C6A |
-### Testing
 
 
-|31|30|29|28|
-|-|-|-|-|                           
-|||||
+The 5 frequnecy values for the FPGA are-
 
-|27|26|25|24|
+I. 300 MHz
+
+II. 250 MHz
+
+III. 187.5 MHz
+
+IV. 150 MHz
+
+V. 100 MHz
+
+Base frequency = 1500 MHz
+
+Hence the DIV1 and DIV0 values for each combination are given as
+
+I. 300 MHz, 1500/300 = 5 ---> Hence DIV1 = 1, DIV0 = 5
+
+II. 250 MHz, 1500/250 = 6 ---> Hence DIV1 = 1, DIV0 = 6
+
+III. 187.5 MHz, 1500/187.5 = 8 ---> Hence DIV1 = 1, DIV0 = 8
+
+IV. 150 MHz, 1500/150 = 10 ---> Hence DIV1 = 1, DIV0 = 10
+
+V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15
+
+
+
+## PL0_REF_CTRL
+
+|31|30|29|28| | |
+|-|-|-|-|-|-|                      
+|0|0|0|0|| **_0_**|
+
+|27|26|25|24|||
+|-|-|-|-|-|-|
+|0|0|0|0||**_0_**|
+
+|23|22|21|20|19|18|17|16||||
+|-|-|-|-|-|-|-|-|-|-|-|
+|0|0|0|0|0|0|0|1||**_0_**|**_1_**|
+
+|15|14|13|12|11|10|9|8||||
+|-|-|-|-|-|-|-|-|-|-|-|
+|0|0|0|0|0|1|1|0||**_0_**|**_6_**|
+
+
+|7|6|5|4|||
+|-|-|-|-|-|-|
+|0|0|0|0||**_0_**|
+
+|3|2|1|0|||
+|-|-|-|-|-|-|
+|**0**|0|0|**0**||**_0_**|
+
+
+Hence, 
+
+I. 300 MHz, 1500/300 = 5 ---> Hence DIV1 = 1, DIV0 = 5 ---> 0x0101_0500
+
+II. 250 MHz, 1500/250 = 6 ---> Hence DIV1 = 1, DIV0 = 6 ---> 0x0101_0600
+
+III. 187.5 MHz, 1500/187.5 = 8 ---> Hence DIV1 = 1, DIV0 = 8 ---> 0x0101_0800
+
+IV. 150 MHz, 1500/150 = 10 ---> Hence DIV1 = 1, DIV0 = 10 ---> 0x0101_0A00
+
+V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15 ---> 0x0101_0F00
+
+
+# PL Frequency Table
+|Frequency (MHz)|DIV1| DIV0|PL0_REF_CTRL|
 |-|-|-|-|
-|||||
+|300|1 |5|0x0101_0500 |
+|250|1 |6 | 0x0101_0600|
+|187.5|1 |8 | 0x0101_0800|
+|150| 1| 10| 0x0101_0A00|
+|100| 1| 15|0x0101_0F00 |
 
-|23|22|21|20|
-|-|-|-|-|
-|||||
+## Code for setting the register values
 
-|19|18|17|16|
-|-|-|-|-|
-|||||
-
-|15|14|13|12|
-|-|-|-|-|
-|||||
-
-|11|10|9|8|
-|-|-|-|-|
-|||||
-
-
-|7|6|5|4|
-|-|-|-|-|
-|||||
-
-|3|2|1|0|
-|-|-|-|-|
-|||||
-
+```c
+```
