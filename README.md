@@ -146,7 +146,7 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 5. Enable root access, and Mount the device to enable the boot access. 
 
 ``` bash
-root@ultra96:/sys/firmware/devi sudi bash
+root@ultra96:/sys/firmware/devi sudo bash
 root@ultra96: mount /dev/mmcblk0p1 BOOT/
 
 Filesystem     1K-blocks     Used Available Use% Mounted on
