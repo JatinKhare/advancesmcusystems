@@ -9,21 +9,22 @@
 #include <sys/time.h>
 #include <time.h>
 
-#define CDMA                0x40000000
-#define BRAM                0x43C00000
+#define CDMA                0xB0000000
+#define BRAM                0xB0028000
 #define OCM                 0xFFFC0000
-#define CDMACR              0x00
-#define CDMASR              0x04
-#define CURDESC_PNTR        0x08
-#define CURDESC_PNTR_MSB    0x0C
-#define TAILDESC_PNTR       0x10
-#define TAILDESC_PNTR_MSB   0x14
-#define SA                  0x18
-#define SA_MSB              0x1C
-#define DA                  0x20
-#define DA_MSB              0x24
-#define BTT                 0x28
-
+#define CDMACR              0x00           //CDMA Control
+#define CDMASR              0x04           //Status
+#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
+#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
+#define TAILDESC_PNTR       0x10	   //Tail Description Pointer
+#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
+#define SA                  0x18           //Source Address
+#define SA_MSB              0x1C           //Source Address MSB
+#define DA                  0x20           //Destination Address
+#define DA_MSB              0x24           //Destination Address MSB
+#define BTT                 0x28           //Bytes to Transfer
+#define MAP_SIZE            4096UL
+#define MAP_MASK            (MAP_SIZE - 1)
 /***************************  DMA SET ************************************
 *   
 */
@@ -77,17 +78,17 @@ void transfer(unsigned int *cdma_virtual_address, int length)
 int main() {
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
     uint32_t* cdma_virtual_address = mmap(NULL, 
-                                          4096, 
+                                          MAP_SIZE, 
                                           PROT_READ | PROT_WRITE, 
                                           MAP_SHARED, 
                                           dh, 
-                                          CDMA); // Memory map AXI Lite register block
+                                          CDMA & ~MAP_MASK); // Memory map AXI Lite register block
     uint32_t* BRAM_virtual_address = mmap(NULL, 
-                                          4096, 
+                                          MAP_SIZE, 
                                           PROT_READ | PROT_WRITE, 
                                           MAP_SHARED, 
                                           dh, 
-                                          BRAM); // Memory map AXI Lite register block
+                                          BRAM & ~MAP_MASK); // Memory map AXI Lite register block
     uint32_t c[20] = {4,6,2,6,3,8,0,4,6,8,3,42,7,8,2,75,2,69,6,1};  // 
     uint32_t c_t[20];
     printf("memory allocation\n");
@@ -107,7 +108,7 @@ int main() {
 
     for(int i=0; i<20; i++)
     {
-        if(BRAM_virtual_address[i] != c[i])
+        if(*(BRAM_virtual_address + i) != c[i])
         {
             printf("RAM result: %d and c result is %d  element %d\n", BRAM_virtual_address[i], c[i], i);
             printf("test failed!!\n");

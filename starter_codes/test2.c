@@ -38,7 +38,7 @@
 #define PL_0_150            0x01010A00
 #define PL_0_100            0x01010F00
 
-#define BRAM_ADD            0xA0028000
+#define OCM_ADD             0xFFFC0000
 #define MAP_SIZE 	    131072UL
 #define MAP_MASK	    (MAP_SIZE - 1)
 
@@ -371,25 +371,25 @@ int main(int argc, char *argv[]) {
     case 3:
 	    while(xx){
 
-	    uint32_t* BRAM_virtual_address = mmap(NULL, 
+	    uint32_t* OCM_virtual_address = mmap(NULL, 
 						  MAP_SIZE, 
 						  PROT_READ | PROT_WRITE, 
 						  MAP_SHARED, 
 						  dh, 
-						  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
+						  OCM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 	    change_ps_freq(dh);
-	    change_pl_freq(dh);
+	    //change_pl_freq(dh);
 
 	    for(int i = 0; i < yy; i++){
 		    r_data[i] = rand();
 		    r_addr_offset[i] = rand() % 4096;
 
-		    address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+		    address = OCM_virtual_address + (((OCM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
 		    
 		    
 		    *address = r_data[i];
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], BRAM_ADD + r_addr_offset[i]);
+		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], OCM_ADD + r_addr_offset[i]);
 		    }
 
 		    printf("randomization for loop %d completed!\n\n", LOOPS - xx + 1);
@@ -397,16 +397,16 @@ int main(int argc, char *argv[]) {
 
 		    for(int i=0; i<yy; i++)
 		    {
-			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+			unsigned int *reading_address = OCM_virtual_address + (((OCM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
 			if(*reading_address != r_data[i])
 			{
-			    printf("BRAM result = %d, random value written = %d at index = %d\n", *reading_address, r_data[i], i);
+			    printf("OCM result = %d, random value written = %d at index = %d\n", *reading_address, r_data[i], i);
 			    printf("test failed!!\n");
-			    munmap(BRAM_virtual_address,4096);
+			    munmap(OCM_virtual_address, 4096);
 			    return -1;
 			}
 		    }
-		    munmap(BRAM_virtual_address,4096);
+		    munmap(OCM_virtual_address,4096);
 		    
 	    }
    	    printf("Test passed: '%d' loops of '%d' 32-bit words\n", LOOPS, yy); 
@@ -414,36 +414,36 @@ int main(int argc, char *argv[]) {
 
 	default:
 	    while(1){
-		    uint32_t* BRAM_virtual_address = mmap(NULL, 
+		    uint32_t* OCM_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
 							  MAP_SHARED, 
 							  dh, 
-							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
+							  OCM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 		    for(int i = 0; i < yy; i++){
 		    r_data[i] = rand();
 		    r_addr_offset[i] = rand() % 4096;
 
-		    address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+		    address = OCM_virtual_address + (((OCM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
 		    
 		    
 		    *address = r_data[i];
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], BRAM_ADD + r_addr_offset[i]);
+		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], OCM_ADD + r_addr_offset[i]);
 		    }
 
 		    for(int i=0; i<yy; i++)
 		    {
-			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+			unsigned int *reading_address = OCM_virtual_address + (((OCM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
 			if(*reading_address != r_data[i])
 			{
-			    printf("BRAM result = %d, random value written = %d on loop = %d\n", *reading_address, r_data[i], count);
+			    printf("OCM result = %d, random value written = %d on loop = %d\n", *reading_address, r_data[i], count);
 			    printf("test failed!!\n");
-			    munmap(BRAM_virtual_address,4096);
+			    munmap(OCM_virtual_address,4096);
 			    return -1;
 			}
 		    }
-		    munmap(BRAM_virtual_address,4096);
+		    munmap(OCM_virtual_address,4096);
 		    count++;
 		    printf("Test passed: '%d' loops of '%d' 32-bit words\n", count, yy); 
 	    }
