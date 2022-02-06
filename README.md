@@ -232,8 +232,8 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ## Frequency Values
 
-1. TEST #1: Vary CPU and [FPGA Frequency](#ps-frequency-table).
-2. TEST #2: Vary only [CPU Frequency](#pl-frequency-table). 
+1. TEST #1: Vary CPU and [FPGA Frequency](#pl-frequency-table).
+2. TEST #2: Vary only [CPU Frequency](#ps-frequency-table). 
 
 # PS Frequency
 
