@@ -13,13 +13,17 @@ This will generate the corresponding object files and executables for all the th
 ### ./test1
 
 USAGE: ./test1 (xx loops) (yy words), where pass 0 for default values.
+
 default value for loops: INF
+
 default value for words: 2048
 
 ### ./test2
 
 USAGE: ./test2 (xx loops) (yy words), where pass 0 for default values.
+
 default value for loops: INF
+
 default value for words: 4096
 
 ### ./test3
@@ -224,12 +228,14 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
 drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ```
-# Testing
+# Setting the Frequnecy
 
 ## Frequency Values
 
 1. TEST #1: Vary CPU and FPGA [Frequency](#ps-frequency-table).
 2. TEST #2: Vary only CPU [Frequency](#pl-frequency-table). 
+
+### PS Frequency
 
 The 5 frequnecy values for the CPU are-
 
@@ -290,6 +296,8 @@ V. 416.6 MHz, 416.6/33.33 = 12.5 ---> Hence FBDIV = 25, DIV2 = 1
 |**0**|0|0|**0**||**_0_**|
 
 This makes the APLL_CTRL value as 0x0000_2D00
+
+## APLL_CFG
 
 For the five frequency values, the register values should be set to the following-
 
@@ -394,6 +402,7 @@ which gives us = 0x0111_1110_0111_1101_0000_1100_0110_1010 = 0x7E7D_0C6A
 |733| 44| 0x0001_2C00| 0x7E6A_4C6C|
 |416.6| 25| 0x0001_1900|0x7E7D_0C6A |
 
+### PL Frequency
 
 The 5 frequnecy values for the FPGA are-
 
