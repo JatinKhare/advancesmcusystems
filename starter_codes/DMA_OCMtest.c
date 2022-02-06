@@ -41,27 +41,22 @@
 #define DA_MSB              0x24           //Destination Address MSB
 #define BTT                 0x28           //Bytes to Transfer
 #define OCM_MAP_SIZE        65536UL
-#define MAP_SIZE            4096UL
+#define MAP_SIZE            65536UL
 #define MAP_MASK            (MAP_SIZE - 1)
-/***************************  DMA SET ************************************
-*   
-*/
+
+//DMA Set
 
 unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
     dma_virtual_address[offset>>2] = value;
 }
 
-/***************************  DMA GET ************************************
-*   
-*/
+//DMA Get
 
 unsigned int dma_get(unsigned int* dma_virtual_address, int offset) {
     return dma_virtual_address[offset>>2];
 }
 
-/***************************  CDMA SYNC ************************************
-*   
-*/
+//CDMA Sync
 
 int cdma_sync(unsigned int* dma_virtual_address) {
     unsigned int status = dma_get(dma_virtual_address, CDMASR);
@@ -85,6 +80,8 @@ void memdump(void* virtual_address, int byte_count) {
     printf("\n");
 }
 
+//Transfer from OCM to BRAM
+
 void transfer(unsigned int *cdma_virtual_address, int length){
 
     dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
@@ -92,6 +89,9 @@ void transfer(unsigned int *cdma_virtual_address, int length){
     dma_set(cdma_virtual_address, BTT, length*4);
     cdma_sync(cdma_virtual_address);
 }
+
+//Transfer from BRAM to OCM
+
 void transfer_back(unsigned int *cdma_virtual_address, int length){
 
     dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
@@ -114,37 +114,52 @@ int main() {
                                           MAP_SHARED, 
                                           dh, 
                                           BRAM & ~MAP_MASK); // Memory map AXI Lite register block
-    int yy = 1024;
+    int yy = 1028;
     uint32_t data[yy];
+    srand(time(0));
     for(int i = 0; i < yy; i++){
-	    data[i] = rand()%10000;
+	    data[i] = rand();
     }
 
-    uint32_t* ocm_1 = mmap(NULL, OCM_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, dh, OCM_1);
-    uint32_t* ocm_2 = mmap(NULL, OCM_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, dh, OCM_2);
+    uint32_t* ocm_1 = mmap(NULL, 
+		           OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_1);
+
+    uint32_t* ocm_2 = mmap(NULL, 
+		           OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_2);
 
     for(int i=0; i<yy; i++)
         ocm_1[i] = data[i];
     
     // RESET DMA
     dma_set(cdma_virtual_address, CDMACR, 0x04);
-   //struct timeval start, end;
-
-   //printf("Source memory block:      "); memdump(cdma_virtual_address, 32);
-   //printf("Destination memory block: "); memdump(BRAM_virtual_address, 32);
+   
+    //struct timeval start, end;
+    //printf("Source memory block:      "); memdump(cdma_virtual_address, 32);
+    //printf("Destination memory block: "); memdump(BRAM_virtual_address, 32);
 
     transfer(cdma_virtual_address, yy);
     printf("OCM to BRAM transfer of %d words successful!\n", yy);
 
     transfer_back(cdma_virtual_address, yy);
-    printf("BRAM to OCM transfer of %d words successful!\n", yy);
+    printf("BRAM to OCM transfer of %d words successful!\n\n", yy);
  
+    //for(int i = 0; i<yy; i++){
+    //	    printf("ocm1[%d] = %d, ocm2[%d] = %d\n", i, ocm_1[i], i, ocm_2[i]);
+    //}
     
     for(int i=0; i<yy; i++)
     {
         if(ocm_2[i] != ocm_1[i])
         {
-            printf("OCM2 result: %d and OCM1 result is %d element %d\n", ocm_2[i], ocm_1[i], i);
+            printf("OCM2 result: %d and OCM1 result is %d for the element %d\n", ocm_2[i], ocm_1[i], i);
             printf("test failed!!\n");
             munmap(ocm_1, OCM_MAP_SIZE);
             munmap(ocm_2, OCM_MAP_SIZE);
@@ -153,10 +168,12 @@ int main() {
             return -1;
         }
     }
-    printf("DMA's OCM/BRAM traffic test successful!!!\n");
+   
+    printf("DMA's OCM/BRAM traffic test with %d successful!!!\n", yy);
     munmap(ocm_1, OCM_MAP_SIZE);
     munmap(ocm_2, OCM_MAP_SIZE);
     munmap(cdma_virtual_address, MAP_SIZE);
     munmap(BRAM_virtual_address,MAP_SIZE);
+   
     return 0;
 }

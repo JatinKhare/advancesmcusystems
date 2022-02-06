@@ -130,7 +130,7 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
-		    printf("g = %d\n", g);
+		    printf("waited %d loop cycles for STATUS = 1\n", g);
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
@@ -166,7 +166,7 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
-		    printf("g = %d\n", g);
+		    printf("waited %d loop cycles for STATUS = 1\n", g);
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
@@ -203,7 +203,7 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
-		    printf("g = %d\n", g);
+		    printf("waited %d loop cycles for STATUS = 1\n", g);
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
@@ -238,7 +238,7 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
-		    printf("g = %d\n", g);
+		    printf("waited %d loop cycles for STATUS = 1\n", g);
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
@@ -348,25 +348,25 @@ int main(int argc, char *argv[]) {
 
     if(argc == 2){
 	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
-            printf("Changing the words/loop to yy = %d \n", yy);
+            printf("Changing the words/loop to yy = %d \n\n", yy);
     }
     if(argc == 3){ 
 	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
 	    xx = strtoul(argv[2], 0, 0);   //taking number of loops from the user
             printf("Changing the number of loops to xx = %d\n", xx);
-            printf("Changing the words/loop to yy = %d\n", yy);
+            printf("Changing the words/loop to yy = %d\n\n", yy);
     }
 
     
 
     //Generating random data and address
-    int data;
+    uint32_t data;
     int addr_offset;    
     int LOOPS = xx;
     int count = 0;
 
     uint32_t* BRAM_virtual_address;
-
+    srand(time(0));
     switch(argc){
 
     case 3:
@@ -379,11 +379,13 @@ int main(int argc, char *argv[]) {
 						  MAP_SHARED, 
 						  dh, 
 						  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
-	    change_ps_freq(dh);
-	    change_pl_freq(dh);
 
 	    for(int i = 0; i < yy; i++){
-		    data = rand() % 10000;
+		    
+		    change_ps_freq(dh);
+		    change_pl_freq(dh);
+		    
+		    data = rand();
 		    addr_offset = rand() % 2048;
 
 		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
@@ -411,6 +413,10 @@ int main(int argc, char *argv[]) {
 	    break;
 	default:
 	    while(1){
+		    
+		    change_ps_freq(dh);
+		    change_pl_freq(dh);
+		    
 		    BRAM_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
@@ -418,7 +424,7 @@ int main(int argc, char *argv[]) {
 							  dh, 
 							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 		    for(int i = 0; i < yy; i++){
-		    data = rand() % 10000;
+		    data = rand();
 		    addr_offset = rand() % 2048;
 
 		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
@@ -437,7 +443,7 @@ int main(int argc, char *argv[]) {
 			    return -1;
 			}
 		    count++;
-		    printf("Test passed: '%d' loops of '%d' 32-bit words\n", count, yy); 
+		    printf("Test passed: '%d' loops of '%d' 32-bit words\n\n", count, yy); 
 	    }
 	    }	  
 	    munmap(BRAM_virtual_address, MAP_SIZE);
