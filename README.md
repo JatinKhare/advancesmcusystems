@@ -228,14 +228,14 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
 drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ```
-# Setting the Frequnecy
+# Setting the Frequency
 
 ## Frequency Values
 
-1. TEST #1: Vary CPU and FPGA [Frequency](#ps-frequency-table).
-2. TEST #2: Vary only CPU [Frequency](#pl-frequency-table). 
+1. TEST #1: Vary CPU and [FPGA Frequency](#ps-frequency-table).
+2. TEST #2: Vary only [CPU Frequency](#pl-frequency-table). 
 
-### PS Frequency
+# PS Frequency
 
 The 5 frequnecy values for the CPU are-
 
@@ -402,7 +402,7 @@ which gives us = 0x0111_1110_0111_1101_0000_1100_0110_1010 = 0x7E7D_0C6A
 |733| 44| 0x0001_2C00| 0x7E6A_4C6C|
 |416.6| 25| 0x0001_1900|0x7E7D_0C6A |
 
-### PL Frequency
+# PL Frequency
 
 The 5 frequnecy values for the FPGA are-
 
