@@ -394,12 +394,12 @@ int main(int argc, char *argv[]) {
 		    
 		    printf("Writing data: %d at address: 0x%.8x\n", *address, OCM_ADD + addr_offset);
 
-		    printf("randomization for loop %d completed!\n\n", LOOPS - xx + 1);
+		    printf("Testing for (loop %d, word %d) completed!\n\n", LOOPS - xx + 1, i);
 
 			if(*address != data)
 			{
 			    printf("BRAM result = %d, random value written = %d at index = %d\n", *address, data, i);
-			    printf("test failed!!\n");
+			    printf("Test failed!!\n");
 			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
 			if(*reading_address != data)
 			{
 			    printf("BRAM result = %d, random value written = %d on loop = %d\n", *reading_address, data, count);
-			    printf("test failed!!\n");
+			    printf("Test failed!!\n");
 			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
