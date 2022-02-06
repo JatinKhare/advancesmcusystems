@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
     }
 
     if(argc>3){
-	    printf("USAGE: ./test1 (yy words) (xx loops) \n");
+	    printf("USAGE: ./test1 (yy words) (xx loops) or ./test1 (yy words)\n");
 	    return -1;
     }
 
@@ -378,6 +378,49 @@ int main(int argc, char *argv[]) {
     srand(time(0));
     switch(argc){
 
+    case 2:
+	     
+	    while(1){
+		    
+		    
+		    BRAM_virtual_address = mmap(NULL, 
+							  MAP_SIZE, 
+							  PROT_READ | PROT_WRITE, 
+							  MAP_SHARED, 
+							  dh, 
+							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
+		    for(int i = 0; i < yy; i++){
+		    
+                    printf("Testing (LOOP, WORD) = (%d, %d)\n", count+1, i+1); 
+		    
+		    change_ps_freq(dh);
+		    change_pl_freq(dh);
+		    
+		    data = rand();
+		    addr_offset = rand() % 2048;
+
+		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
+		    
+		    
+		    *address = data;
+		    
+		    printf("Writing data: %d at address: 0x%.8x\n", data, BRAM_ADD + addr_offset);
+
+			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
+			if(*reading_address != data)
+			{
+			    printf("Test failed!!\n");
+			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *reading_address);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
+			    return -1;
+			}
+		    printf("Test passed: '%d' loops of '%d' 32-bit words\n\n", count+1, i+1); 
+                        
+	    }
+		    count++;
+	    }	  
+	    munmap(BRAM_virtual_address, MAP_SIZE);	    
+	    break;
     case 3:
 	     
 	    while(xx){
@@ -403,15 +446,15 @@ int main(int argc, char *argv[]) {
 		    
 		    printf("Writing data: %d at address: 0x%.8x\n", *address, BRAM_ADD + addr_offset);
 
-		    printf("Testing for (WORD %d, WORD %d) completed!\n\n", LOOPS - xx + 1, i+1);
 
 			if(*address != data)
 			{
 			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, BRAM Result = %d\n",i, data, *address);
+			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *address);
 			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
+		    printf("Testing for (LOOP %d, WORD %d) completed!\n\n", LOOPS - xx + 1, i+1);
 		    
 	    }
 		    xx--;
@@ -450,8 +493,8 @@ int main(int argc, char *argv[]) {
 			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 			if(*reading_address != data)
 			{
-			    printf("BRAM result = %d, random value written = %d on loop = %d\n", *reading_address, data, count);
-			    printf("test failed!!\n");
+			    printf("Test failed!!\n");
+			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *reading_address);
 			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}

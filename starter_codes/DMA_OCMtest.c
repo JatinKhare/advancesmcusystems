@@ -83,7 +83,8 @@ void memdump(void* virtual_address, int byte_count) {
 //Transfer from OCM to BRAM
 
 void transfer(unsigned int *cdma_virtual_address, int length){
-
+    
+    printf("Transfering data from OCM to BRAM\n");	
     dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
     dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
     dma_set(cdma_virtual_address, BTT, length*4);
@@ -94,6 +95,7 @@ void transfer(unsigned int *cdma_virtual_address, int length){
 
 void transfer_back(unsigned int *cdma_virtual_address, int length){
 
+    printf("Transfering data from BRAM to OCM\n");	
     dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
     dma_set(cdma_virtual_address, SA, BRAM); // Write source address
     dma_set(cdma_virtual_address, BTT, length*4);
@@ -142,14 +144,14 @@ int main() {
     dma_set(cdma_virtual_address, CDMACR, 0x04);
    
     //struct timeval start, end;
-    //printf("Source memory block:      "); memdump(cdma_virtual_address, 32);
-    //printf("Destination memory block: "); memdump(BRAM_virtual_address, 32);
+    //printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
+    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
 
     transfer(cdma_virtual_address, yy);
-    printf("OCM to BRAM transfer of %d words successful!\n", yy);
+    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 
     transfer_back(cdma_virtual_address, yy);
-    printf("BRAM to OCM transfer of %d words successful!\n\n", yy);
+    printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
  
     //for(int i = 0; i<yy; i++){
     //	    printf("ocm1[%d] = %d, ocm2[%d] = %d\n", i, ocm_1[i], i, ocm_2[i]);
@@ -159,8 +161,8 @@ int main() {
     {
         if(ocm_2[i] != ocm_1[i])
         {
-            printf("OCM2 result: %d and OCM1 result is %d for the element %d\n", ocm_2[i], ocm_1[i], i);
-            printf("test failed!!\n");
+            printf("\nTest failed!!\n");
+            printf("OCM2 result: %d and OCM1 result is %d for the element %d\n", ocm_2[i], ocm_1[i], i+1);
             munmap(ocm_1, OCM_MAP_SIZE);
             munmap(ocm_2, OCM_MAP_SIZE);
             munmap(cdma_virtual_address, MAP_SIZE);
@@ -169,7 +171,7 @@ int main() {
         }
     }
    
-    printf("DMA's OCM/BRAM traffic test with %d successful!!!\n", yy);
+    printf("\nDMA's OCM/BRAM traffic test with %d words successful!!!\n", yy);
     munmap(ocm_1, OCM_MAP_SIZE);
     munmap(ocm_2, OCM_MAP_SIZE);
     munmap(cdma_virtual_address, MAP_SIZE);
