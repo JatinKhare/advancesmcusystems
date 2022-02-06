@@ -17,6 +17,6 @@ test3:  $(test3_OBJS)
 	$(CC) $(CFLAGS) -o$@ $^ 
 
 clean: 
-	$(RM) count *.o *~
+	$(RM) count *.o *~ test1 test2 test3
 
 .PHONY: all clean
