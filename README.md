@@ -443,7 +443,44 @@ V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15 ---> 0x0101_0F00
 |150| 1| 10| 0x0101_0A00|
 |100| 1| 15|0x0101_0F00 |
 
-## Code for setting the register values
+## Useful information for writing the code 
 
+#test1
+
+1. PL0_REF_CTRL_ADD         0xFF5E0000
+2. PS_APLL_BASE             0xFD1A0000, with an offset of 0x20, 0x24, 0x44 for CTRL, CFG, STATUS.
+3. BRAM_ADD                 0xA0028000
+
+#test2
+
+1. PL0_REF_CTRL_ADD         0xFF5E0000
+2. PS_APLL_BASE             0xFD1A0000, with an offset of 0x20, 0x24, 0x44 for CTRL, CFG, STATUS.
+3. OCM_ADD                  0xFFFC000
+
+#test3
+
+1.                       OCM1 (0xFFFC0000) --- |      | --- BRAM (0xB0028000)                  
+                                               |      |                                        
+                                               | CDMA |                                      
+                                               |      |                                        
+                         BRAM (0xB0028000) --- |      | --- OCM2 (0xFFFC2000)                 
+
+2. 
 ```c
+
+#define CDMACR              0x00           //CDMA Control
+#define CDMASR              0x04           //Status
+#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
+#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
+#define TAILDESC_PNTR       0x10	   //Tail Description Pointer
+#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
+#define SA                  0x18           //Source Address
+#define SA_MSB              0x1C           //Source Address MSB
+#define DA                  0x20           //Destination Address
+#define DA_MSB              0x24           //Destination Address MSB
+#define BTT                 0x28           //Bytes to Transfer
+#define OCM_MAP_SIZE        65536UL
+#define MAP_SIZE            65536UL
+#define MAP_MASK            (MAP_SIZE - 1)
+
 ```
