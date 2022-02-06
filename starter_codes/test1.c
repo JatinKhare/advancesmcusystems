@@ -329,7 +329,6 @@ void change_pl_freq(int dh){
 int main(int argc, char *argv[]) {
 
     volatile unsigned int *address;
-    unsigned int value[6]; 
     int seed_pl, seed_ps;
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
     
@@ -361,17 +360,20 @@ int main(int argc, char *argv[]) {
     
 
     //Generating random data and address
-    int r_data[yy];
-    int r_addr_offset[yy];    
+    int data;
+    int addr_offset;    
     int LOOPS = xx;
     int count = 0;
+
+    uint32_t* BRAM_virtual_address;
 
     switch(argc){
 
     case 3:
+	     
 	    while(xx){
 
-	    uint32_t* BRAM_virtual_address = mmap(NULL, 
+	    BRAM_virtual_address = mmap(NULL, 
 						  MAP_SIZE, 
 						  PROT_READ | PROT_WRITE, 
 						  MAP_SHARED, 
@@ -381,73 +383,64 @@ int main(int argc, char *argv[]) {
 	    change_pl_freq(dh);
 
 	    for(int i = 0; i < yy; i++){
-		    r_data[i] = rand();
-		    r_addr_offset[i] = rand() % 4096;
+		    data = rand() % 10000;
+		    addr_offset = rand() % 2048;
 
-		    address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
 		    
-		    *address = r_data[i];
+		    *address = data;
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], BRAM_ADD + r_addr_offset[i]);
-		    }
+		    printf("Writing data: %d at address: 0x%.8x\n", *address, BRAM_ADD + addr_offset);
 
-		    printf("randomization for loop %d completed!\n\n", LOOPS - xx + 1);
-		    xx--;
+		    printf("randomization for loop %d completed!\n\n", data/*LOOPS - xx + 1*/);
 
-		    for(int i=0; i<yy; i++)
-		    {
-			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
-			if(*reading_address != r_data[i])
+			if(*address != data)
 			{
-			    printf("BRAM result = %d, random value written = %d at index = %d\n", *reading_address, r_data[i], i);
+			    printf("BRAM result = %d, random value written = %d at index = %d\n", *address, data, i);
 			    printf("test failed!!\n");
-			    munmap(BRAM_virtual_address,4096);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
-		    }
-		    munmap(BRAM_virtual_address,4096);
 		    
 	    }
+		    xx--;
+	    }
+	    munmap(BRAM_virtual_address, MAP_SIZE);
    	    printf("Test passed: '%d' loops of '%d' 32-bit words\n", LOOPS, yy); 
 	    break;
-
 	default:
 	    while(1){
-		    uint32_t* BRAM_virtual_address = mmap(NULL, 
+		    BRAM_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
 							  MAP_SHARED, 
 							  dh, 
 							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 		    for(int i = 0; i < yy; i++){
-		    r_data[i] = rand();
-		    r_addr_offset[i] = rand() % 4096;
+		    data = rand() % 10000;
+		    addr_offset = rand() % 2048;
 
-		    address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
+		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
 		    
-		    *address = r_data[i];
+		    *address = data;
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", r_data[i], BRAM_ADD + r_addr_offset[i]);
-		    }
+		    printf("Writing data: %d at address: 0x%.8x\n", data, BRAM_ADD + addr_offset);
 
-		    for(int i=0; i<yy; i++)
-		    {
-			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + r_addr_offset[i]) & MAP_MASK) >>2);
-			if(*reading_address != r_data[i])
+			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
+			if(*reading_address != data)
 			{
-			    printf("BRAM result = %d, random value written = %d on loop = %d\n", *reading_address, r_data[i], count);
+			    printf("BRAM result = %d, random value written = %d on loop = %d\n", *reading_address, data, count);
 			    printf("test failed!!\n");
-			    munmap(BRAM_virtual_address,4096);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
-		    }
-		    munmap(BRAM_virtual_address,4096);
 		    count++;
 		    printf("Test passed: '%d' loops of '%d' 32-bit words\n", count, yy); 
 	    }
-		  
+	    }	  
+	    munmap(BRAM_virtual_address, MAP_SIZE);
 		    
 
     }
