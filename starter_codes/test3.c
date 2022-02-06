@@ -48,6 +48,7 @@
 
 unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
     dma_virtual_address[offset>>2] = value;
+    return 0;
 }
 
 //DMA Get
@@ -68,6 +69,7 @@ int cdma_sync(unsigned int* dma_virtual_address) {
     while(!(status & 1<<1)){
         status = dma_get(dma_virtual_address, CDMASR);
     }
+    return 0;
 }
 
 void memdump(void* virtual_address, int byte_count) {

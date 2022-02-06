@@ -75,13 +75,9 @@ void change_ps_freq(int dh){
 		    //1. Program the new FIDIV, CLKOUT
 		    *ps_clk_ctrl = PS_APLL_CTRL_1499;
 
-		    unsigned int temp;
-		    temp = *ps_clk_ctrl;
 		    //2. Program the control data
 		    *ps_clk_cfg  = PS_APLL_CFG_1499;
 		    
-		    unsigned int temp1;
-		    temp1 = *ps_clk_cfg;
 		    //3. Program the bypass -> APLL_CTRL[3] = 1;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
 
@@ -275,8 +271,6 @@ void change_pl_freq(int dh){
  		    
 		    *pl0 = PL_0_300;
 			
-		    unsigned int temp2;
-		    temp2 = *pl0;
   		    printf("PL Frequncy changed to 300 MHz\n");		    
 		    munmap(pl_clk_reg, 0x1000);
 
@@ -339,7 +333,6 @@ int main(int argc, char *argv[]) {
 
     signal(SIGINT, m_unmap_ctrl_c);
     volatile unsigned int *address;
-    int seed_pl, seed_ps;
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
     
     if(dh == -1){
