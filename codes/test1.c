@@ -39,7 +39,7 @@
 #define PL_0_150            0x01010A00
 #define PL_0_100            0x01010F00
 
-#define OCM_ADD             0xFFFC0000
+#define BRAM_ADD            0xA0028000
 #define MAP_SIZE 	    131072UL
 #define MAP_MASK	    (MAP_SIZE - 1)
 
@@ -321,11 +321,10 @@ void change_pl_freq(int dh){
     }
 }
 
-
-uint32_t* OCM_virtual_address;
+uint32_t* BRAM_virtual_address;
 void m_unmap_ctrl_c(int sig_num){
 
-        munmap(OCM_virtual_address, MAP_SIZE);
+        munmap(BRAM_virtual_address, MAP_SIZE);
 	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
 	kill(0,SIGKILL);
 }
@@ -341,25 +340,29 @@ int main(int argc, char *argv[]) {
 	    return -1;
     }
 
-    if(argc>3){
-	    printf("USAGE: ./test1 (yy words) (xx loops) \n");
+    if(argc!=3 && argc!=1){
+	    printf("USAGE: ./test1 (xx loops) (yy words), and pass 0 to run with default values\n");
 	    return -1;
     }
 
 
-    int xx = 1;   //default value of number of loops to run
-    int yy = 4096;   //default value of number of words to test per loop
-
+    int xx = 0;   //default value of number of loops to run
+    int yy = 2048;   //default value of number of words to test per loop
+    int sw = 1;
     if(argc == 2){
-	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
-            printf("Changing the words/loop to yy = %d\n\n", yy);
+	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
+            printf("Changing the words/loop to yy = %d \n\n", yy);
     }
     if(argc == 3){ 
-	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
-	    xx = strtoul(argv[2], 0, 0);   //taking number of loops from the user
+	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
+	    yy = strtoul(argv[2], 0, 0);   //taking number of loops from the user
             printf("Changing the number of loops to xx = %d\n", xx);
             printf("Changing the words/loop to yy = %d\n\n", yy);
+	    if(yy == 0)
+		    yy = 2048;
     }
+    if(xx == 0)
+	    sw = 0;
 
     
 
@@ -370,80 +373,39 @@ int main(int argc, char *argv[]) {
     int count = 0;
 
     srand(time(0));
-    switch(argc){
-    
-    case 2:
+    switch(sw){
 
-	    while(1){
-		    OCM_virtual_address = mmap(NULL, 
-							  MAP_SIZE, 
-							  PROT_READ | PROT_WRITE, 
-							  MAP_SHARED, 
-							  dh, 
-							  OCM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
-		    for(int i = 0; i < yy; i++){
-	
-                    printf("Testing (LOOP, WORD) = (%d, %d)\n", count+1, i+1); 
-		    
-		    change_ps_freq(dh);
-
-		    data = rand();
-		    addr_offset = rand() % 2048;
-
-		    address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
-		    
-		    
-		    *address = data;
-		    
-		    printf("Writing data: %d at address: 0x%.8x\n", data, OCM_ADD + addr_offset);
-
-			unsigned int *reading_address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
-			if(*reading_address != data)
-			{   
-			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, OCM Result = %d\n", i+1, data, *reading_address);
-			    munmap(OCM_virtual_address, MAP_SIZE);
-			    return -1;
-			}
-		    printf("Test passed: '%d' loops of '%d' 32-bit words\n\n", count+1, i+1); 
-	    }
-		    count++;
-	    }	  
-	    munmap(OCM_virtual_address, MAP_SIZE);
-	    break;
-
-    case 3:
+    case 1:
 	     
 	    while(xx){
 
-	    OCM_virtual_address = mmap(NULL, 
+	    BRAM_virtual_address = mmap(NULL, 
 						  MAP_SIZE, 
 						  PROT_READ | PROT_WRITE, 
 						  MAP_SHARED, 
 						  dh, 
-						  OCM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
-
+						  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 	    for(int i = 0; i < yy; i++){
                     printf("Testing (LOOP, WORD) = (%d, %d)\n", LOOPS - xx + 1, i+1); 
-		    
 		    change_ps_freq(dh);
-		   
+		    change_pl_freq(dh);
+		    
 		    data = rand();
 		    addr_offset = rand() % 2048;
 
-		    address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
+		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
 		    
 		    *address = data;
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", *address, OCM_ADD + addr_offset);
+		    printf("Writing data: %d at address: 0x%.8x\n", *address, BRAM_ADD + addr_offset);
 
 
 			if(*address != data)
-			{   
+			{
 			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, OCM Result = %d\n", i+1, data, *address);
-			    munmap(OCM_virtual_address, MAP_SIZE);
+			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *address);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
 		    printf("Testing for (LOOP %d, WORD %d) completed!\n\n", LOOPS - xx + 1, i+1);
@@ -451,47 +413,51 @@ int main(int argc, char *argv[]) {
 	    }
 		    xx--;
 	    }
-	    munmap(OCM_virtual_address, MAP_SIZE);
+	    munmap(BRAM_virtual_address, MAP_SIZE);
    	    printf("Test passed: '%d' loops of '%d' 32-bit words\n", LOOPS, yy); 
 	    break;
 
 	default:
 	    while(1){
-		    OCM_virtual_address = mmap(NULL, 
+		    
+		    
+		    BRAM_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
 							  MAP_SHARED, 
 							  dh, 
-							  OCM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
+							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
 		    for(int i = 0; i < yy; i++){
-	
+		    
                     printf("Testing (LOOP, WORD) = (%d, %d)\n", count+1, i+1); 
 		    
 		    change_ps_freq(dh);
-
+		    change_pl_freq(dh);
+		    
 		    data = rand();
 		    addr_offset = rand() % 2048;
 
-		    address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
+		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
 		    
 		    *address = data;
 		    
-		    printf("Writing data: %d at address: 0x%.8x\n", data, OCM_ADD + addr_offset);
+		    printf("Writing data: %d at address: 0x%.8x\n", data, BRAM_ADD + addr_offset);
 
-			unsigned int *reading_address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
+			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
 			if(*reading_address != data)
-			{   
+			{
 			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, OCM Result = %d\n", i+1, data, *reading_address);
-			    munmap(OCM_virtual_address, MAP_SIZE);
+			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *reading_address);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
 		    printf("Test passed: '%d' loops of '%d' 32-bit words\n\n", count+1, i+1); 
+                        
 	    }
 		    count++;
 	    }	  
-	    munmap(OCM_virtual_address, MAP_SIZE);
+	    munmap(BRAM_virtual_address, MAP_SIZE);
 		    
 
     }

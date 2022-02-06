@@ -12,19 +12,30 @@ This will generate the corresponding object files and executables for all the th
 
 ### ./test1
 
-USAGE: ./test1 (yy words) (xx loops) or ./test1 (yy words)
-a. If you pass 2 arguments with ./test, the test will run for 'xx' loops, each loop having 'yy' words.
-b. If you pass 1 argument with ./test, the test  will run for infinite loops with each loop having 'yy' words.
-c. If you do not pass any argument, the test will run for infinite loops with each loop having '2048' words.
+USAGE: ./test1 (xx loops) (yy words), where pass 0 for default values.
+default value for loops: INF
+default value for words: 2048
+
+### ./test2
+
+USAGE: ./test2 (xx loops) (yy words), where pass 0 for default values.
+default value for loops: INF
+default value for words: 4096
+
+### ./test3
+
+USAGE: ./test3
+no arguments needed to pass.
 
 
-
-### Contents
+# Contents
 1. [Setting up the environment](#setting-up-the-environment)
 2. [Lab 1](#lab-1)
 3. [Setting up the Board](#setting-up-the-board)
-4. [Testing](#testing)
-5. [Code for setting the register values](#code-for-setting-the-register-values)
+4. [Setting the Frequency](#setting-the-frequency)
+5. [Useful information for writing the code](#useful-information-for-writing-the-code)
+6. [Codes](#codes)
+
 
 ## Setting up the environment
 
@@ -503,3 +514,9 @@ V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15 ---> 0x0101_0F00
 #define MAP_MASK            (MAP_SIZE - 1)
 
 ```
+
+## Codes
+
+1. [test1.c](codes/test1.c)
+2. [test2.c](codes/test2.c)
+3. [test3.c](codes/test3.c)
