@@ -1,5 +1,24 @@
 # advancesmcusystems
 
+## How to run the code
+
+Once you have the .c files (test1.c, test2.c, and test3.c) in the same directory as the Makefile, do the following:
+
+``` bash
+$ make clean
+$ make 
+```
+This will generate the corresponding object files and executables for all the three test cases. 
+
+### ./test1
+
+USAGE: ./test1 (yy words) (xx loops) or ./test1 (yy words)
+a. If you pass 2 arguments with ./test, the test will run for 'xx' loops, each loop having 'yy' words.
+b. If you pass 1 argument with ./test, the test  will run for infinite loops with each loop having 'yy' words.
+c. If you do not pass any argument, the test will run for infinite loops with each loop having '2048' words.
+
+
+
 ### Contents
 1. [Setting up the environment](#setting-up-the-environment)
 2. [Lab 1](#lab-1)

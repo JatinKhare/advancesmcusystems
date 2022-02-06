@@ -340,25 +340,29 @@ int main(int argc, char *argv[]) {
 	    return -1;
     }
 
-    if(argc>3){
-	    printf("USAGE: ./test1 (yy words) (xx loops) or ./test1 (yy words)\n");
+    if(argc!=3 && argc!=1){
+	    printf("USAGE: ./test1 xx loops) (yy words)\n");
 	    return -1;
     }
 
 
-    int xx = 1;   //default value of number of loops to run
+    int xx = 0;   //default value of number of loops to run
     int yy = 2048;   //default value of number of words to test per loop
-
+    int sw = 1;
     if(argc == 2){
-	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
+	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
             printf("Changing the words/loop to yy = %d \n\n", yy);
     }
     if(argc == 3){ 
-	    yy = strtoul(argv[1], 0, 0);   //taking number of words from the user
-	    xx = strtoul(argv[2], 0, 0);   //taking number of loops from the user
+	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
+	    yy = strtoul(argv[2], 0, 0);   //taking number of loops from the user
             printf("Changing the number of loops to xx = %d\n", xx);
             printf("Changing the words/loop to yy = %d\n\n", yy);
+	    if(yy == 0)
+		    yy = 2048;
     }
+    if(xx == 0)
+	    sw = 0;
 
     
 
@@ -369,7 +373,7 @@ int main(int argc, char *argv[]) {
     int count = 0;
 
     srand(time(0));
-    switch(argc){
+    switch(sw){
 
     case 2:
 	     
@@ -414,7 +418,7 @@ int main(int argc, char *argv[]) {
 	    }	  
 	    munmap(BRAM_virtual_address, MAP_SIZE);	    
 	    break;
-    case 3:
+    case 1:
 	     
 	    while(xx){
 
