@@ -118,7 +118,7 @@ int main() {
                                           MAP_SHARED, 
                                           dh, 
                                           BRAM & ~MAP_MASK); // Memory map AXI Lite register block
-    int yy = 1028;
+    int yy = 1024;
     uint32_t data[yy];
     srand(time(0));
     for(int i = 0; i < yy; i++){

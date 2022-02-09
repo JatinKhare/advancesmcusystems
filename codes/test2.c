@@ -348,7 +348,7 @@ int main(int argc, char *argv[]) {
 
 
     int xx = 0;   //default value of number of loops to run
-    int yy = 2048;   //default value of number of words to test per loop
+    int yy = 4096;   //default value of number of words to test per loop
     int sw = 1;
     if(argc == 2){
 	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
@@ -360,7 +360,7 @@ int main(int argc, char *argv[]) {
             printf("Changing the number of loops to xx = %d\n", xx);
             printf("Changing the words/loop to yy = %d\n\n", yy);
 	    if(yy == 0)
-		    yy = 2048;
+		    yy = 4096;
     }
     if(xx == 0)
 	    sw = 0;
