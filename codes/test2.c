@@ -42,7 +42,7 @@
 #define OCM_ADD             0xFFFC0000
 #define MAP_SIZE 	    131072UL
 #define MAP_MASK	    (MAP_SIZE - 1)
-
+#define MAP_SIZE_F          131072UL
 
 
 void change_ps_freq(int dh){
@@ -55,7 +55,7 @@ void change_ps_freq(int dh){
     uint32_t *reg, *ps_clk_ctrl, *ps_clk_cfg, *ps_clk_status;
 
     reg = mmap(NULL, 
-	       MAP_SIZE,
+	       MAP_SIZE_F,
 	       PROT_READ|PROT_WRITE,
 	       MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK);
     
@@ -97,7 +97,7 @@ void change_ps_freq(int dh){
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, 0x1000);
+		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
   		    printf("PS Frequncy changed to 1499 MHz\n");		    
 		    break;
@@ -132,7 +132,7 @@ void change_ps_freq(int dh){
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, 0x1000);
+		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
   		    printf("PS Frequncy changed to 1333 MHz\n");		    
 
@@ -168,7 +168,7 @@ void change_ps_freq(int dh){
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, 0x1000);
+		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
 
   		    printf("PS Frequncy changed to 999 MHz\n");		    
@@ -240,8 +240,7 @@ void change_ps_freq(int dh){
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, 0x1000);
-
+		    munmap(ps_clk_ctrl, MAP_SIZE_F);
   		    printf("PS Frequncy changed to 416.6 MHz\n");		    
 		    break;
     
@@ -272,7 +271,7 @@ void change_pl_freq(int dh){
 		    *pl0 = PL_0_300;
 			
   		    printf("PL Frequncy changed to 300 MHz\n");		    
-		    munmap(pl_clk_reg, 0x1000);
+		    munmap(pl_clk_reg, MAP_SIZE_F);
 
 		    break;
 
@@ -282,7 +281,7 @@ void change_pl_freq(int dh){
 
 		    *pl0 = PL_0_250;
 
-		    munmap(pl_clk_reg, 0x1000);		  
+		    munmap(pl_clk_reg, MAP_SIZE_F);
 
   		    printf("PL Frequncy changed to 250 MHz\n");		    
 		    break;
@@ -292,7 +291,7 @@ void change_pl_freq(int dh){
 
 		    *pl0 = PL_0_187_5;
 
-		    munmap(pl_clk_reg, 0x1000);	
+		    munmap(pl_clk_reg, MAP_SIZE_F);
 	 	    
   		    printf("PL Frequncy changed to 187.5 MHz\n");		    
 		    break;
@@ -302,7 +301,7 @@ void change_pl_freq(int dh){
 
 		    *pl0 = PL_0_150;
 
-		    munmap(pl_clk_reg, 0x1000);	
+		    munmap(pl_clk_reg, MAP_SIZE_F);
 
   		    printf("PL Frequncy changed to 150 MHz\n");		    
 		    break;
@@ -312,7 +311,7 @@ void change_pl_freq(int dh){
 
 		    *pl0 = PL_0_100;
 
-		    munmap(pl_clk_reg, 0x1000);	
+		    munmap(pl_clk_reg, MAP_SIZE_F);
 
   		    printf("PL Frequncy changed to 100 MHz\n");		    
 		    break;
@@ -389,8 +388,11 @@ int main(int argc, char *argv[]) {
 		    
 		    change_ps_freq(dh);
 		   
+		    //OCM Size: 128K
+		    //Offset range: 0-128K, with a multiple of 4.
+		    //Hence, offset = random number from (0-128K/4)*4
 		    data = rand();
-		    addr_offset = rand() % 2048;
+		    addr_offset = (rand() % 32768)*4;
 
 		    address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
@@ -431,7 +433,8 @@ int main(int argc, char *argv[]) {
 		    change_ps_freq(dh);
 
 		    data = rand();
-		    addr_offset = rand() % 2048;
+		    addr_offset = (rand() % 32768)*4;
+		    addr_offset = 131073;
 
 		    address = OCM_virtual_address + (((OCM_ADD + addr_offset) & MAP_MASK) >>2);
 		    
