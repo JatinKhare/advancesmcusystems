@@ -1,5 +1,11 @@
 # advancesmcusystems
 
+# Lab 1
+```
+Name: Jatin Khare
+UT EID: jk47976
+Email: jatinkhare@utexas.edu
+```
 ## How to run the code
 
 Once you have the .c files (test1.c, test2.c, and test3.c) in the same directory as the Makefile, do the following:
