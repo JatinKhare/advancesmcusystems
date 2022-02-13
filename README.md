@@ -242,13 +242,10 @@ set_property PACKAGE_PIN F8 [get_ports ls_mezz_uart0_rx]
 1. sudo screen -L /dev/ttyUSB1 115200
 2. wpa_passphrase SpectrumSetup-FE PASSWORD
 3. sudo ./wifi.sh sets up the wifi 
-4. udhcpc: lease of **192.168.1.173** obtained, lease time 43200.
-
-``` bash
-
-#transfer system.bit and system.dtb files to the board.
-
+```bash
+#udhcpc: lease of **XXX.XXX.X.XXX** obtained, lease time 43200.
 ```
+4. transfer system.bit and system.dtb files to the board.
 5. Enable root access, and Mount the device to enable the boot access. 
 
 ``` bash
