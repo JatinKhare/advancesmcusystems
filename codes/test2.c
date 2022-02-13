@@ -42,7 +42,8 @@
 #define OCM_ADD             0xFFFC0000
 #define MAP_SIZE 	    131072UL
 #define MAP_MASK	    (MAP_SIZE - 1)
-#define MAP_SIZE_F          131072UL
+#define MAP_SIZE_F          4096UL
+#define MAP_MASK_F	    (MAP_SIZE_F - 1)
 
 
 void change_ps_freq(int dh){
@@ -57,7 +58,7 @@ void change_ps_freq(int dh){
     reg = mmap(NULL, 
 	       MAP_SIZE_F,
 	       PROT_READ|PROT_WRITE,
-	       MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK);
+	       MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK_F);
     
     ps_clk_ctrl = reg + (((PS_APLL_BASE + APLL_CTRL_OFF) & MAP_MASK) >> 2);
 
@@ -257,7 +258,7 @@ void change_pl_freq(int dh){
     pl_clk_reg = mmap(NULL, 
 		     MAP_SIZE,
 		     PROT_READ|PROT_WRITE,
-		     MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK);
+		     MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK_F);
     pl0 = pl_clk_reg + (((PL0_REF_CTRL_ADD + 0xC0) & MAP_MASK) >> 2);
 	            
     switch(seed_pl){

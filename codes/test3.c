@@ -41,8 +41,9 @@
 #define DA                  0x20           //Destination Address
 #define DA_MSB              0x24           //Destination Address MSB
 #define BTT                 0x28           //Bytes to Transfer
-#define OCM_MAP_SIZE        65536UL
-#define MAP_SIZE            65536UL
+#define OCM_MAP_SIZE        131072UL
+#define OCM_MAP_MASK        (OCM_MAP_SIZE - 1)
+#define MAP_SIZE            4096UL
 #define MAP_MASK            (MAP_SIZE - 1)
 
 //DMA Set
@@ -64,8 +65,8 @@ int cdma_sync(unsigned int* dma_virtual_address) {
     unsigned int status = dma_get(dma_virtual_address, CDMASR);
     if( (status&0x40) != 0)
     {
-        unsigned int desc = dma_get(dma_virtual_address, CURDESC_PNTR);
-        printf("error address : %X\n", desc);
+        //unsigned int desc = dma_get(dma_virtual_address, CURDESC_PNTR);
+        //printf("error address : %X\n", desc);
     }
     while(!(status & 1<<1)){
         status = dma_get(dma_virtual_address, CDMASR);
@@ -149,6 +150,19 @@ int main(int argc, char *argv[]) {
 	    sw = 0;
 
     
+    uint32_t* ocm_1 = mmap(NULL, 
+			   OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_1 & ~OCM_MAP_MASK);
+
+    uint32_t* ocm_2 = mmap(NULL, 
+			   OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_2 & ~OCM_MAP_MASK);
 
     //Generating random data and address
     int count = 0;
@@ -175,19 +189,6 @@ int main(int argc, char *argv[]) {
 			    data[i] = rand();
 		    }
 
-		    uint32_t* ocm_1 = mmap(NULL, 
-					   OCM_MAP_SIZE, 
-					   PROT_READ | PROT_WRITE, 
-					   MAP_SHARED, 
-					   dh, 
-					   OCM_1);
-
-		    uint32_t* ocm_2 = mmap(NULL, 
-					   OCM_MAP_SIZE, 
-					   PROT_READ | PROT_WRITE, 
-					   MAP_SHARED, 
-					   dh, 
-					   OCM_2);
 
 		    for(int i=0; i<yy; i++)
 			ocm_1[i] = data[i];
@@ -218,19 +219,19 @@ int main(int argc, char *argv[]) {
 			    munmap(ocm_1, OCM_MAP_SIZE);
 			    munmap(ocm_2, OCM_MAP_SIZE);
 			    munmap(cdma_virtual_address, MAP_SIZE);
-			    munmap(BRAM_virtual_address,MAP_SIZE);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
 		    }
 		   
 		    printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - xx + 1, yy);
-		    munmap(ocm_1, OCM_MAP_SIZE);
-		    munmap(ocm_2, OCM_MAP_SIZE);
 		    xx--;
 		   
 	    }
+		    munmap(ocm_1, OCM_MAP_SIZE);
+		    munmap(ocm_2, OCM_MAP_SIZE);
 		    munmap(cdma_virtual_address, MAP_SIZE);
-		    munmap(BRAM_virtual_address,MAP_SIZE);
+		    munmap(BRAM_virtual_address, MAP_SIZE);
 		    break;
 
 	    case 0:
@@ -253,19 +254,6 @@ int main(int argc, char *argv[]) {
 			    data[i] = rand();
 		    }
 
-		    uint32_t* ocm_1 = mmap(NULL, 
-					   OCM_MAP_SIZE, 
-					   PROT_READ | PROT_WRITE, 
-					   MAP_SHARED, 
-					   dh, 
-					   OCM_1);
-
-		    uint32_t* ocm_2 = mmap(NULL, 
-					   OCM_MAP_SIZE, 
-					   PROT_READ | PROT_WRITE, 
-					   MAP_SHARED, 
-					   dh, 
-					   OCM_2);
 
 		    for(int i=0; i<yy; i++)
 			ocm_1[i] = data[i];
@@ -296,18 +284,18 @@ int main(int argc, char *argv[]) {
 			    munmap(ocm_1, OCM_MAP_SIZE);
 			    munmap(ocm_2, OCM_MAP_SIZE);
 			    munmap(cdma_virtual_address, MAP_SIZE);
-			    munmap(BRAM_virtual_address,MAP_SIZE);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
 		    }
 		    count++;
 		    printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", count, yy);
-		    munmap(ocm_1, OCM_MAP_SIZE);
-		    munmap(ocm_2, OCM_MAP_SIZE);
 		    munmap(cdma_virtual_address, MAP_SIZE);
-		    munmap(BRAM_virtual_address,MAP_SIZE);
+		    munmap(BRAM_virtual_address, MAP_SIZE);
 		   
 	    }
+		    munmap(ocm_1, OCM_MAP_SIZE);
+		    munmap(ocm_2, OCM_MAP_SIZE);
 		    break;
 
     }
