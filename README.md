@@ -12,7 +12,13 @@ This will generate the corresponding object files and executables for all the th
 
 ### ./test1
 
-USAGE: ./test1 (xx loops) (yy words), where pass 0 for default values.
+USAGE:
+
+```bash
+
+./test1 (xx loops) (yy words), where pass 0 for default values.
+
+```
 
 default value for loops: INF
 
@@ -44,7 +50,13 @@ Test passed: '2' loops of '1' 32-bit words
 
 ### ./test2
 
-USAGE: ./test2 (xx loops) (yy words), where pass 0 for default values.
+USAGE: 
+
+```bash
+
+./test2 (xx loops) (yy words), where pass 0 for default values.
+
+```
 
 default value for loops: INF
 
@@ -80,7 +92,12 @@ Test passed: '3' loops of '1' 32-bit words
 
 ### ./test3
 
-USAGE: ./test3 (xx loops) (yy words), where pass 0 for default values.
+USAGE: 
+```bash
+
+./test3 (xx loops) (yy words), where pass 0 for default values.
+
+```
 
 default value for loops: INF
 
