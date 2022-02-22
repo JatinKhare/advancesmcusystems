@@ -1,6 +1,6 @@
 # advancesmcusystems
 
-# Lab 1
+# Lab 2
 ```
 Name: Jatin Khare
 UT EID: jk47976
@@ -32,26 +32,6 @@ default value for words: 2048
 
 ```bash
 
-root@ultra96:~/lab1/advmcu_codes/advancesmcusystems/codes# ./test1 2 1
-Changing the number of loops to xx = 2
-Changing the words/loop to yy = 1
-
-Testing (LOOP, WORD) = (1, 1)
-waited 64 loop cycles for STATUS = 1
-PS Frequncy changed to 733 MHz
-PL Frequncy changed to 187.5 MHz
-Writing data: 499830553 at address: 0xa00291ac
-Testing for (LOOP 1, WORD 1) completed!
-
-Testing (LOOP, WORD) = (2, 1)
-waited 63 loop cycles for STATUS = 1
-PS Frequncy changed to 1499 MHz
-PL Frequncy changed to 150 MHz
-Writing data: 415887069 at address: 0xa002914c
-Testing for (LOOP 2, WORD 1) completed!
-
-Test passed: '2' loops of '1' 32-bit words
-
 ```
 
 ### ./test2
@@ -70,29 +50,6 @@ default value for words: 4096
 
 ```bash
 
-root@ultra96:~/lab1/advmcu_codes/advancesmcusystems/codes# ./test2 3 1
-Changing the number of loops to xx = 3
-Changing the words/loop to yy = 1
-
-Testing (LOOP, WORD) = (1, 1)
-waited 65 loop cycles for STATUS = 1
-PS Frequncy changed to 733 MHz
-Writing data: 1137404480 at address: 0xfffc05c8
-Testing for (LOOP 1, WORD 1) completed!
-
-Testing (LOOP, WORD) = (2, 1)
-waited 65 loop cycles for STATUS = 1
-PS Frequncy changed to 733 MHz
-Writing data: 1132964299 at address: 0xfffc7320
-Testing for (LOOP 2, WORD 1) completed!
-
-Testing (LOOP, WORD) = (3, 1)
-waited 65 loop cycles for STATUS = 1
-PS Frequncy changed to 733 MHz
-Writing data: 1869751373 at address: 0xfffdc884
-Testing for (LOOP 3, WORD 1) completed!
-
-Test passed: '3' loops of '1' 32-bit words
 
 ```
 
@@ -111,25 +68,12 @@ default value for words: 1024
 
 ```bash
 
-root@ultra96:~/lab1/advmcu_codes/advancesmcusystems/codes# ./test3 1 1 
-Changing the number of loops to xx = 1
-Changing the words/loop to yy = 1
-
-Transfering data from OCM to BRAM
-OCM to BRAM: Transfer of 1 words successful!
-
-Transfering data from BRAM to OCM
-BRAM to OCM: Transfer of 1 words successful!
-
-
-DMA's OCM/BRAM traffic test loop 1 with 1 words successful!!!
-
 ```
 
 
 # Contents
 1. [Setting up the environment](#setting-up-the-environment)
-2. [Lab 1](#lab-1)
+2. [Lab 2](#lab-2)
 3. [Setting up the Board](#setting-up-the-board)
 4. [Setting the Frequency](#setting-the-frequency)
 5. [Useful information for writing the code](#useful-information-for-writing-the-code)

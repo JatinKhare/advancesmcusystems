@@ -6,6 +6,15 @@ Name: Jatin Khare
 UT EID: jk47976
 Email: jatinkhare@utexas.edu
 ```
+# Contents
+1. [How to run the code](#how-to-run-the-code)
+2. [Setting up the environment](#setting-up-the-environment)
+3. [Lab 1](#lab-1)
+4. [Setting up the Board](#setting-up-the-board)
+5. [Setting the Frequency](#setting-the-frequency)
+6. [Useful information for writing the code](#useful-information-for-writing-the-code)
+7. [Codes](#codes)
+
 ## How to run the code
 
 Once you have the .c files (test1.c, test2.c, and test3.c) in the same directory as the Makefile, do the following:
@@ -125,16 +134,6 @@ BRAM to OCM: Transfer of 1 words successful!
 DMA's OCM/BRAM traffic test loop 1 with 1 words successful!!!
 
 ```
-
-
-# Contents
-1. [Setting up the environment](#setting-up-the-environment)
-2. [Lab 1](#lab-1)
-3. [Setting up the Board](#setting-up-the-board)
-4. [Setting the Frequency](#setting-the-frequency)
-5. [Useful information for writing the code](#useful-information-for-writing-the-code)
-6. [Codes](#codes)
-
 
 ## Setting up the environment
 
