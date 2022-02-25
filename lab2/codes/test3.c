@@ -1,4 +1,4 @@
-//Testing of the DMA traffic to/from the OCM and BRAM
+//Implementing capture timer
 //
 //
 /**********************************************************************************************/
@@ -29,6 +29,13 @@
 #define BRAM                0xB0028000
 #define OCM_1               0xFFFC0000
 #define OCM_2               0xFFFC2000
+
+#define SLV_REG_BASE        0xA0030000
+#define SLV_REG_0_OFF       0x00000000
+#define SLV_REG_1_OFF       0x00000004
+#define SLV_REG_2_OFF       0x00000008
+#define SLV_REG_3_OFF       0x0000000c
+
 
 #define CDMACR              0x00           //CDMA Control
 #define CDMASR              0x04           //Status
@@ -163,7 +170,20 @@ int main(int argc, char *argv[]) {
 			   MAP_SHARED, 
 			   dh, 
 			   OCM_2 & ~OCM_MAP_MASK);
+   
+    uint32_t *slv_reg_base;
 
+    slv_reg_base = mmap(NULL,
+               MAP_SIZE,
+               PROT_READ|PROT_WRITE,
+               MAP_SHARED, dh, SLV_REG_BASE  & ~MAP_MASK);
+
+    uint32_t *slv_reg_0 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_0_OFF) & MAP_MASK) >> 2);
+    uint32_t *slv_reg_1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
+    uint32_t *slv_reg_2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
+    uint32_t *slv_reg_3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
+	
+    printf("slv3 = 0x%.8x\n", *slv_reg_3);
     //Generating random data and address
     int count = 0;
     int LOOPS = xx;
