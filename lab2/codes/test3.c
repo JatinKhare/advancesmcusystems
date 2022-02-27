@@ -1,4 +1,4 @@
-//Implementing capture timer
+
 //
 //
 /**********************************************************************************************/
@@ -142,14 +142,15 @@ void set_TE(){
    *slv_reg1 = *slv_reg1 | 2; 
 }
 
-int capture_complete(int *count_value){
+int capture_complete(){
+	int count_value;
    //check for the capture_complete flag
    if((*slv_reg0 >> 4) & 1){
-	*count_value = *slv_reg2;
+	count_value = *slv_reg2;
 	reset_TE();
-	return 1;
+	return count_value;
    }
-   return 0;
+   return -1;
 
 }
 //Transfer from BRAM to OCM
@@ -512,6 +513,9 @@ int main(int argc, char *argv[]) {
     slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
     slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
     printf("slv_reg0 = 0x%.8x \n", *slv_reg0);
+    printf("slv_reg1 = 0x%.8x \n", *slv_reg1);
+    printf("slv_reg2 = 0x%.8x \n", *slv_reg2);
+    printf("slv_reg3 = 0x%.8x \n", *slv_reg3);
     //Generating random data and address
     int count = 0;
     int LOOPS = xx;
@@ -531,6 +535,8 @@ int main(int argc, char *argv[]) {
 							  dh, 
 							  BRAM & ~MAP_MASK); // Memory map AXI Lite register block
 	    while(xx){
+		    //change_ps_freq(dh);
+		    //change_pl_freq(dh);
 		    uint32_t data[yy];
 		    srand(time(0));
 		    for(int i = 0; i < yy; i++){
@@ -548,7 +554,24 @@ int main(int argc, char *argv[]) {
 		    //printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
 		    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
 
+		    set_TE();
 		    transfer(cdma_virtual_address, yy);
+		    printf("slv_reg0_at = 0x%.8x \n", *slv_reg0);
+		    printf("slv_reg1_at = 0x%.8x \n", *slv_reg1);
+		    printf("slv_reg2_at = 0x%.8x \n", *slv_reg2);
+		    printf("slv_reg3_at = 0x%.8x \n", *slv_reg3);
+		    int val, i=0;
+		    reset_TE();
+		    //while(capture_complete()==-1){
+			//    i++;//waiting for the transfer to complete
+		    //}
+
+		    printf("slv_reg0_at = 0x%.8x \n", *slv_reg0);
+		    printf("slv_reg1_at = 0x%.8x \n", *slv_reg1);
+		    printf("slv_reg2_at = 0x%.8x \n", *slv_reg2);
+		    printf("slv_reg3_at = 0x%.8x \n", *slv_reg3);
+		    val = *slv_reg2;
+		    printf("Count = %d, i = %d\n", val, i);
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 
 		    transfer_back(cdma_virtual_address, yy);
@@ -612,7 +635,6 @@ int main(int argc, char *argv[]) {
 		    //struct timeval start, end;
 		    //printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
 		    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
-
 		    transfer(cdma_virtual_address, yy);
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 
