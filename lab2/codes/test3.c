@@ -151,15 +151,9 @@ void transfer(unsigned int *cdma_virtual_address, int length){
     printf("Transfering data from OCM to BRAM\n");	
     dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
     dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
+    dma_set(cdma_virtual_address, CDMACR, 0x1000);
     dma_set(cdma_virtual_address, BTT, length*4);
-    if (sigio_signal_processed == 0) {
-	    printf("sigio_signal_processed = 0\n");
-    
-    rc = sigsuspend(&signal_mask_most);
-    /* Confirm we are coming out of suspend mode correcly */
-    assert(rc == -1 && errno == EINTR && sigio_signal_processed);
-    }
-    cdma_sync(cdma_virtual_address);
+    //cdma_sync(cdma_virtual_address);
 }
 
 void reset_TE(){
@@ -189,8 +183,9 @@ void transfer_back(unsigned int *cdma_virtual_address, int length){
     printf("Transfering data from BRAM to OCM\n");	
     dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
     dma_set(cdma_virtual_address, SA, BRAM); // Write source address
+    dma_set(cdma_virtual_address, CDMACR, 0x1000);
     dma_set(cdma_virtual_address, BTT, length*4);
-    cdma_sync(cdma_virtual_address);
+    //cdma_sync(cdma_virtual_address);
 }
 
 uint32_t* cdma_virtual_address;
@@ -485,24 +480,12 @@ void
 sigio_signal_handler(int signo)
 {
     det_int = 1;
-    assert(signo == SIGIO);   // Confirm correct signal #
+    //assert(signo == SIGIO);   // Confirm correct signal #
     sigio_signal_count ++;
 
     printf("sigio_signal_handler called (signo=%d)\n", signo);
 
-    /* -------------------------------------------------------------------------
-     * Set global flag
-     */
-
-    sigio_signal_processed = 1;
-
-    /* -------------------------------------------------------------------------
-     * Take end timestamp for interrupt latency measurement
-     */
-
-
 }
-
 
 
 
@@ -514,14 +497,14 @@ int main(int argc, char *argv[]) {
     /* --------------------------------------------------------------------------
      *      Block all signals while our signal handler is executing:
      */
-    (void)sigfillset(&sig_action.sa_mask);
+   (void)sigfillset(&sig_action.sa_mask);
 
     rc = sigaction(SIGIO, &sig_action, NULL);
 
     if (rc == -1) {
         perror("sigaction() failed");
         return -1;
-    }
+   }
 
     /* -------------------------------------------------------------------------
      *      Open the device file
@@ -641,10 +624,6 @@ int main(int argc, char *argv[]) {
 	    while(xx){
 
 	            sigio_signal_processed = 0;
-		    (void)sigfillset(&signal_mask);
-		    (void)sigfillset(&signal_mask_most);
-		    (void)sigdelset(&signal_mask_most, SIGIO);
-		    (void)sigprocmask(SIG_SETMASK,&signal_mask, &signal_mask_old);
 		    //change_ps_freq(dh);
 		    //change_pl_freq(dh);
 		    uint32_t data[yy];
@@ -668,13 +647,17 @@ int main(int argc, char *argv[]) {
 		    set_TE();
 		    int status;
 		    int childpid = vfork();
-		    if(childpid ==0)
+		    if(childpid ==0){
 			    transfer(cdma_virtual_address, yy);
+		    	    exit(0);
+		    }
 		    else{
-			    waitpid(childpid, &status, WCONTINUED);
+		    waitpid(childpid, &status, WCONTINUED);
 		    reset_TE();
 	            while(!det_int);
 		    det_int = 0;
+                    
+		    dma_set(cdma_virtual_address, CDMACR, 0x0000);
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 		    }
     		    set_TE();
