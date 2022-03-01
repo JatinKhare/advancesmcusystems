@@ -12,18 +12,29 @@
 /*                                                                                            */
 /**********************************************************************************************/
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 #include <stdint.h>
-#include <fcntl.h>
 #include <termios.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <linux/errno.h>
+#include <linux/fs.h>
 #include <sys/mman.h>
-#include <sys/time.h>
-#include <time.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/version.h>
+#include <math.h>
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
 
 #define CDMA                0xB0000000
 #define BRAM                0xB0028000
@@ -82,6 +93,15 @@
 #define MAP_MASK            (MAP_SIZE - 1)
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
+#define CDMA_DEV_PATH    "/dev/cdma_int"
+
+void sigio_signal_handler(int signo);
+static volatile sig_atomic_t sigio_signal_processed = 0;
+volatile int sigio_signal_count = 0;
+int cdma_dev_fd  = -1;
+
+
+
 //DMA Set
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
@@ -130,6 +150,11 @@ void transfer(unsigned int *cdma_virtual_address, int length){
     dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
     dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
     dma_set(cdma_virtual_address, BTT, length*4);
+    if (sigio_signal_processed == 0) {
+	    printf("sigio_signal_processed = 0\n");
+    rc = sigsuspend(&signal_mask_most);
+    /* Confirm we are coming out of suspend mode correcly */
+    assert(rc == -1 && errno == EINTR && sigio_signal_processed);
     cdma_sync(cdma_virtual_address);
 }
 
@@ -451,11 +476,92 @@ void change_pl_freq(int dh){
 
     }
 }
+void
+sigio_signal_handler(int signo)
+{
+    volatile int rc1;
+
+    assert(signo == SIGIO);   // Confirm correct signal #
+    sigio_signal_count ++;
+
+    printf("sigio_signal_handler called (signo=%d)\n", signo);
+
+    /* -------------------------------------------------------------------------
+     * Set global flag
+     */
+
+    sigio_signal_processed = 1;
+
+    /* -------------------------------------------------------------------------
+     * Take end timestamp for interrupt latency measurement
+     */
+
+
+}
+
+
 
 
 int main(int argc, char *argv[]) {
+    volatile int rc; 
+    struct sigaction sig_action;
+    memset(&sig_action, 0, sizeof sig_action);
+    sig_action.sa_handler = sigio_signal_handler;
 
-    signal(SIGINT, m_unmap_ctrl_c);
+    /* --------------------------------------------------------------------------
+     *      Block all signals while our signal handler is executing:
+     */
+    (void)sigfillset(&sig_action.sa_mask);
+
+    rc = sigaction(SIGIO, &sig_action, NULL);
+
+    if (rc == -1) {
+        perror("sigaction() failed");
+        return -1;
+    }
+
+    /* -------------------------------------------------------------------------
+     *      Open the device file
+     */
+
+    cdma_dev_fd = open(CDMA_DEV_PATH, O_RDWR);
+     if(cdma_dev_fd == -1)    {
+        perror("open() of " CDMA_DEV_PATH " failed");
+        return -1;
+    }
+
+    /* -------------------------------------------------------------------------
+     * Set our process to receive SIGIO signals from the GPIO device:
+     */
+
+    rc = fcntl(cdma_dev_fd, F_SETOWN, getpid());
+
+    if (rc == -1) {
+        perror("fcntl() SETOWN failed\n");
+        return -1;
+    }
+ 
+      /* -------------------------------------------------------------------------
+     * Enable reception of SIGIO signals for the cdma_dev_fd descriptor
+     */
+
+    int fd_flags = fcntl(cdma_dev_fd, F_GETFL);
+        rc = fcntl(cdma_dev_fd, F_SETFL, fd_flags | O_ASYNC);
+
+    if (rc == -1) {
+        perror("fcntl() SETFL failed\n");
+        return -1;
+    }
+
+     sigset_t signal_mask, signal_mask_old, signal_mask_most;
+
+
+        /* ---------------------------------------------------------------------
+         * Reset sigio_signal_processed flag:
+         */
+
+
+    //    signal(SIGINT, m_unmap_ctrl_c);
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
     
     if(dh == -1){
@@ -531,6 +637,11 @@ int main(int argc, char *argv[]) {
 							  dh, 
 							  BRAM & ~MAP_MASK); // Memory map AXI Lite register block
 	    while(xx){
+	            sigio_signal_processed = 0;
+		    (void)sigfillset(&signal_mask);
+		    (void)sigfillset(&signal_mask_most);
+		    (void)sigdelset(&signal_mask_most, SIGIO);
+		    (void)sigprocmask(SIG_SETMASK,&signal_mask, &signal_mask_old);
 		    //change_ps_freq(dh);
 		    //change_pl_freq(dh);
 		    uint32_t data[yy];
@@ -551,12 +662,10 @@ int main(int argc, char *argv[]) {
 		    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
 
 		    reset_TE();
-		    printf("slv_reg0 = 0x%.8x \n", *slv_reg0);
-		    printf("slv_reg1 = 0x%.8x \n", *slv_reg1);
-		    printf("slv_reg2 = 0x%.8x \n", *slv_reg2);
-		    printf("slv_reg3 = 0x%.8x \n", *slv_reg3);
 		    set_TE();
 		    transfer(cdma_virtual_address, yy);
+        
+
 		    printf("slv_reg0_at = 0x%.8x \n", *slv_reg0);
 		    printf("slv_reg1_at = 0x%.8x \n", *slv_reg1);
 		    printf("slv_reg2_at = 0x%.8x \n", *slv_reg2);
@@ -571,14 +680,8 @@ int main(int argc, char *argv[]) {
 		    printf("Count = %d, i = %d\n", val, i);
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
                     
-		    printf("state register = x%.8x/n", *slv_reg3);
     		    set_TE();
 		    transfer_back(cdma_virtual_address, yy);
-		    printf("slv_reg0_at = 0x%.8x \n", *slv_reg0);
-		    printf("slv_reg1_at = 0x%.8x \n", *slv_reg1);
-		    printf("slv_reg2_at = 0x%.8x \n", *slv_reg2);
-		    printf("slv_reg3_at = 0x%.8x \n", *slv_reg3);
-		    printf("state register = x%.8x/n", *slv_reg3);
 		    printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
 		 
 		    //for(int i = 0; i<yy; i++){
@@ -603,6 +706,7 @@ int main(int argc, char *argv[]) {
 		    xx--;
 		   
 	    }
+		    (void)close(cdma_dev_fd);
 		    munmap(ocm_1, OCM_MAP_SIZE);
 		    munmap(ocm_2, OCM_MAP_SIZE);
 		    munmap(cdma_virtual_address, MAP_SIZE);
