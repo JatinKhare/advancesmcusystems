@@ -53,7 +53,7 @@
  * Device path name for the GPIO device
  */
  
-#define GPIO_DEV_PATH    "/dev/captimer_int"
+#define GPIO_DEV_PATH    "/dev/gpio_int"
 
 #define GPIO_DR_NUM     0x0             // Pin Number
 #define GPIO_DR         0xA0030004      // Interrupt register
@@ -153,6 +153,7 @@ main(void)
         perror("open() of " GPIO_DEV_PATH " failed");
         return -1;
     }    
+
     /* -------------------------------------------------------------------------
      * Set our process to receive SIGIO signals from the GPIO device:
      */
@@ -207,7 +208,7 @@ main(void)
         (void)sigprocmask(SIG_SETMASK,&signal_mask, &signal_mask_old);       
         
         /* ---------------------------------------------------------------------
-
+         * Take a start timestamp for interrupt latency measurement
          */
         (void)gettimeofday(&start_timestamp, NULL); 
 
@@ -307,7 +308,7 @@ sigio_signal_handler(int signo)
     assert(signo == SIGIO);   // Confirm correct signal #
     sigio_signal_count ++;
 
-    printf("sigio_signal_handler called (signo=%d)\n", signo);
+    //printf("sigio_signal_handler called (signo=%d)\n", signo);
 
     /* -------------------------------------------------------------------------
      * Set global flag

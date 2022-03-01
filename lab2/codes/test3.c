@@ -96,11 +96,13 @@
 #define CDMA_DEV_PATH    "/dev/cdma_int"
 
 void sigio_signal_handler(int signo);
+volatile int rc;
 static volatile sig_atomic_t sigio_signal_processed = 0;
 volatile int sigio_signal_count = 0;
 int cdma_dev_fd  = -1;
+int det_int;
 
-
+sigset_t signal_mask, signal_mask_old, signal_mask_most;
 
 //DMA Set
 
@@ -152,9 +154,11 @@ void transfer(unsigned int *cdma_virtual_address, int length){
     dma_set(cdma_virtual_address, BTT, length*4);
     if (sigio_signal_processed == 0) {
 	    printf("sigio_signal_processed = 0\n");
+    
     rc = sigsuspend(&signal_mask_most);
     /* Confirm we are coming out of suspend mode correcly */
     assert(rc == -1 && errno == EINTR && sigio_signal_processed);
+    }
     cdma_sync(cdma_virtual_address);
 }
 
@@ -476,11 +480,11 @@ void change_pl_freq(int dh){
 
     }
 }
+
 void
 sigio_signal_handler(int signo)
 {
-    volatile int rc1;
-
+    det_int = 1;
     assert(signo == SIGIO);   // Confirm correct signal #
     sigio_signal_count ++;
 
@@ -503,7 +507,6 @@ sigio_signal_handler(int signo)
 
 
 int main(int argc, char *argv[]) {
-    volatile int rc; 
     struct sigaction sig_action;
     memset(&sig_action, 0, sizeof sig_action);
     sig_action.sa_handler = sigio_signal_handler;
@@ -553,7 +556,6 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-     sigset_t signal_mask, signal_mask_old, signal_mask_most;
 
 
         /* ---------------------------------------------------------------------
@@ -637,6 +639,7 @@ int main(int argc, char *argv[]) {
 							  dh, 
 							  BRAM & ~MAP_MASK); // Memory map AXI Lite register block
 	    while(xx){
+
 	            sigio_signal_processed = 0;
 		    (void)sigfillset(&signal_mask);
 		    (void)sigfillset(&signal_mask_most);
@@ -663,23 +666,17 @@ int main(int argc, char *argv[]) {
 
 		    reset_TE();
 		    set_TE();
-		    transfer(cdma_virtual_address, yy);
-        
-
-		    printf("slv_reg0_at = 0x%.8x \n", *slv_reg0);
-		    printf("slv_reg1_at = 0x%.8x \n", *slv_reg1);
-		    printf("slv_reg2_at = 0x%.8x \n", *slv_reg2);
-		    printf("slv_reg3_at = 0x%.8x \n", *slv_reg3);
-		    int val, i=0;
+		    int status;
+		    int childpid = vfork();
+		    if(childpid ==0)
+			    transfer(cdma_virtual_address, yy);
+		    else{
+			    waitpid(childpid, &status, WCONTINUED);
 		    reset_TE();
-		    //while(capture_complete()==-1){
-			//    i++;//waiting for the transfer to complete
-		    //}
-
-		    val = *slv_reg2;
-		    printf("Count = %d, i = %d\n", val, i);
+	            while(!det_int);
+		    det_int = 0;
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
-                    
+		    }
     		    set_TE();
 		    transfer_back(cdma_virtual_address, yy);
 		    printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
