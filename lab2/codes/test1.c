@@ -1,17 +1,3 @@
-
-//
-//
-/**********************************************************************************************/
-/*                                            |      |                                        */
-/*                      OCM1 (0xFFFC0000) --- | CDMA | --- BRAM (0xB0028000)                  */
-/*                                            |      |                                        */
-/*                                                                                            */
-/*                                            |      |                                        */
-
-/*                                            |      |                                        */
-/*                                                                                            */
-/**********************************************************************************************/
-
 #include <stdint.h>
 #include <termios.h>
 #include <unistd.h>
@@ -93,8 +79,8 @@
 #define MAP_MASK            (MAP_SIZE - 1)
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
-#define CDMA_DEV_PATH    "/dev/cdma_int"
-#define NUM_MEASUREMENTS  500
+#define CDMA_DEV_PATH       "/dev/cdma_int"
+#define NUM_MEASUREMENTS    500
 //#define PRINT_COUNT
 
 void sigio_signal_handler(int signo);
@@ -169,7 +155,7 @@ void set_TE(){
    *slv_reg1 = *slv_reg1 | 2; 
 }
 
-int capture_complete(){
+/*int capture_complete(){
 	int count_value;
    //check for the capture_complete flag
    if((*slv_reg0 >> 4) & 1){
@@ -179,7 +165,7 @@ int capture_complete(){
    }
    return -1;
 
-}
+}*/
 //Transfer from BRAM to OCM
 
 void transfer_back(unsigned int *cdma_virtual_address, int length){
@@ -196,17 +182,10 @@ void transfer_back(unsigned int *cdma_virtual_address, int length){
 
 uint32_t* cdma_virtual_address;
 uint32_t* BRAM_virtual_address;
-void m_unmap_ctrl_c(int sig_num){
 
-        munmap(cdma_virtual_address, MAP_SIZE);
-        munmap(BRAM_virtual_address, MAP_SIZE);
-	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
-	kill(0,SIGKILL);
-}
 
 
 void change_ps_freq(int dh){
-
 
     //changing PS Frequency
 
@@ -225,7 +204,7 @@ void change_ps_freq(int dh){
 
     ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
 
-    switch(4){
+    switch(seed_ps){
 
 	    case 0:
 		    //1499 MHz
@@ -511,15 +490,24 @@ void change_pl_freq(int dh){
 
     }
 }
-
+int count1;
+int count2;
 void
 sigio_signal_handler(int signo)
 {
     det_int = 1;
     //assert(signo == SIGIO);   // Confirm correct signal #
     sigio_signal_count ++;
+    reset_TE();
+    count2 = *slv_reg2;
 
 //    printf("sigio_signal_handler called (signo=%d)\n", signo);
+      if(signo == SIGINT){
+        munmap(cdma_virtual_address, MAP_SIZE);
+        munmap(BRAM_virtual_address, MAP_SIZE);
+	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
+	kill(0,SIGKILL);
+	}
 }
 
 
@@ -643,7 +631,9 @@ int main(int argc, char *argv[]) {
     int LOOPS = xx;
     srand(time(0));
     switch(sw){
-	    case 1:
+	    case 1:{
+		    int i =0; 
+
 		    cdma_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
@@ -681,58 +671,51 @@ int main(int argc, char *argv[]) {
 
 		    reset_TE();
 		    #ifdef PRINT_COUNT
-		    printf("after reset TE, slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+		    printf("after reset TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
                     #endif
-		    set_TE();
 		    #ifdef PRINT_COUNT
-		    printf("after set TE, slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+		    printf("after set TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
                     #endif
-		    int count2 = 0;
-		    int count1 = *slv_reg0;
-		    int i =0; 
+		    
 		    int childpid = vfork();
 		   
+		    set_TE();
+		    count1 = *slv_reg2;
 		    if(childpid ==0){
 		    #ifdef PRINT_COUNT
-		    printf("inside child before transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+		    printf("inside child before transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
                     #endif
 			    transfer(cdma_virtual_address, yy);
 		    #ifdef PRINT_COUNT
-		    printf("inside child after transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+		    printf("inside child after transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
                     #endif
 		    	    exit(0);
 		    }
 
 		    else{
 		    waitpid(childpid, &status, WCONTINUED);
-		    intr_latency_measurements[i] = *slv_reg2;
-		    count2 = *slv_reg0;
-		    reset_TE();
 	            while(!det_int);
 		    det_int = 0;
-                   
 		    dma_set(cdma_virtual_address, CDMACR, 0x0000);
 		    #ifdef PRINT_COUNT
 		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
                     #endif
 		    }
 
-		    reset_TE();
+		    intr_latency_measurements[i] = count2 - count1;
+                    i++;
     		    set_TE();
-		   
-		    count1 = *slv_reg2;
 		   
 		    childpid = vfork();
 		   
 		    if(childpid ==0){
 			    transfer_back(cdma_virtual_address, yy);
+			    reset_TE();
 		    	    exit(0);
 		    }
 
 		    else{
 		    waitpid(childpid, &status, WCONTINUED);
-		    count2 = *slv_reg0;
-		    reset_TE();
 	            while(!det_int);
 		    det_int = 0;
 		    #ifdef PRINT_COUNT
@@ -757,22 +740,23 @@ int main(int argc, char *argv[]) {
 			}
 		    }
 		   
-		    #ifdef PRINT_COUNT
 		    printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - xx + 1, yy);
-                    #endif
 		    xx--;
 		   
 	    }
+
+	    for(int i=0;i<500;i++){
+			    printf("%d ", intr_latency_measurements[i]);
+	    }
+	    printf("\n\n");
+
+
 		     unsigned long   min_latency;
     unsigned long   max_latency;
     double          average_latency;
     double          std_deviation;
 
-    compute_interrupt_latency_stats(
-                        &min_latency,
-                        &max_latency,
-                        &average_latency,
-                        &std_deviation);
+    compute_interrupt_latency_stats(&min_latency, &max_latency, &average_latency, &std_deviation);
 
     /*
      * Print interrupt latency stats:
@@ -797,7 +781,7 @@ int main(int argc, char *argv[]) {
 		    munmap(cdma_virtual_address, MAP_SIZE);
 		    munmap(BRAM_virtual_address, MAP_SIZE);
 		    break;
-
+		   }
 	    case 0:
 	    while(1){
 		    cdma_virtual_address = mmap(NULL, 
@@ -866,8 +850,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
- unsigned long int_sqrt(unsigned long n)
-{
+ unsigned long int_sqrt(unsigned long n){
    unsigned long root = 0;
    unsigned long bit;
    unsigned long trial;
@@ -886,13 +869,13 @@ int main(int argc, char *argv[]) {
    } while (bit);
    return root;
 }
-void
-compute_interrupt_latency_stats(
+
+void compute_interrupt_latency_stats(
     unsigned long   *min_latency_p,
     unsigned long   *max_latency_p,
     double          *average_latency_p,
-    double          *std_deviation_p)
-{
+    double          *std_deviation_p){
+
     int i;
     unsigned long   val;
     unsigned long   min = ULONG_MAX;
@@ -927,5 +910,11 @@ compute_interrupt_latency_stats(
        *average_latency_p = average;
     *std_deviation_p = std_deviation;
 }
+
+
+
+
+
+
 
 

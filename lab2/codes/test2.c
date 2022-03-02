@@ -1,17 +1,3 @@
-
-//
-//
-/**********************************************************************************************/
-/*                                            |      |                                        */
-/*                      OCM1 (0xFFFC0000) --- | CDMA | --- BRAM (0xB0028000)                  */
-/*                                            |      |                                        */
-/*                                                                                            */
-/*                                            |      |                                        */
-
-/*                                            |      |                                        */
-/*                                                                                            */
-/**********************************************************************************************/
-
 #include <stdint.h>
 #include <termios.h>
 #include <unistd.h>
@@ -93,7 +79,7 @@
 #define MAP_MASK            (MAP_SIZE - 1)
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
-#define CDMA_DEV_PATH    "/dev/captimer_int"
+#define CAPTIME_DEV_PATH    "/dev/captimer_int"
 #define NUM_MEASUREMENTS 10000
 #define PRINT_COUNT
 
@@ -101,49 +87,13 @@ void sigio_signal_handler(int signo);
 volatile int rc;
 static volatile sig_atomic_t sigio_signal_processed = 0;
 volatile int sigio_signal_count = 0;
-int cdma_dev_fd  = -1;
+int captime_dev_fd  = -1;
 int det_int;
 sigset_t signal_mask, signal_mask_old, signal_mask_most;
 unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
 
-//DMA Set
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
-unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
-    dma_virtual_address[offset>>2] = value;
-    return 0;
-}
-
-//DMA Get
-
-unsigned int dma_get(unsigned int* dma_virtual_address, int offset) {
-    return dma_virtual_address[offset>>2];
-}
-
-//CDMA Sync
-
-int cdma_sync(unsigned int* dma_virtual_address) {
-    unsigned int status = dma_get(dma_virtual_address, CDMASR);
-    if( (status&0x40) != 0)
-    {
-        //unsigned int desc = dma_get(dma_virtual_address, CURDESC_PNTR);
-        //printf("error address : %X\n", desc);
-    }
-    while(!(status & 1<<1)){
-        status = dma_get(dma_virtual_address, CDMASR);
-    }
-    return 0;
-}
-
-void memdump(void* virtual_address, int byte_count) {
-    char *p = virtual_address;
-    int offset;
-    for (offset = 0; offset < byte_count; offset++) {
-        printf("%02x", p[offset]);
-        if (offset % 4 == 3) { printf(" "); }
-    }
-    printf("\n");
-}
 
 void m_unmap_ctrl_c(int sig_num){
 
@@ -173,7 +123,7 @@ void change_ps_freq(int dh){
 
     ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
 
-    switch(4){
+    switch(seed_ps){
 
 	    case 0:
 		    //1499 MHz
@@ -429,23 +379,23 @@ void change_pl_freq(int dh){
 
     }
 }
-int ind = 0;
+int count1, count2;
 void
 sigio_signal_handler(int signo)
 {
     det_int = 1;
     //assert(signo == SIGIO);   // Confirm correct signal #
-    //printf("sigio_signal_handler called (signo=%d)\n", signo);
-    //printf("count = %d, state = %d\n", *slv_reg2, (*slv_reg3) & 7);
+    printf("sigio_signal_handler called (signo=%d)\n", signo);
+   printf("count = %d, state = x%.8x\n", *slv_reg2, (*slv_reg3));
     //*slv_reg1 = *slv_reg1 & 0x0;
-    intr_latency_measurements[ind] = *slv_reg2;
-    ind ++;
+    count2 = *slv_reg2;
     sigio_signal_count ++;
 }
 
 
 
 int main(int argc, char *argv[]) {
+	det_int = 0;
     struct sigaction sig_action;
     memset(&sig_action, 0, sizeof sig_action);
     sig_action.sa_handler = sigio_signal_handler;
@@ -466,9 +416,9 @@ int main(int argc, char *argv[]) {
      *      Open the device file
      */
 
-    cdma_dev_fd = open(CDMA_DEV_PATH, O_RDWR);
-     if(cdma_dev_fd == -1)    {
-        perror("open() of " CDMA_DEV_PATH " failed");
+    captime_dev_fd = open(CAPTIME_DEV_PATH, O_RDWR);
+     if(captime_dev_fd == -1)    {
+        perror("open() of " CAPTIME_DEV_PATH " failed");
         return -1;
     }
 
@@ -476,7 +426,7 @@ int main(int argc, char *argv[]) {
      * Set our process to receive SIGIO signals from the GPIO device:
      */
 
-    rc = fcntl(cdma_dev_fd, F_SETOWN, getpid());
+    rc = fcntl(captime_dev_fd, F_SETOWN, getpid());
 
     if (rc == -1) {
         perror("fcntl() SETOWN failed\n");
@@ -484,11 +434,11 @@ int main(int argc, char *argv[]) {
     }
  
       /* -------------------------------------------------------------------------
-     * Enable reception of SIGIO signals for the cdma_dev_fd descriptor
+     * Enable reception of SIGIO signals for the captime_dev_fd descriptor
      */
 
-    int fd_flags = fcntl(cdma_dev_fd, F_GETFL);
-        rc = fcntl(cdma_dev_fd, F_SETFL, fd_flags | O_ASYNC);
+    int fd_flags = fcntl(captime_dev_fd, F_GETFL);
+        rc = fcntl(captime_dev_fd, F_SETFL, fd_flags | O_ASYNC);
 
     if (rc == -1) {
         perror("fcntl() SETFL failed\n");
@@ -521,34 +471,36 @@ int main(int argc, char *argv[]) {
 		    //change_ps_freq(dh);
 		    //change_pl_freq(dh);
 		    int status;    
-	  for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
+		  for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
 		   *slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
-		    int childpid = vfork();
-              		   
-		    if(childpid ==0){
-			   // transfer(cdma_virtual_address, yy);
+              			   
 			   *slv_reg1 = *slv_reg1 | 0x3;
-
-		    	    exit(0);
-		    }
-
-		    else{
-		    waitpid(childpid, &status, WCONTINUED);
-		    
+			   count1 = *slv_reg2;
+			   printf("count1 = %d\n",count1);
+		   while(!det_int){
+		   det_int = 0;
 			   *slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
+		   } 
                    
-		    }
+		    intr_latency_measurements[i] = count2 - count1;
 	  }
-		      unsigned long   min_latency;
-    unsigned long   max_latency;
-    double          average_latency;
-    double          std_deviation;
 
-    compute_interrupt_latency_stats(
-                        &min_latency,
-                        &max_latency,
-                        &average_latency,
-                        &std_deviation);
+	 for(int i=0;i<NUM_MEASUREMENTS;i++){
+			    printf("%d ", intr_latency_measurements[i]);
+	 }
+         printf("\n\n");
+
+
+	    unsigned long   min_latency;
+	    unsigned long   max_latency;
+	    double          average_latency;
+	    double          std_deviation;
+
+	    compute_interrupt_latency_stats(
+				&min_latency,
+				&max_latency,
+				&average_latency,
+				&std_deviation);
 
     /*
      * Print interrupt latency stats:
