@@ -33,10 +33,9 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
-
+#include <stdint.h>
 #undef DEBUG
 #define DEBUG
-
 
 
 /* -------------------------------------------------------------------------------  
@@ -59,6 +58,7 @@
 #define GPIO_DR         0xA0030004      // Interrupt register
 #define GPIO_LED_NUM    0x1
 #define GPIO_LED        0xA0030010      // LED register
+#define COUNT_REG       0xA0030008
 /* -------------------------------------------------------------------------------
  * Number of interrupt latency measurements to take:
  */
@@ -112,12 +112,13 @@ void compute_interrupt_latency_stats(
 /* -------------------------------------------------------------------------------
  * Main routine
  */
+uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
  
 int
 main(void)
 { 
     volatile int rc;
-    int i;
+    int i, dh;
     struct timeval start_timestamp;
     
     //printf("Entering main routine\n");   // DEBUG ONLY 
@@ -186,16 +187,15 @@ main(void)
         perror("gpio_set_pin() failed");
     return -1;
     }
+sigset_t signal_mask, signal_mask_old, signal_mask_most;
 
-    sigset_t signal_mask, signal_mask_old, signal_mask_most;
-    
     for (i = 0; i < NUM_MEASUREMENTS; i ++) {
 
         /* ---------------------------------------------------------------------
          * Reset sigio_signal_processed flag:
          */
         sigio_signal_processed = 0; 
-
+	int status;
         /* ---------------------------------------------------------------------
          * NOTE: This next section of code must be excuted each cycle to prevent
          * a race condition between the SIGIO signal handler and sigsuspend()
@@ -214,34 +214,55 @@ main(void)
         /* ---------------------------------------------------------------------
          * Assert GPIO output pin to trigger generation of edge sensitive interrupt:
          */
+         int childpid = vfork();
 
+	    if(childpid ==0){
+	    #ifdef PRINT_COUNT
+	    printf("inside child before transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+	    #endif
+
+	   // *slv_reg1 = *slv_reg1 | 1;
         rc = gpio_set_pin(GPIO_DR, GPIO_DR_NUM, 1);
-        //rc = gpio_set_pin(GPIO_LED, GPIO_LED_NUM, 1);        
         if (rc != 0) { 
             perror("gpio_set_pin() failed");
         return -1;
+	    #ifdef PRINT_COUNT
+	    printf("inside child after transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+	    #endif
+		    exit(0);
+	    }
+
+	    else{
+	    waitpid(childpid, &status, WCONTINUED);
+	    //printf("count = %d", *slv_reg0);
+            
+	    //*slv_reg1 = *slv_reg1 & 0;
+       // rc = gpio_set_pin(GPIO_DR, GPIO_DR_NUM, 0);
+//        rc = gpio_set_pin(GPIO_LED, GPIO_LED_NUM, 0);       
+        if (rc != 0) { 
+            perror("gpio_set_pin() failed");
+        return -1;
+
+	    }
+
+        //rc = gpio_set_pin(GPIO_LED, GPIO_LED_NUM, 1);        
         }
                 
         /* ---------------------------------------------------------------------
          * Wait for SIGIO signal handler to be executed. 
          */
-        if (sigio_signal_processed == 0) { 
+        //if (sigio_signal_processed == 0) { 
 
-            rc = sigsuspend(&signal_mask_most);
+          //  rc = sigsuspend(&signal_mask_most);
             
             /* Confirm we are coming out of suspend mode correcly */
-            assert(rc == -1 && errno == EINTR && sigio_signal_processed);
-        }   
+            //assert(rc == -1 && errno == EINTR && sigio_signal_processed);
+        //}   
               
-        (void)sigprocmask(SIG_SETMASK, &signal_mask_old, NULL);
+        //(void)sigprocmask(SIG_SETMASK, &signal_mask_old, NULL);
     
-        assert(sigio_signal_count == i + 1);   // Critical assertion!!
+        //assert(sigio_signal_count == i + 1);   // Critical assertion!!
 
-        rc = gpio_set_pin(GPIO_DR, GPIO_DR_NUM, 0);
-        //rc = gpio_set_pin(GPIO_LED, GPIO_LED_NUM, 0);       
-        if (rc != 0) { 
-            perror("gpio_set_pin() failed");
-        return -1;
         } 
          
         /* ---------------------------------------------------------------------
@@ -422,6 +443,15 @@ int gpio_set_pin(unsigned int target_addr, unsigned int pin_number, unsigned int
                                 PROT_READ|PROT_WRITE, 
                                 MAP_SHARED, 
                                 fd, 
+                                COUNT_REG & ~MAP_MASK);
+    
+    address = regs + (((COUNT_REG) & MAP_MASK)>>2);
+    printf("count = %d\n", *address);
+    regs = (unsigned int *)mmap(NULL, 
+                                MAP_SIZE, 
+                                PROT_READ|PROT_WRITE, 
+                                MAP_SHARED, 
+                                fd, 
                                 target_addr & ~MAP_MASK);
     
     address = regs + (((target_addr) & MAP_MASK)>>2);
@@ -436,8 +466,8 @@ int gpio_set_pin(unsigned int target_addr, unsigned int pin_number, unsigned int
     /* Read register value to modify */
     
     reg_data = *address;
-    
-    if (bit_val == 0) {
+	printf("slv_reg1 = x%.8x\n", reg_data); 
+    if (bit_val == 0){
         
         /* Deassert output pin in the target port's DR register*/
         

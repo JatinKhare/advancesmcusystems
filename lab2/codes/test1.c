@@ -1,14 +1,51 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+
+//
+//
+/**********************************************************************************************/
+/*                                            |      |                                        */
+/*                      OCM1 (0xFFFC0000) --- | CDMA | --- BRAM (0xB0028000)                  */
+/*                                            |      |                                        */
+/*                                                                                            */
+/*                                            |      |                                        */
+
+/*                                            |      |                                        */
+/*                                                                                            */
+/**********************************************************************************************/
+
 #include <stdint.h>
-#include <fcntl.h>
 #include <termios.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <linux/errno.h>
+#include <linux/fs.h>
 #include <sys/mman.h>
-#include <sys/time.h>
-#include <time.h>
+#include <linux/sched.h>
+#include <linux/types.h>
+#include <linux/version.h>
+#include <math.h>
 #include <signal.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
+
+#define CDMA                0xB0000000
+#define BRAM                0xB0028000
+#define OCM_1               0xFFFC0000
+#define OCM_2               0xFFFC2000
+
+#define SLV_REG_BASE        0xA0030000
+#define SLV_REG_0_OFF       0x00000000
+#define SLV_REG_1_OFF       0x00000004
+#define SLV_REG_2_OFF       0x00000008
+#define SLV_REG_3_OFF       0x0000000c
 
 #define PL0_REF_CTRL_ADD    0xFF5E0000
 
@@ -39,33 +76,156 @@
 #define PL_0_150            0x01010A00
 #define PL_0_100            0x01010F00
 
-#define BRAM_ADD            0xA0028000
-#define MAP_SIZE 	    8192UL
-#define MAP_MASK	    (MAP_SIZE - 1)
+#define CDMACR              0x00           //CDMA Control
+#define CDMASR              0x04           //Status
+#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
+#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
+#define TAILDESC_PNTR       0x10	   //Tail Description Pointer
+#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
+#define SA                  0x18           //Source Address
+#define SA_MSB              0x1C           //Source Address MSB
+#define DA                  0x20           //Destination Address
+#define DA_MSB              0x24           //Destination Address MSB
+#define BTT                 0x28           //Bytes to Transfer
+#define OCM_MAP_SIZE        131072UL
+#define OCM_MAP_MASK        (OCM_MAP_SIZE - 1)
+#define MAP_SIZE            4096UL
+#define MAP_MASK            (MAP_SIZE - 1)
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
+#define CDMA_DEV_PATH    "/dev/cdma_int"
+#define NUM_MEASUREMENTS  500
+//#define PRINT_COUNT
+
+void sigio_signal_handler(int signo);
+volatile int rc;
+static volatile sig_atomic_t sigio_signal_processed = 0;
+volatile int sigio_signal_count = 0;
+int cdma_dev_fd  = -1;
+int det_int;
+sigset_t signal_mask, signal_mask_old, signal_mask_most;
+unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
+
+//DMA Set
+
+uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
+unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
+    dma_virtual_address[offset>>2] = value;
+    return 0;
+}
+
+//DMA Get
+
+unsigned int dma_get(unsigned int* dma_virtual_address, int offset) {
+    return dma_virtual_address[offset>>2];
+}
+
+//CDMA Sync
+
+int cdma_sync(unsigned int* dma_virtual_address) {
+    unsigned int status = dma_get(dma_virtual_address, CDMASR);
+    if( (status&0x40) != 0)
+    {
+        //unsigned int desc = dma_get(dma_virtual_address, CURDESC_PNTR);
+        //printf("error address : %X\n", desc);
+    }
+    while(!(status & 1<<1)){
+        status = dma_get(dma_virtual_address, CDMASR);
+    }
+    return 0;
+}
+
+void memdump(void* virtual_address, int byte_count) {
+    char *p = virtual_address;
+    int offset;
+    for (offset = 0; offset < byte_count; offset++) {
+        printf("%02x", p[offset]);
+        if (offset % 4 == 3) { printf(" "); }
+    }
+    printf("\n");
+}
+
+//Transfer from OCM to BRAM
+
+void transfer(unsigned int *cdma_virtual_address, int length){
+    
+    //set TE and capture_complete
+    #ifdef PRINT_COUNT
+    printf("Transfering data from OCM to BRAM\n");	
+    #endif
+    dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
+    dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
+    dma_set(cdma_virtual_address, CDMACR, 0x1000);
+    dma_set(cdma_virtual_address, BTT, length*4);
+    //cdma_sync(cdma_virtual_address);
+}
+
+void reset_TE(){
+   //set the TE = 1
+   *slv_reg1 = *slv_reg1 & 0xFFFFFFFD; 
+}
+void set_TE(){
+   //set the TE = 1
+   *slv_reg1 = *slv_reg1 | 2; 
+}
+
+int capture_complete(){
+	int count_value;
+   //check for the capture_complete flag
+   if((*slv_reg0 >> 4) & 1){
+	count_value = *slv_reg2;
+	reset_TE();
+	return count_value;
+   }
+   return -1;
+
+}
+//Transfer from BRAM to OCM
+
+void transfer_back(unsigned int *cdma_virtual_address, int length){
+
+    #ifdef PRINT_COUNT
+    printf("Transfering data from BRAM to OCM\n");	
+    #endif
+    dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
+    dma_set(cdma_virtual_address, SA, BRAM); // Write source address
+    dma_set(cdma_virtual_address, CDMACR, 0x1000);
+    dma_set(cdma_virtual_address, BTT, length*4);
+    //cdma_sync(cdma_virtual_address);
+}
+
+uint32_t* cdma_virtual_address;
+uint32_t* BRAM_virtual_address;
+void m_unmap_ctrl_c(int sig_num){
+
+        munmap(cdma_virtual_address, MAP_SIZE);
+        munmap(BRAM_virtual_address, MAP_SIZE);
+	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
+	kill(0,SIGKILL);
+}
+
 
 void change_ps_freq(int dh){
 
 
     //changing PS Frequency
-    
+
     int seed_ps= rand()%5;
     int g = 0;
     uint32_t *reg, *ps_clk_ctrl, *ps_clk_cfg, *ps_clk_status;
 
-    reg = mmap(NULL, 
+    reg = mmap(NULL,
 	       MAP_SIZE_F,
 	       PROT_READ|PROT_WRITE,
 	       MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK_F);
-    
+
     ps_clk_ctrl = reg + (((PS_APLL_BASE + APLL_CTRL_OFF) & MAP_MASK) >> 2);
 
     ps_clk_cfg = reg + (((PS_APLL_BASE + APLL_CFG_OFF) & MAP_MASK) >> 2);
 
     ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
 
-    switch(seed_ps){
+    switch(4){
 
 	    case 0:
 		    //1499 MHz
@@ -77,7 +237,7 @@ void change_ps_freq(int dh){
 
 		    //2. Program the control data
 		    *ps_clk_cfg  = PS_APLL_CFG_1499;
-		    
+
 		    //3. Program the bypass -> APLL_CTRL[3] = 1;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
 
@@ -92,14 +252,18 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
+		    #ifdef PRINT_COUNT
 		    printf("waited %d loop cycles for STATUS = 1\n", g);
+                    #endif
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
 		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
-  		    printf("PS Frequncy changed to 1499 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PS Frequncy changed to 1499 MHz\n");
+                    #endif
 		    break;
 	    case 1:
 		    //1333 MHz
@@ -127,14 +291,18 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
+		    #ifdef PRINT_COUNT
 		    printf("waited %d loop cycles for STATUS = 1\n", g);
+                    #endif
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
 		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
-  		    printf("PS Frequncy changed to 1333 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PS Frequncy changed to 1333 MHz\n");
+                    #endif
 
 		    break;
 	    case 2:
@@ -163,7 +331,9 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
+		    #ifdef PRINT_COUNT
 		    printf("waited %d loop cycles for STATUS = 1\n", g);
+                    #endif
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
@@ -171,7 +341,9 @@ void change_ps_freq(int dh){
 		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
 
-  		    printf("PS Frequncy changed to 999 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PS Frequncy changed to 999 MHz\n");
+                    #endif
 		    break;
 	    case 3:
 		    //733 MHz
@@ -200,14 +372,18 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
+		    #ifdef PRINT_COUNT
 		    printf("waited %d loop cycles for STATUS = 1\n", g);
+                    #endif
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
 		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
-  		    printf("PS Frequncy changed to 733 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PS Frequncy changed to 733 MHz\n");
+                    #endif
 		    break;
 	    case 4:
 		    //416.6 MHz
@@ -235,32 +411,37 @@ void change_ps_freq(int dh){
 		    while((*ps_clk_status & 0x00000001) != 1){
 		    	g++;
 		    }
+		    #ifdef PRINT_COUNT
 		    printf("waited %d loop cycles for STATUS = 1\n", g);
+                    #endif
 
 		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
 		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
 		    munmap(ps_clk_ctrl, MAP_SIZE_F);
 
-  		    printf("PS Frequncy changed to 416.6 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PS Frequncy changed to 416.6 MHz\n");
+                    #endif
 		    break;
-    
+
 
     }
 }
-	
+
+
 void change_pl_freq(int dh){
 
     //changing PL Frequency
     int seed_pl = rand() % 5;
     uint32_t *pl_clk_reg;
     uint32_t *pl0;
-    pl_clk_reg = mmap(NULL, 
+    pl_clk_reg = mmap(NULL,
 		     MAP_SIZE_F,
 		     PROT_READ|PROT_WRITE,
 		     MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK_F);
     pl0 = pl_clk_reg + (((PL0_REF_CTRL_ADD + 0xC0) & MAP_MASK) >> 2);
-	            
+
     switch(seed_pl){
 
 
@@ -268,10 +449,12 @@ void change_pl_freq(int dh){
 	    case 0:
 		    //300 MHz
 		    //PL0_REF_CTRL = 0x0101_0500
- 		    
+
 		    *pl0 = PL_0_300;
-			
-  		    printf("PL Frequncy changed to 300 MHz\n");		    
+
+		    #ifdef PRINT_COUNT
+  		    printf("PL Frequncy changed to 300 MHz\n");
+                    #endif
 		    munmap(pl_clk_reg, MAP_SIZE_F);
 
 		    break;
@@ -284,7 +467,9 @@ void change_pl_freq(int dh){
 
 		    munmap(pl_clk_reg, MAP_SIZE_F);
 
-  		    printf("PL Frequncy changed to 250 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PL Frequncy changed to 250 MHz\n");
+                    #endif
 		    break;
 	    case 2:
 		    //187.5 MHz
@@ -293,8 +478,10 @@ void change_pl_freq(int dh){
 		    *pl0 = PL_0_187_5;
 
 		    munmap(pl_clk_reg, MAP_SIZE_F);
-	 	    
-  		    printf("PL Frequncy changed to 187.5 MHz\n");		    
+
+		    #ifdef PRINT_COUNT
+  		    printf("PL Frequncy changed to 187.5 MHz\n");
+                    #endif
 		    break;
 	    case 3:
 		    //150 MHz
@@ -304,7 +491,9 @@ void change_pl_freq(int dh){
 
 		    munmap(pl_clk_reg, MAP_SIZE_F);
 
-  		    printf("PL Frequncy changed to 150 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PL Frequncy changed to 150 MHz\n");
+                    #endif
 		    break;
 	    case 4:
 		    //100 MHz
@@ -314,25 +503,85 @@ void change_pl_freq(int dh){
 
 		    munmap(pl_clk_reg, MAP_SIZE_F);
 
-  		    printf("PL Frequncy changed to 100 MHz\n");		    
+		    #ifdef PRINT_COUNT
+  		    printf("PL Frequncy changed to 100 MHz\n");
+                    #endif
 		    break;
-    
+
 
     }
 }
 
-uint32_t* BRAM_virtual_address;
-void m_unmap_ctrl_c(int sig_num){
+void
+sigio_signal_handler(int signo)
+{
+    det_int = 1;
+    //assert(signo == SIGIO);   // Confirm correct signal #
+    sigio_signal_count ++;
 
-        munmap(BRAM_virtual_address, MAP_SIZE);
-	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
-	kill(0,SIGKILL);
+//    printf("sigio_signal_handler called (signo=%d)\n", signo);
 }
 
-int main(int argc, char *argv[]) {
 
-    signal(SIGINT, m_unmap_ctrl_c);
-    volatile unsigned int *address;
+
+int main(int argc, char *argv[]) {
+    struct sigaction sig_action;
+    memset(&sig_action, 0, sizeof sig_action);
+    sig_action.sa_handler = sigio_signal_handler;
+
+    /* --------------------------------------------------------------------------
+     *      Block all signals while our signal handler is executing:
+     */
+   (void)sigfillset(&sig_action.sa_mask);
+
+    rc = sigaction(SIGIO, &sig_action, NULL);
+
+    if (rc == -1) {
+        perror("sigaction() failed");
+        return -1;
+   }
+
+    /* -------------------------------------------------------------------------
+     *      Open the device file
+     */
+
+    cdma_dev_fd = open(CDMA_DEV_PATH, O_RDWR);
+     if(cdma_dev_fd == -1)    {
+        perror("open() of " CDMA_DEV_PATH " failed");
+        return -1;
+    }
+
+    /* -------------------------------------------------------------------------
+     * Set our process to receive SIGIO signals from the GPIO device:
+     */
+
+    rc = fcntl(cdma_dev_fd, F_SETOWN, getpid());
+
+    if (rc == -1) {
+        perror("fcntl() SETOWN failed\n");
+        return -1;
+    }
+ 
+      /* -------------------------------------------------------------------------
+     * Enable reception of SIGIO signals for the cdma_dev_fd descriptor
+     */
+
+    int fd_flags = fcntl(cdma_dev_fd, F_GETFL);
+        rc = fcntl(cdma_dev_fd, F_SETFL, fd_flags | O_ASYNC);
+
+    if (rc == -1) {
+        perror("fcntl() SETFL failed\n");
+        return -1;
+    }
+
+
+
+        /* ---------------------------------------------------------------------
+         * Reset sigio_signal_processed flag:
+         */
+
+
+    //    signal(SIGINT, m_unmap_ctrl_c);
     int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
     
     if(dh == -1){
@@ -347,7 +596,7 @@ int main(int argc, char *argv[]) {
 
 
     int xx = 0;   //default value of number of loops to run
-    int yy = 2048;   //default value of number of words to test per loop
+    int yy = 1024;   //default value of number of words to test per loop
     int sw = 1;
     if(argc == 2){
 	    xx = strtoul(argv[1], 0, 0);   //taking number of words from the user
@@ -359,113 +608,324 @@ int main(int argc, char *argv[]) {
             printf("Changing the number of loops to xx = %d\n", xx);
             printf("Changing the words/loop to yy = %d\n\n", yy);
 	    if(yy == 0)
-		    yy = 2048;
+		    yy = 1024;
     }
     if(xx == 0)
 	    sw = 0;
 
     
+    uint32_t* ocm_1 = mmap(NULL, 
+			   OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_1 & ~OCM_MAP_MASK);
 
+    uint32_t* ocm_2 = mmap(NULL, 
+			   OCM_MAP_SIZE, 
+			   PROT_READ | PROT_WRITE, 
+			   MAP_SHARED, 
+			   dh, 
+			   OCM_2 & ~OCM_MAP_MASK);
+   
+
+    slv_reg_base = mmap(NULL,
+               MAP_SIZE,
+               PROT_READ|PROT_WRITE,
+               MAP_SHARED, dh, SLV_REG_BASE  & ~MAP_MASK);
+
+    slv_reg0 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_0_OFF) & MAP_MASK) >> 2);
+    slv_reg1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
+    slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
+    slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
     //Generating random data and address
-    uint32_t data;
-    int addr_offset;    
-    int LOOPS = xx;
     int count = 0;
-
+    int LOOPS = xx;
     srand(time(0));
     switch(sw){
-
-    case 1:
-	     
-	    while(xx){
-
-	    BRAM_virtual_address = mmap(NULL, 
-						  MAP_SIZE, 
-						  PROT_READ | PROT_WRITE, 
-						  MAP_SHARED, 
-						  dh, 
-						  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
-	    for(int i = 0; i < yy; i++){
-                    printf("Testing (LOOP, WORD) = (%d, %d)\n", LOOPS - xx + 1, i+1); 
-		    change_ps_freq(dh);
-		    change_pl_freq(dh);
-		   
-		    //BRAM Size: 8K
-		    //Offset range: 0-8K, with a multiple of 4.
-		    //Hence, offset = random number from (0-8K/4)*4
-
-		    data = rand();
-		    addr_offset = (rand() % 2048)*4;
-		    
-		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
-		    
-		    
-		    *address = data;
-		    
-		    printf("Writing data: %d at address: 0x%.8x\n", *address, BRAM_ADD + addr_offset);
-
-
-			if(*address != data)
-			{
-			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *address);
-			    munmap(BRAM_virtual_address, MAP_SIZE);
-			    return -1;
-			}
-		    printf("Testing for (LOOP %d, WORD %d) completed!\n\n", LOOPS - xx + 1, i+1);
-		    
-	    }
-		    xx--;
-	    }
-	    munmap(BRAM_virtual_address, MAP_SIZE);
-   	    printf("Test passed: '%d' loops of '%d' 32-bit words\n", LOOPS, yy); 
-	    break;
-
-	default:
-	    while(1){
-		    
-		    
+	    case 1:
+		    cdma_virtual_address = mmap(NULL, 
+							  MAP_SIZE, 
+							  PROT_READ | PROT_WRITE, 
+							  MAP_SHARED, 
+							  dh, 
+							  CDMA & ~MAP_MASK); // Memory map AXI Lite register block
 		    BRAM_virtual_address = mmap(NULL, 
 							  MAP_SIZE, 
 							  PROT_READ | PROT_WRITE, 
 							  MAP_SHARED, 
 							  dh, 
-							  BRAM_ADD & ~MAP_MASK); // Memory map AXI Lite register block
-		    for(int i = 0; i < yy; i++){
-		    
-                    printf("Testing (LOOP, WORD) = (%d, %d)\n", count+1, i+1); 
-		    
+							  BRAM & ~MAP_MASK); // Memory map AXI Lite register block
+	    while(xx){
+		
 		    change_ps_freq(dh);
 		    change_pl_freq(dh);
-		    
-		    data = rand();
-		    addr_offset = (rand() % 2048)*4;
+		    srand(time(0));
+			
+		    int status;    
+		    uint32_t data[yy];
+		    for(int i = 0; i < yy; i++){
+			    data[i] = rand();
+		    }
 
-		    address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
-		    
-		    
-		    *address = data;
-		    
-		    printf("Writing data: %d at address: 0x%.8x\n", data, BRAM_ADD + addr_offset);
 
-			unsigned int *reading_address = BRAM_virtual_address + (((BRAM_ADD + addr_offset) & MAP_MASK) >>2);
-			if(*reading_address != data)
+		    for(int i=0; i<yy; i++)
+			ocm_1[i] = data[i];
+		    
+		    // RESET DMA
+		    dma_set(cdma_virtual_address, CDMACR, 0x04);
+		   
+		    //struct timeval start, end;
+		    //printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
+		    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
+
+		    reset_TE();
+		    #ifdef PRINT_COUNT
+		    printf("after reset TE, slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+                    #endif
+		    set_TE();
+		    #ifdef PRINT_COUNT
+		    printf("after set TE, slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+                    #endif
+		    int count2 = 0;
+		    int count1 = *slv_reg0;
+		    int i =0; 
+		    int childpid = vfork();
+		   
+		    if(childpid ==0){
+		    #ifdef PRINT_COUNT
+		    printf("inside child before transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+                    #endif
+			    transfer(cdma_virtual_address, yy);
+		    #ifdef PRINT_COUNT
+		    printf("inside child after transfer(), slv_reg2 = %d, state = %d\n", *slv_reg2, *slv_reg3 && 7);
+                    #endif
+		    	    exit(0);
+		    }
+
+		    else{
+		    waitpid(childpid, &status, WCONTINUED);
+		    intr_latency_measurements[i] = *slv_reg2;
+		    count2 = *slv_reg0;
+		    reset_TE();
+	            while(!det_int);
+		    det_int = 0;
+                   
+		    dma_set(cdma_virtual_address, CDMACR, 0x0000);
+		    #ifdef PRINT_COUNT
+		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
+                    #endif
+		    }
+
+		    reset_TE();
+    		    set_TE();
+		   
+		    count1 = *slv_reg2;
+		   
+		    childpid = vfork();
+		   
+		    if(childpid ==0){
+			    transfer_back(cdma_virtual_address, yy);
+		    	    exit(0);
+		    }
+
+		    else{
+		    waitpid(childpid, &status, WCONTINUED);
+		    count2 = *slv_reg0;
+		    reset_TE();
+	            while(!det_int);
+		    det_int = 0;
+		    #ifdef PRINT_COUNT
+		    printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
+                    #endif
+		    } 
+		    //for(int i = 0; i<yy; i++){
+		    //	    printf("ocm1[%d] = %d, ocm2[%d] = %d\n", i, ocm_1[i], i, ocm_2[i]);
+		    //}
+		    
+		    for(int i=0; i<yy; i++)
+		    {
+			if(ocm_2[i] != ocm_1[i])
 			{
-			    printf("Test failed!!\n");
-			    printf("At word %d, Random value written = %d, BRAM Result = %d\n", i+1, data, *reading_address);
+			    printf("\nTest failed!!\n");
+			    printf("OCM2 result: %d and OCM1 result is %d for the element %d\n", ocm_2[i], ocm_1[i], i+1);
+			    munmap(ocm_1, OCM_MAP_SIZE);
+			    munmap(ocm_2, OCM_MAP_SIZE);
+			    munmap(cdma_virtual_address, MAP_SIZE);
 			    munmap(BRAM_virtual_address, MAP_SIZE);
 			    return -1;
 			}
-		    printf("Test passed: '%d' loops of '%d' 32-bit words\n\n", count+1, i+1); 
-                        
+		    }
+		   
+		    #ifdef PRINT_COUNT
+		    printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - xx + 1, yy);
+                    #endif
+		    xx--;
+		   
 	    }
-		    count++;
-	    }	  
-	    munmap(BRAM_virtual_address, MAP_SIZE);
+		     unsigned long   min_latency;
+    unsigned long   max_latency;
+    double          average_latency;
+    double          std_deviation;
+
+    compute_interrupt_latency_stats(
+                        &min_latency,
+                        &max_latency,
+                        &average_latency,
+                        &std_deviation);
+
+    /*
+     * Print interrupt latency stats:
+     */
+    printf("Minimum Latency:    %lu\n"
+           "Maximum Latency:    %lu\n"
+           "Average Latency:    %f\n"
+           "Standard Deviation: %f\n"
+           "Number of samples:  %d\n",
+            min_latency,
+            max_latency,
+            average_latency,
+            std_deviation,
+            NUM_MEASUREMENTS
+          );
+   printf("Number of Interrupts: %d\n", sigio_signal_count);
+
+
+		    (void)close(cdma_dev_fd);
+		    munmap(ocm_1, OCM_MAP_SIZE);
+		    munmap(ocm_2, OCM_MAP_SIZE);
+		    munmap(cdma_virtual_address, MAP_SIZE);
+		    munmap(BRAM_virtual_address, MAP_SIZE);
+		    break;
+
+	    case 0:
+	    while(1){
+		    cdma_virtual_address = mmap(NULL, 
+							  MAP_SIZE, 
+							  PROT_READ | PROT_WRITE, 
+							  MAP_SHARED, 
+							  dh, 
+							  CDMA & ~MAP_MASK); // Memory map AXI Lite register block
+		    BRAM_virtual_address = mmap(NULL, 
+							  MAP_SIZE, 
+							  PROT_READ | PROT_WRITE, 
+							  MAP_SHARED, 
+							  dh, 
+							  BRAM & ~MAP_MASK); // Memory map AXI Lite register block
+		    uint32_t data[yy];
+		    srand(time(0));
+		    for(int i = 0; i < yy; i++){
+			    data[i] = rand();
+		    }
+
+
+		    for(int i=0; i<yy; i++)
+			ocm_1[i] = data[i];
 		    
+		    // RESET DMA
+		    dma_set(cdma_virtual_address, CDMACR, 0x04);
+		   
+		    //struct timeval start, end;
+		    //printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
+		    //printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
+		    transfer(cdma_virtual_address, yy);
+		    printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
+
+		    transfer_back(cdma_virtual_address, yy);
+		    printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
+		 
+		    //for(int i = 0; i<yy; i++){
+		    //	    printf("ocm1[%d] = %d, ocm2[%d] = %d\n", i, ocm_1[i], i, ocm_2[i]);
+		    //}
+		    
+		    for(int i=0; i<yy; i++)
+		    {
+			if(ocm_2[i] != ocm_1[i])
+			{
+			    printf("\nTest failed!!\n");
+			    printf("OCM2 result: %d and OCM1 result is %d for the element %d\n", ocm_2[i], ocm_1[i], i+1);
+			    munmap(ocm_1, OCM_MAP_SIZE);
+			    munmap(ocm_2, OCM_MAP_SIZE);
+			    munmap(cdma_virtual_address, MAP_SIZE);
+			    munmap(BRAM_virtual_address, MAP_SIZE);
+			    return -1;
+			}
+		    }
+		    count++;
+		    printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", count, yy);
+		    munmap(cdma_virtual_address, MAP_SIZE);
+		    munmap(BRAM_virtual_address, MAP_SIZE);
+		   
+	    }
+		    munmap(ocm_1, OCM_MAP_SIZE);
+		    munmap(ocm_2, OCM_MAP_SIZE);
+		    break;
 
     }
 
-
     return 0;
 }
+
+ unsigned long int_sqrt(unsigned long n)
+{
+   unsigned long root = 0;
+   unsigned long bit;
+   unsigned long trial;
+
+   bit = (n >= 0x10000) ? 1<<30 : 1<<14;
+   do
+   {
+      trial = root+bit;
+      if (n >= trial)
+      {
+         n -= trial;
+         root = trial+bit;
+      }
+      root >>= 1;
+      bit >>= 2;
+   } while (bit);
+   return root;
+}
+void
+compute_interrupt_latency_stats(
+    unsigned long   *min_latency_p,
+    unsigned long   *max_latency_p,
+    double          *average_latency_p,
+    double          *std_deviation_p)
+{
+    int i;
+    unsigned long   val;
+    unsigned long   min = ULONG_MAX;
+    unsigned long   max = 0;
+    unsigned long   sum = 0;
+    unsigned long   sum_squares = 0;
+
+    for (i = 0; i < NUM_MEASUREMENTS; i ++) {
+        val = intr_latency_measurements[i];
+
+        if (val < min) {
+            min = val;
+        }
+
+        if (val > max) {
+            max = val;
+        }
+
+        sum += val;
+        sum_squares += val * val;
+    }
+
+    *min_latency_p = min;
+    *max_latency_p = max;
+
+    unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+
+    unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
+                    (average * average));
+
+
+       *average_latency_p = average;
+    *std_deviation_p = std_deviation;
+}
+
+
