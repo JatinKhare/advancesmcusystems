@@ -97,7 +97,7 @@ uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
 
 void m_unmap_ctrl_c(int sig_num){
 
-        munmap(slv_reg_base, MAP_SIZE);
+	munmap(slv_reg_base, MAP_SIZE);
 	printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
 	kill(0,SIGKILL);
 }
@@ -106,480 +106,462 @@ void m_unmap_ctrl_c(int sig_num){
 void change_ps_freq(int dh){
 
 
-    //changing PS Frequency
+	//changing PS Frequency
 
-    int seed_ps= rand()%5;
-    int g = 0;
-    uint32_t *reg, *ps_clk_ctrl, *ps_clk_cfg, *ps_clk_status;
+	int seed_ps= rand()%5;
+	int g = 0;
+	uint32_t *reg, *ps_clk_ctrl, *ps_clk_cfg, *ps_clk_status;
 
-    reg = mmap(NULL,
-	       MAP_SIZE_F,
-	       PROT_READ|PROT_WRITE,
-	       MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK_F);
+	reg = mmap(NULL,
+			MAP_SIZE_F,
+			PROT_READ|PROT_WRITE,
+			MAP_SHARED, dh, PS_APLL_BASE  & ~MAP_MASK_F);
 
-    ps_clk_ctrl = reg + (((PS_APLL_BASE + APLL_CTRL_OFF) & MAP_MASK) >> 2);
+	ps_clk_ctrl = reg + (((PS_APLL_BASE + APLL_CTRL_OFF) & MAP_MASK) >> 2);
 
-    ps_clk_cfg = reg + (((PS_APLL_BASE + APLL_CFG_OFF) & MAP_MASK) >> 2);
+	ps_clk_cfg = reg + (((PS_APLL_BASE + APLL_CFG_OFF) & MAP_MASK) >> 2);
 
-    ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
+	ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
 
-    switch(seed_ps){
+	switch(seed_ps){
 
-	    case 0:
-		    //1499 MHz
-		    //APLL_CTRL = 0x0000_2D00
-		    //APLL_CFG  = 0x7E67_2C6C
+		case 0:
+			//1499 MHz
+			//APLL_CTRL = 0x0000_2D00
+			//APLL_CFG  = 0x7E67_2C6C
 
-		    //1. Program the new FIDIV, CLKOUT
-		    *ps_clk_ctrl = PS_APLL_CTRL_1499;
+			//1. Program the new FIDIV, CLKOUT
+			*ps_clk_ctrl = PS_APLL_CTRL_1499;
 
-		    //2. Program the control data
-		    *ps_clk_cfg  = PS_APLL_CFG_1499;
+			//2. Program the control data
+			*ps_clk_cfg  = PS_APLL_CFG_1499;
 
-		    //3. Program the bypass -> APLL_CTRL[3] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
+			//3. Program the bypass -> APLL_CTRL[3] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
 
-		    //4. Assert Reset -> APLL_CTRL[0] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | 1;
+			//4. Assert Reset -> APLL_CTRL[0] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
 
-		    //5. Deassert Reset -> APLL_CTRL[0] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
+			//5. Deassert Reset -> APLL_CTRL[0] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
 
-		    //6. Check for LOCK -> PLL_STATUS[0]
-		    g = 0;
-		    while((*ps_clk_status & 0x00000001) != 1){
-		    	g++;
-		    }
-		    printf("waited %d loop cycles for STATUS = 1\n", g);
+			//6. Check for LOCK -> PLL_STATUS[0]
+			g = 0;
+			while((*ps_clk_status & 0x00000001) != 1){
+				g++;
+			}
+			printf("waited %d loop cycles for STATUS = 1\n", g);
 
-		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
+			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, MAP_SIZE_F);
+			munmap(ps_clk_ctrl, MAP_SIZE_F);
 
-  		    printf("PS Frequncy changed to 1499 MHz\n");
-		    break;
-	    case 1:
-		    //1333 MHz
-		    //APLL_CTRL = 0x0000_2800
-		    //APLL_CFG  = 0x7E73_AC6C
-
-
-		    //1. Program the new FIDIV, CLKOUT
-		    *ps_clk_ctrl = PS_APLL_CTRL_1333;
-
-		    //2. Program the control data
-		    *ps_clk_cfg  = PS_APLL_CFG_1333;
-
-		    //3. Program the bypass -> APLL_CTRL[3] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
-
-		    //4. Assert Reset -> APLL_CTRL[0] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | 1;
-
-		    //5. Deassert Reset -> APLL_CTRL[0] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
-
-		    //6. Check for LOCK -> PLL_STATUS[0]
-		    g = 0;
-		    while((*ps_clk_status & 0x00000001) != 1){
-		    	g++;
-		    }
-		    printf("waited %d loop cycles for STATUS = 1\n", g);
-
-		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
-
-		    munmap(ps_clk_ctrl, MAP_SIZE_F);
-
-  		    printf("PS Frequncy changed to 1333 MHz\n");
-
-		    break;
-	    case 2:
-		    //999 MHz
-		    //APLL_CTRL = 0x0000_1E00
-		    //APLL_CFG  = 0x7E7D_0C86
+			printf("PS Frequncy changed to 1499 MHz\n");
+			break;
+		case 1:
+			//1333 MHz
+			//APLL_CTRL = 0x0000_2800
+			//APLL_CFG  = 0x7E73_AC6C
 
 
-		    //1. Program the new FIDIV, CLKOUT
-		    *ps_clk_ctrl = PS_APLL_CTRL_999;
+			//1. Program the new FIDIV, CLKOUT
+			*ps_clk_ctrl = PS_APLL_CTRL_1333;
 
-		    //2. Program the control data
-		    *ps_clk_cfg  = PS_APLL_CFG_999;
+			//2. Program the control data
+			*ps_clk_cfg  = PS_APLL_CFG_1333;
 
-		    //3. Program the bypass -> APLL_CTRL[3] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
+			//3. Program the bypass -> APLL_CTRL[3] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
 
-		    //4. Assert Reset -> APLL_CTRL[0] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | 1;
+			//4. Assert Reset -> APLL_CTRL[0] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
 
-		    //5. Deassert Reset -> APLL_CTRL[0] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
+			//5. Deassert Reset -> APLL_CTRL[0] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
 
-		    //6. Check for LOCK -> PLL_STATUS[0]
-		    g = 0;
-		    while((*ps_clk_status & 0x00000001) != 1){
-		    	g++;
-		    }
-		    printf("waited %d loop cycles for STATUS = 1\n", g);
+			//6. Check for LOCK -> PLL_STATUS[0]
+			g = 0;
+			while((*ps_clk_status & 0x00000001) != 1){
+				g++;
+			}
+			printf("waited %d loop cycles for STATUS = 1\n", g);
 
-		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
+			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, MAP_SIZE_F);
+			munmap(ps_clk_ctrl, MAP_SIZE_F);
 
+			printf("PS Frequncy changed to 1333 MHz\n");
 
-  		    printf("PS Frequncy changed to 999 MHz\n");
-		    break;
-	    case 3:
-		    //733 MHz
-		    //APLL_CTRL = 0x0001_2C00
-		    //APLL_CFG  = 0x7E67_4C6C
-
-
-
-		    //1. Program the new FIDIV, CLKOUT
-		    *ps_clk_ctrl = PS_APLL_CTRL_733;
-
-		    //2. Program the control data
-		    *ps_clk_cfg  = PS_APLL_CFG_733;
-
-		    //3. Program the bypass -> APLL_CTRL[3] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
-
-		    //4. Assert Reset -> APLL_CTRL[0] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | 1;
-
-		    //5. Deassert Reset -> APLL_CTRL[0] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
-
-		    //6. Check for LOCK -> PLL_STATUS[0]
-		    g = 0;
-		    while((*ps_clk_status & 0x00000001) != 1){
-		    	g++;
-		    }
-		    printf("waited %d loop cycles for STATUS = 1\n", g);
-
-		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
-
-		    munmap(ps_clk_ctrl, MAP_SIZE_F);
-
-  		    printf("PS Frequncy changed to 733 MHz\n");
-		    break;
-	    case 4:
-		    //416.6 MHz
-		    //APLL_CTRL = 0x0001_1900
-		    //APLL_CFG  = 0x7E7D_0C6A
+			break;
+		case 2:
+			//999 MHz
+			//APLL_CTRL = 0x0000_1E00
+			//APLL_CFG  = 0x7E7D_0C86
 
 
-		    //1. Program the new FIDIV, CLKOUT
-		    *ps_clk_ctrl = PS_APLL_CTRL_416_6;
+			//1. Program the new FIDIV, CLKOUT
+			*ps_clk_ctrl = PS_APLL_CTRL_999;
 
-		    //2. Program the control data
-		    *ps_clk_cfg  = PS_APLL_CFG_416_6;
+			//2. Program the control data
+			*ps_clk_cfg  = PS_APLL_CFG_999;
 
-		    //3. Program the bypass -> APLL_CTRL[3] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
+			//3. Program the bypass -> APLL_CTRL[3] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
 
-		    //4. Assert Reset -> APLL_CTRL[0] = 1;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) | 1;
+			//4. Assert Reset -> APLL_CTRL[0] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
 
-		    //5. Deassert Reset -> APLL_CTRL[0] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
+			//5. Deassert Reset -> APLL_CTRL[0] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
 
-		    //6. Check for LOCK -> PLL_STATUS[0]
-		    g = 0;
-		    while((*ps_clk_status & 0x00000001) != 1){
-		    	g++;
-		    }
-		    printf("waited %d loop cycles for STATUS = 1\n", g);
+			//6. Check for LOCK -> PLL_STATUS[0]
+			g = 0;
+			while((*ps_clk_status & 0x00000001) != 1){
+				g++;
+			}
+			printf("waited %d loop cycles for STATUS = 1\n", g);
 
-		    //7. Deassert the bypass -> APLL_CTRL[3] = 0;
-		    *ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
+			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
 
-		    munmap(ps_clk_ctrl, MAP_SIZE_F);
-
-  		    printf("PS Frequncy changed to 416.6 MHz\n");
-		    break;
+			munmap(ps_clk_ctrl, MAP_SIZE_F);
 
 
-    }
+			printf("PS Frequncy changed to 999 MHz\n");
+			break;
+		case 3:
+			//733 MHz
+			//APLL_CTRL = 0x0001_2C00
+			//APLL_CFG  = 0x7E67_4C6C
+
+
+
+			//1. Program the new FIDIV, CLKOUT
+			*ps_clk_ctrl = PS_APLL_CTRL_733;
+
+			//2. Program the control data
+			*ps_clk_cfg  = PS_APLL_CFG_733;
+
+			//3. Program the bypass -> APLL_CTRL[3] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
+
+			//4. Assert Reset -> APLL_CTRL[0] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
+
+			//5. Deassert Reset -> APLL_CTRL[0] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
+
+			//6. Check for LOCK -> PLL_STATUS[0]
+			g = 0;
+			while((*ps_clk_status & 0x00000001) != 1){
+				g++;
+			}
+			printf("waited %d loop cycles for STATUS = 1\n", g);
+
+			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
+
+			munmap(ps_clk_ctrl, MAP_SIZE_F);
+
+			printf("PS Frequncy changed to 733 MHz\n");
+			break;
+		case 4:
+			//416.6 MHz
+			//APLL_CTRL = 0x0001_1900
+			//APLL_CFG  = 0x7E7D_0C6A
+
+
+			//1. Program the new FIDIV, CLKOUT
+			*ps_clk_ctrl = PS_APLL_CTRL_416_6;
+
+			//2. Program the control data
+			*ps_clk_cfg  = PS_APLL_CFG_416_6;
+
+			//3. Program the bypass -> APLL_CTRL[3] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
+
+			//4. Assert Reset -> APLL_CTRL[0] = 1;
+			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
+
+			//5. Deassert Reset -> APLL_CTRL[0] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
+
+			//6. Check for LOCK -> PLL_STATUS[0]
+			g = 0;
+			while((*ps_clk_status & 0x00000001) != 1){
+				g++;
+			}
+			printf("waited %d loop cycles for STATUS = 1\n", g);
+
+			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
+			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
+
+			munmap(ps_clk_ctrl, MAP_SIZE_F);
+
+			printf("PS Frequncy changed to 416.6 MHz\n");
+			break;
+
+
+	}
 }
 
 
 void change_pl_freq(int dh){
 
-    //changing PL Frequency
-    int seed_pl = rand() % 5;
-    uint32_t *pl_clk_reg;
-    uint32_t *pl0;
-    pl_clk_reg = mmap(NULL,
-		     MAP_SIZE_F,
-		     PROT_READ|PROT_WRITE,
-		     MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK_F);
-    pl0 = pl_clk_reg + (((PL0_REF_CTRL_ADD + 0xC0) & MAP_MASK) >> 2);
+	//changing PL Frequency
+	int seed_pl = rand() % 5;
+	uint32_t *pl_clk_reg;
+	uint32_t *pl0;
+	pl_clk_reg = mmap(NULL,
+			MAP_SIZE_F,
+			PROT_READ|PROT_WRITE,
+			MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK_F);
+	pl0 = pl_clk_reg + (((PL0_REF_CTRL_ADD + 0xC0) & MAP_MASK) >> 2);
 
-    switch(seed_pl){
-
-
-	    //address for PL0_REF_CTRL register = 0x00_FF5E_00C0;
-	    case 0:
-		    //300 MHz
-		    //PL0_REF_CTRL = 0x0101_0500
-
-		    *pl0 = PL_0_300;
-
-  		    printf("PL Frequncy changed to 300 MHz\n");
-		    munmap(pl_clk_reg, MAP_SIZE_F);
-
-		    break;
-
-	    case 1:
-		    //250 MHz
-		    //PL0_REF_CTRL = 0x0101_0600
-
-		    *pl0 = PL_0_250;
-
-		    munmap(pl_clk_reg, MAP_SIZE_F);
-
-  		    printf("PL Frequncy changed to 250 MHz\n");
-		    break;
-	    case 2:
-		    //187.5 MHz
-		    //PL0_REF_CTRL = 0x0101_0800
-
-		    *pl0 = PL_0_187_5;
-
-		    munmap(pl_clk_reg, MAP_SIZE_F);
-
-  		    printf("PL Frequncy changed to 187.5 MHz\n");
-		    break;
-	    case 3:
-		    //150 MHz
-		    //PL0_REF_CTRL = 0x0101_0A00
-
-		    *pl0 = PL_0_150;
-
-		    munmap(pl_clk_reg, MAP_SIZE_F);
-
-  		    printf("PL Frequncy changed to 150 MHz\n");
-		    break;
-	    case 4:
-		    //100 MHz
-		    //PL0_REF_CTRL = 0x0101_0F00
-
-		    *pl0 = PL_0_100;
-
-		    munmap(pl_clk_reg, MAP_SIZE_F);
-
-  		    printf("PL Frequncy changed to 100 MHz\n");
-		    break;
+	switch(seed_pl){
 
 
-    }
+		//address for PL0_REF_CTRL register = 0x00_FF5E_00C0;
+		case 0:
+			//300 MHz
+			//PL0_REF_CTRL = 0x0101_0500
+
+			*pl0 = PL_0_300;
+
+			printf("PL Frequncy changed to 300 MHz\n");
+			munmap(pl_clk_reg, MAP_SIZE_F);
+
+			break;
+
+		case 1:
+			//250 MHz
+			//PL0_REF_CTRL = 0x0101_0600
+
+			*pl0 = PL_0_250;
+
+			munmap(pl_clk_reg, MAP_SIZE_F);
+
+			printf("PL Frequncy changed to 250 MHz\n");
+			break;
+		case 2:
+			//187.5 MHz
+			//PL0_REF_CTRL = 0x0101_0800
+
+			*pl0 = PL_0_187_5;
+
+			munmap(pl_clk_reg, MAP_SIZE_F);
+
+			printf("PL Frequncy changed to 187.5 MHz\n");
+			break;
+		case 3:
+			//150 MHz
+			//PL0_REF_CTRL = 0x0101_0A00
+
+			*pl0 = PL_0_150;
+
+			munmap(pl_clk_reg, MAP_SIZE_F);
+
+			printf("PL Frequncy changed to 150 MHz\n");
+			break;
+		case 4:
+			//100 MHz
+			//PL0_REF_CTRL = 0x0101_0F00
+
+			*pl0 = PL_0_100;
+
+			munmap(pl_clk_reg, MAP_SIZE_F);
+
+			printf("PL Frequncy changed to 100 MHz\n");
+			break;
+
+
+	}
 }
+
 int count1, count2;
-void
-sigio_signal_handler(int signo)
-{
-    det_int = 1;
-    //assert(signo == SIGIO);   // Confirm correct signal #
-    printf("sigio_signal_handler called (signo=%d)\n", signo);
-   printf("count = %d, state = x%.8x\n", *slv_reg2, (*slv_reg3));
-    //*slv_reg1 = *slv_reg1 & 0x0;
-    count2 = *slv_reg2;
-    sigio_signal_count ++;
+	
+void sigio_signal_handler(int signo){
+	
+	//assert(signo == SIGIO);   // Confirm correct signal #
+	//printf("sigio_signal_handler called (signo=%d)\n", signo);
+	//*slv_reg1 = *slv_reg1 & 0x0;
+			*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
+	sigio_signal_count ++;
+	det_int = 1;
 }
 
 
 
 int main(int argc, char *argv[]) {
 	det_int = 0;
-    struct sigaction sig_action;
-    memset(&sig_action, 0, sizeof sig_action);
-    sig_action.sa_handler = sigio_signal_handler;
+	struct sigaction sig_action;
+	memset(&sig_action, 0, sizeof sig_action);
+	sig_action.sa_handler = sigio_signal_handler;
 
-    /* --------------------------------------------------------------------------
-     *      Block all signals while our signal handler is executing:
-     */
-   (void)sigfillset(&sig_action.sa_mask);
+	//Block all signals while our signal handler is executing:
+	(void)sigfillset(&sig_action.sa_mask);
 
-    rc = sigaction(SIGIO, &sig_action, NULL);
+	rc = sigaction(SIGIO, &sig_action, NULL);
 
-    if (rc == -1) {
-        perror("sigaction() failed");
-        return -1;
-   }
+	if (rc == -1) {
+		perror("sigaction() failed");
+		return -1;
+	}
 
-    /* -------------------------------------------------------------------------
-     *      Open the device file
-     */
+	//Open the device file
 
-    captime_dev_fd = open(CAPTIME_DEV_PATH, O_RDWR);
-     if(captime_dev_fd == -1)    {
-        perror("open() of " CAPTIME_DEV_PATH " failed");
-        return -1;
-    }
+	captime_dev_fd = open(CAPTIME_DEV_PATH, O_RDWR);
+	if(captime_dev_fd == -1)    {
+		perror("open() of " CAPTIME_DEV_PATH " failed");
+		return -1;
+	}
 
-    /* -------------------------------------------------------------------------
-     * Set our process to receive SIGIO signals from the GPIO device:
-     */
+	//Set our process to receive SIGIO signals from the GPIO device:
 
-    rc = fcntl(captime_dev_fd, F_SETOWN, getpid());
+	rc = fcntl(captime_dev_fd, F_SETOWN, getpid());
 
-    if (rc == -1) {
-        perror("fcntl() SETOWN failed\n");
-        return -1;
-    }
- 
-      /* -------------------------------------------------------------------------
-     * Enable reception of SIGIO signals for the captime_dev_fd descriptor
-     */
+	if (rc == -1) {
+		perror("fcntl() SETOWN failed\n");
+		return -1;
+	}
 
-    int fd_flags = fcntl(captime_dev_fd, F_GETFL);
-        rc = fcntl(captime_dev_fd, F_SETFL, fd_flags | O_ASYNC);
+	//Enable reception of SIGIO signals for the captime_dev_fd descriptor
 
-    if (rc == -1) {
-        perror("fcntl() SETFL failed\n");
-        return -1;
-    }
+	int fd_flags = fcntl(captime_dev_fd, F_GETFL);
+	rc = fcntl(captime_dev_fd, F_SETFL, fd_flags | O_ASYNC);
 
- int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
+	if (rc == -1) {
+		perror("fcntl() SETFL failed\n");
+		return -1;
+	}
 
-    if(dh == -1){
-            printf("Unable to open /dev/mem. Ensure if it exists.\n");
-            return -1;
-    }
+	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
 
+	if(dh == -1){
+		printf("Unable to open /dev/mem. Ensure if it exists.\n");
+		return -1;
+	}
 
-        /* ---------------------------------------------------------------------
-         * Reset sigio_signal_processed flag:
-         */
+	//signal(SIGINT, m_unmap_ctrl_c);
+	slv_reg_base = mmap(NULL,
+			MAP_SIZE,
+			PROT_READ|PROT_WRITE,
+			MAP_SHARED, dh, SLV_REG_BASE  & ~MAP_MASK);
 
+	slv_reg0 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_0_OFF) & MAP_MASK) >> 2);
+	slv_reg1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
+	slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
+	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
+	//change_ps_freq(dh);
+	//change_pl_freq(dh);
+	int status;    
+	for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
+		*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
 
-    //    signal(SIGINT, m_unmap_ctrl_c);
-    slv_reg_base = mmap(NULL,
-               MAP_SIZE,
-               PROT_READ|PROT_WRITE,
-               MAP_SHARED, dh, SLV_REG_BASE  & ~MAP_MASK);
+		*slv_reg1 = *slv_reg1 | 0x3;
+		count1 = *slv_reg2;
+		while(!det_int){
+			;
+		} 
+	
+			det_int = 0;
 
-    slv_reg0 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_0_OFF) & MAP_MASK) >> 2);
-    slv_reg1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
-    slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
-    slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
-		    //change_ps_freq(dh);
-		    //change_pl_freq(dh);
-		    int status;    
-		  for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
-		   *slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
-              			   
-			   *slv_reg1 = *slv_reg1 | 0x3;
-			   count1 = *slv_reg2;
-			   printf("count1 = %d\n",count1);
-		   while(!det_int){
-		   det_int = 0;
-			   *slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
-		   } 
-                   
-		    intr_latency_measurements[i] = count2 - count1;
-	  }
+	count2 = *slv_reg2;
+		intr_latency_measurements[i] = count2 - count1;
+	}
 
-	 for(int i=0;i<NUM_MEASUREMENTS;i++){
-			    printf("%d ", intr_latency_measurements[i]);
-	 }
-         printf("\n\n");
+//	for(int i=0;i<NUM_MEASUREMENTS;i++){
+//		printf("%d ", intr_latency_measurements[i]);
+//	}
+//	printf("\n\n");
 
 
-	    unsigned long   min_latency;
-	    unsigned long   max_latency;
-	    double          average_latency;
-	    double          std_deviation;
+	unsigned long   min_latency;
+	unsigned long   max_latency;
+	double          average_latency;
+	double          std_deviation;
 
-	    compute_interrupt_latency_stats(
-				&min_latency,
-				&max_latency,
-				&average_latency,
-				&std_deviation);
+	compute_interrupt_latency_stats(
+			&min_latency,
+			&max_latency,
+			&average_latency,
+			&std_deviation);
 
-    /*
-     * Print interrupt latency stats:
-     */
-    printf("Minimum Latency:    %lu\n"
-           "Maximum Latency:    %lu\n"
-           "Average Latency:    %f\n"
-           "Standard Deviation: %f\n"
-           "Number of samples:  %d\n",
-            min_latency,
-            max_latency,
-            average_latency,
-            std_deviation,
-            NUM_MEASUREMENTS 
-	  );
-   printf("Number of Interrupts: %d\n", sigio_signal_count); 
-    return 0;
+	printf("Minimum Latency:    %lu\n"
+			"Maximum Latency:    %lu\n"
+			"Average Latency:    %f\n"
+			"Standard Deviation: %f\n"
+			"Number of samples:  %d\n",
+			min_latency,
+			max_latency,
+			average_latency,
+			std_deviation,
+			NUM_MEASUREMENTS 
+	      );
+	printf("Number of Interrupts: %d\n", sigio_signal_count); 
+	return 0;
 
- }
- unsigned long int_sqrt(unsigned long n)
-{
-   unsigned long root = 0;
-   unsigned long bit;
-   unsigned long trial;
-
-   bit = (n >= 0x10000) ? 1<<30 : 1<<14;
-   do
-   {
-      trial = root+bit;
-      if (n >= trial)
-      {
-         n -= trial;
-         root = trial+bit;
-      }
-      root >>= 1;
-      bit >>= 2;
-   } while (bit);
-   return root;
 }
-void
-compute_interrupt_latency_stats(
-    unsigned long   *min_latency_p,
-    unsigned long   *max_latency_p,
-    double          *average_latency_p,
-    double          *std_deviation_p)
-{
-    int i;
-    unsigned long   val;
-    unsigned long   min = ULONG_MAX;
-    unsigned long   max = 0;
-    unsigned long   sum = 0;
-    unsigned long   sum_squares = 0;
+unsigned long int_sqrt(unsigned long n){
+	unsigned long root = 0;
+	unsigned long bit;
+	unsigned long trial;
 
-    for (i = 0; i < NUM_MEASUREMENTS; i ++) {
-        val = intr_latency_measurements[i];
+	bit = (n >= 0x10000) ? 1<<30 : 1<<14;
+	do
+	{
+		trial = root+bit;
+		if (n >= trial)
+		{
+			n -= trial;
+			root = trial+bit;
+		}
+		root >>= 1;
+		bit >>= 2;
+	} while (bit);
+	return root;
+}
 
-        if (val < min) {
-            min = val;
-        }
+void compute_interrupt_latency_stats(
+		unsigned long   *min_latency_p,
+		unsigned long   *max_latency_p,
+		double          *average_latency_p,
+		double          *std_deviation_p){
+	int i;
+	unsigned long   val;
+	unsigned long   min = ULONG_MAX;
+	unsigned long   max = 0;
+	unsigned long   sum = 0;
+	unsigned long   sum_squares = 0;
 
-        if (val > max) {
-            max = val;
-        }
+	for (i = 0; i < NUM_MEASUREMENTS; i ++) {
+		val = intr_latency_measurements[i];
 
-        sum += val;
-        sum_squares += val * val;
-    }
+		if (val < min) {
+			min = val;
+		}
 
-    *min_latency_p = min;
-    *max_latency_p = max;
+		if (val > max) {
+			max = val;
+		}
 
-    unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+		sum += val;
+		sum_squares += val * val;
+	}
 
-    unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
-                    (average * average));
+	*min_latency_p = min;
+	*max_latency_p = max;
+
+	unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+
+	unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
+			(average * average));
 
 
-       *average_latency_p = average;
-    *std_deviation_p = std_deviation;
+	*average_latency_p = average;
+	*std_deviation_p = std_deviation;
 }
 
 
