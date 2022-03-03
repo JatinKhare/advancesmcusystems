@@ -81,6 +81,7 @@
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
 #define CAPTIME_DEV_PATH    "/dev/captimer_int"
 #define NUM_MEASUREMENTS 10000
+#define STAT_MEASUREMENTS 1000
 //#define PRINT_COUNT
 
 void sigio_signal_handler(int signo);
@@ -91,6 +92,8 @@ int captime_dev_fd  = -1;
 int det_int;
 sigset_t signal_mask, signal_mask_old, signal_mask_most;
 unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
+unsigned long min_latency_measurements[STAT_MEASUREMENTS];
+unsigned long max_latency_measurements[STAT_MEASUREMENTS];
 
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
@@ -414,7 +417,9 @@ int main(int argc, char *argv[]) {
 	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
 	change_ps_freq(dh, n);
 	change_pl_freq(dh, m);
-	int status;    
+	int status;   
+		int sample = 0;
+       for(int j = 0; j< STAT_MEASUREMENTS; j++){	
 	for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
 		*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
 
@@ -446,21 +451,32 @@ int main(int argc, char *argv[]) {
 			&max_latency,
 			&average_latency,
 			&std_deviation);
-
-	printf("Minimum Latency:    %lu\n"
-			"Maximum Latency:    %lu\n"
-			"Average Latency:    %f\n"
-			"Standard Deviation: %f\n"
-			"Number of samples:  %d\n",
-			min_latency,
-			max_latency,
-			average_latency,
-			std_deviation,
-			NUM_MEASUREMENTS 
-	      );
-	printf("Number of Interrupts: %d\n", sigio_signal_count); 
-        save_file(intr_latency_measurements);
-
+		min_latency_measurements[sample] = min_latency;
+		max_latency_measurements[sample] = max_latency;
+		sample ++;
+//	printf("Minimum Latency:    %lu\n"
+//			"Maximum Latency:    %lu\n"
+//			"Average Latency:    %f\n"
+//			"Standard Deviation: %f\n"
+//			"Number of samples:  %d\n",
+//			min_latency,
+//			max_latency,
+//			average_latency,
+//			std_deviation,
+//			NUM_MEASUREMENTS 
+//	      );
+	//printf("Number of Interrupts: %d\n", sigio_signal_count); 
+        //save_file(intr_latency_measurements);
+       }
+/*		for(int i=0;i<STAT_MEASUREMENTS;i++){
+			printf("%d ", min_latency_measurements[i]);
+		}
+		for(int i=0;i<STAT_MEASUREMENTS;i++){
+			printf("%d ", max_latency_measurements[i]);
+		}
+	//	printf("\n\n");*/
+	save_file(min_latency_measurements, STAT_MEASUREMENTS);
+	save_file(max_latency_measurements, STAT_MEASUREMENTS);
 	return 0;
 
 }
@@ -523,22 +539,23 @@ void compute_interrupt_latency_stats(
 	*average_latency_p = average;
 	*std_deviation_p = std_deviation;
 }
-
-void save_file(long *array){
+int flag = 1;
+void save_file(long *array, int size){
 
 FILE *fp;
 
-char *filename = "data.csv";
+char *filename = "data.csv"; 
 
 fp = fopen(filename,"w+");
 
-fprintf(fp,"Sample Cycles");
-
-for(int i=0;i<NUM_MEASUREMENTS;i++){
+for(int i=0;i<size;i++){
 
     fprintf(fp,",%ld ",array[i]);
     }
 
 fclose(fp);
+if(flag){
+	rename("data.csv", "data_min.csv");
+	flag = 0;
 }
-
+}
