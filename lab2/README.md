@@ -1,14 +1,25 @@
-# advancesmcusystems
-
+ 
 # Lab 2
 ```
 Name: Jatin Khare
 UT EID: jk47976
 Email: jatinkhare@utexas.edu
 ```
+
+
+# Contents
+1. [How to run the code](#how-to-run-the-code)
+2. [Setting up the environment](#setting-up-the-environment)
+3. [Lab 2](#lab-2)
+4. [Setting up the Board](#setting-up-the-board)
+5. [Setting the Frequency](#setting-the-frequency)
+6. [Useful information for writing the code](#useful-information-for-writing-the-code)
+7. [Codes](#codes)
+
+
 ## How to run the code
 
-Once you have the .c files (test1.c, test2.c, and test3.c) in the same directory as the Makefile, do the following:
+Once you have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
 $ make clean
@@ -22,66 +33,35 @@ USAGE:
 
 ```bash
 
-./test1 (xx loops) (yy words), where pass 0 for default values.
+./test1 (n) (m)
 
 ```
+The test runs 1000 transfers (1024 words each, to and fro from OCM->BRAM)
 
-default value for loops: INF
+n and m values determine the PS-PL frequency combinations 
 
-default value for words: 2048
+n: 0 (), 1 (), 3 ()
+m: 0 (), 1 (), 3 () 
 
 ```bash
+//Output
 
 ```
-
 ### ./test2
 
 USAGE: 
 
 ```bash
 
-./test2 (xx loops) (yy words), where pass 0 for default values.
+./test2
 
 ```
-
-default value for loops: INF
-
-default value for words: 4096
+The test runs 10000 interrupt latency measurements
 
 ```bash
-
-
-```
-
-### ./test3
-
-USAGE: 
-```bash
-
-./test3 (xx loops) (yy words), where pass 0 for default values.
+//Output
 
 ```
-
-default value for loops: INF
-
-default value for words: 1024
-
-```bash
-
-```
-
-
-# Contents
-1. [Setting up the environment](#setting-up-the-environment)
-2. [Lab 2](#lab-2)
-3. [Setting up the Board](#setting-up-the-board)
-4. [Setting the Frequency](#setting-the-frequency)
-5. [Useful information for writing the code](#useful-information-for-writing-the-code)
-6. [Codes](#codes)
-
-##
-
-
 ## Setting up the environment
 
 ```bash
@@ -128,15 +108,9 @@ start_gui
 ### When the GUI is open-
 1. Open the project from lab1.
 2. Create a new IP block for capture timer.
-3. Integrate the new IP into the pre-existing block diagram.
+3. Integrate the new IP into the pre-existing block diagram and make the connections.
 4. Generate the bitstream.
 
-
-8. Flow -> Generate Bitstrem -> Save the block design -> Synthesis and Implementation is out-of-date? -> Launch Runs.
-
-9. Open reports under 'Design Runs' contain the Static Timing Analysis.
-
-10. File -> Export -> Export Hardware -> include bit stream
 
 ### IP Integration
 
@@ -144,15 +118,38 @@ start_gui
 
 2. Create a new AXI4 peripheral.
 
-3. Name the Peripheral CUSTOM_GPIO
+3. Name the Peripheral CAPTURE_TIMER
 
-4. Add interfaces -> Lite, and number of Registers -> 16
+4. Add interfaces -> Lite, and number of Registers -> 4
 
-5. IP Catalog -> AXI Peripheral -> CUSTOM_GPIO -> Right Click -> Edit in the Packager (opens a new project window)
+5. IP Catalog -> AXI Peripheral -> CAPTURE_TIMER -> Right Click -> Edit in the Packager (opens a new project window)
 
-6. Change the Verilog code as required. Package the IP, and add it to the Block.
+6. Design the state machine required for this project, find the verilog modules [here](verilog_codes/). Simulation of the module written can be performed by forcing constant values/clock cycles to the module ports. 
 
+``` verilog
 
+	parameter RESET = 3'b000,
+        parameter LOAD  = 3'b001,
+        parameter COUNT = 3'b010,
+        parameter WAIT  = 3'b011,
+        parameter IDLE  = 3'b100,
+```
+
+```bash 
+error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting. ~ ~ ~
+```
+Above mentioned error is a bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
+
+```bash
+set_property library xil_defaultlib [get_files]
+```
+7. Repackage the IP and do not forget to Upgrade IP, and rerun the design.
+
+8. Flow -> Generate Bitstrem -> Save the block design -> Synthesis and Implementation is out-of-date? -> Launch Runs.
+
+9. Open reports under 'Design Runs' contain the Static Timing Analysis.
+
+10. File -> Export -> Export Hardware -> include bit stream
 
 
 # Setting up the Board
@@ -191,7 +188,7 @@ pmufw.elf  system_orig.bit      uImage.5.4
 ```
 6. fpgautil -b system.bit
 7. Halt and restart the board. 
-8. Check the device-tree at **/proc/device-tree/amba_pl@0/**-
+8. Check the device-tree at **/proc/device-tree/amba_pl@0/ls**:
 
 ``` bash
 total 0
@@ -217,12 +214,17 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
 drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ```
+9. Once the bit file is loaded in the hardware, check for the debug register values
 
+``` verilog
+        slv_reg0 <= {16'hBEAD, 8'h0, timer_enable, 1'b0, 1'b0, capture_complete, 1'b0, 1'b0, 1'b0, capture_gate};
+        slv_reg1[31:2] <= {16'hFEED, 14'h0};
+        slv_reg2 <= Cap_Timer_Out[31:0];
+        slv_reg3 <= {28'h5555_CAB, 1'b0, current_state[2:0]};
+```
 ``` bash
-root@ultra96:/proc/device-tree/amba_pl@0# dm a0030000
-0x0000 = 0x785f5f00
 root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030000
-0xa0030000 = 0xbead0010
+0xa0030000 = 0xbead0000
 root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030004
 0xa0030004 = 0xfeed0000
 root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030008
@@ -232,7 +234,6 @@ root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
 ```
 
 
-
 # Setting the Frequency
 
 ## Frequency Values
@@ -240,297 +241,219 @@ root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
 1. TEST #1: Vary CPU and [FPGA Frequency](#pl-frequency-table).
 2. TEST #2: Vary only [CPU Frequency](#ps-frequency-table). 
 
-# PS Frequency
-
-The 5 frequnecy values for the CPU are-
-
-I. 1499 MHz
-
-II. 1333 MHz
-
-III. 999 MHz
-
-IV. 733 MHz
-
-V. 416.6 MHz
-
-Base frequency = 33.33 MHz
-
-Hence the FBDIV and DIV2 values for each combination are given as
-
-I. 1499 MHz, 1499/33.33 = 45 ---> Hence FBDIV = 45, DIV2 = 0
-
-II. 1333 MHz, 1333/33.33 = 40 ---> Hence FBDIV = 40, DIV2 = 0
-
-III. 999 MHz, 999/33.33 = 30 ---> Hence FBDIV = 30, DIV2 = 0
-
-IV. 733 MHz, 733/33.33 = 22 ---> Hence FBDIV = 44, DIV2 = 2
-
-V. 416.6 MHz, 416.6/33.33 = 12.5 ---> Hence FBDIV = 25, DIV2 = 1
-
-
-
-## APLL_CTRL
-
-|31|30|29|28| | |
-|-|-|-|-|-|-|                      
-|0|0|0|0|| **_0_**|
-
-|27|26|25|24|||
-|-|-|-|-|-|-|
-|0|0|0|0||**_0_**|
-
-|23|22|21|20|||
-|-|-|-|-|-|-|
-|0|0|0|0||**_0_**|
-
-|19|18|17|16|||
-|-|-|-|-|-|-|
-|0|0|0|**0**||**_0_**|
-
-|15|14|13|12|11|10|9|8||||
-|-|-|-|-|-|-|-|-|-|-|-|
-|0|**0**|**1**|**0**|**1**|**1**|**0**|**1**||**_2_**|**_D_**|
-
-|7|6|5|4|||
-|-|-|-|-|-|-|
-|0|0|0|0||**_0_**|
-
-|3|2|1|0|||
-|-|-|-|-|-|-|
-|**0**|0|0|**0**||**_0_**|
-
-This makes the APLL_CTRL value as 0x0000_2D00
-
-## APLL_CFG
-
-For the five frequency values, the register values should be set to the following-
-
-I. 1499 MHz   = 0x0000_2D00 
-
-II. 1333 MHz  = 0x0000_2800
-
-III. 999 MHz  = 0x0000_1E00
-
-IV. 733 MHz   = 0x0001_2C00
-
-V. 416.6 MHz  = 0x0001_1900
-
-|19|18|17|16|||
-|-|-|-|-|-|-|
-|0|0|0|**1**||**_1_**|
-
-
-APLL_CFG values depend on the FBDIV factor. It is given as follows-
-
-**45** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
-
-LOCK_DLY(7) = 63
-
-LOCK_CNT(10) = 825
-
-LFHF(2) = 3
-
-CP(4) = 3
-
-RES(4) = 12
-
-which gives us = 0x0111_1110_0110_0111_0010_1100_0110_1100 = 0x7E67_2C6C
-
-
-**40** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
-
-LOCK_DLY(7) = 63
- 
-LOCK_CNT(10) = 925
-
-LFHF(2) = 3
-
-CP(4) = 3
-
-RES(4) = 12
-
-which gives us = 0x0111_1110_0111_0011_1010_1100_0110_1100 = 0x7E73_AC6C
-
-
-**30** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
-
-LOCK_DLY(7) = 63
- 
-LOCK_CNT(10) = 1000
-
-LFHF(2) = 3
-
-CP(4) = 4
-
-RES(4) = 6
-
-which gives us = 0x0111_1110_0111_1101_0000_1100_1000_0110 = 0x7E7D_0C86
-
-
-**44** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
-
-LOCK_DLY(7) = 63
-
-LOCK_CNT(10) = 850
-
-LFHF(2) = 3
-
-CP(4) = 3
-
-RES(4) = 12
-
-which gives us = 0x0111_1110_0110_1010_0100_1100_0110_1100 = 0x7E6A_4C6C
-
-
-**35** -> 0xXXXX_XXX(7)0_0XXX_XXXX_XXX(10)0_XX(2)0X_XXX(4)0_XXXX(4)
-
-LOCK_DLY(7) = 63
- 
-LOCK_CNT(10) = 1000
-
-LFHF(2) = 3
-
-CP(4) = 3
-
-RES(4) = 10
-
-which gives us = 0x0111_1110_0111_1101_0000_1100_0110_1010 = 0x7E7D_0C6A
-
-# PS Frequency Table
-
-|Frequency (MHz)|Factor| APLL_CTRL|APLL_CFG|
-|-|-|-|-|
-|1499|45 |0x0000_2D00|0x7E67_2C6C |
-|1333|40 |0x0000_2800 | 0x7E73_AC6C|
-|999|30 |0x0000_1E00 | 0x7E7D_0C86|
-|733| 44| 0x0001_2C00| 0x7E6A_4C6C|
-|416.6| 25| 0x0001_1900|0x7E7D_0C6A |
-
-# PL Frequency
-
-The 5 frequnecy values for the FPGA are-
-
-I. 300 MHz
-
-II. 250 MHz
-
-III. 187.5 MHz
-
-IV. 150 MHz
-
-V. 100 MHz
-
-Base frequency = 1500 MHz
-
-Hence the DIV1 and DIV0 values for each combination are given as
-
-I. 300 MHz, 1500/300 = 5 ---> Hence DIV1 = 1, DIV0 = 5
-
-II. 250 MHz, 1500/250 = 6 ---> Hence DIV1 = 1, DIV0 = 6
-
-III. 187.5 MHz, 1500/187.5 = 8 ---> Hence DIV1 = 1, DIV0 = 8
-
-IV. 150 MHz, 1500/150 = 10 ---> Hence DIV1 = 1, DIV0 = 10
-
-V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15
-
-
-
-## PL0_REF_CTRL
-
-|31|30|29|28| | |
-|-|-|-|-|-|-|                      
-|0|0|0|0|| **_0_**|
-
-|27|26|25|24|||
-|-|-|-|-|-|-|
-|0|0|0|0||**_0_**|
-
-|23|22|21|20|19|18|17|16||||
-|-|-|-|-|-|-|-|-|-|-|-|
-|0|0|0|0|0|0|0|1||**_0_**|**_1_**|
-
-|15|14|13|12|11|10|9|8||||
-|-|-|-|-|-|-|-|-|-|-|-|
-|0|0|0|0|0|1|1|0||**_0_**|**_6_**|
-
-
-|7|6|5|4|||
-|-|-|-|-|-|-|
-|0|0|0|0||**_0_**|
-
-|3|2|1|0|||
-|-|-|-|-|-|-|
-|**0**|0|0|**0**||**_0_**|
-
-
-Hence, 
-
-I. 300 MHz, 1500/300 = 5 ---> Hence DIV1 = 1, DIV0 = 5 ---> 0x0101_0500
-
-II. 250 MHz, 1500/250 = 6 ---> Hence DIV1 = 1, DIV0 = 6 ---> 0x0101_0600
-
-III. 187.5 MHz, 1500/187.5 = 8 ---> Hence DIV1 = 1, DIV0 = 8 ---> 0x0101_0800
-
-IV. 150 MHz, 1500/150 = 10 ---> Hence DIV1 = 1, DIV0 = 10 ---> 0x0101_0A00
-
-V. 100 MHz, 1500/100 = 15 ---> Hence DIV1 = 1, DIV0 = 15 ---> 0x0101_0F00
-
-
-# PL Frequency Table
-|Frequency (MHz)|DIV1| DIV0|PL0_REF_CTRL|
-|-|-|-|-|
-|300|1 |5|0x0101_0500 |
-|250|1 |6 | 0x0101_0600|
-|187.5|1 |8 | 0x0101_0800|
-|150| 1| 10| 0x0101_0A00|
-|100| 1| 15|0x0101_0F00 |
+# Interrupt handling
+
+## Writing and inserting a kernel module
+
+1. Run the following script inside the kernel_modules directory-
+
+```bash
+#!/bin/sh
+
+make
+rm /dev/cdma_int
+mknod /dev/cdma_int c 241 0
+
+rmmod cdma_int.ko
+insmod cdma_int.ko
+
+rm /dev/captimer_int
+mknod /dev/captimer_int c 240 0
+
+rmmod captimer_int.ko
+insmod captimer_int.ko
+```
+
+2. The mknod will make a device node inside the /dev/ and the insmod will insert the kernel module to the /proc/interrupts.
+3. The 240 and 241 are the major number for the driver, and the 'c' stands for the character device.
+4. The .ko is the object file for the kernel modules and can be formed using the Makefile provided.
+5. We can check for the interrupt number to which the linux maps our hardware interrupts 240 and 241 to the application end by the following command-
+
+``` bash
+         CPU0       CPU1       CPU2       CPU3       
+  3:     188581      42967     125880      56554     GICv2  30 Level     arch_timer
+  6:          0          0          0          0     GICv2  67 Level     ff9905c0.mailbox
+  7:          0          0          0          0     GICv2 175 Level     arm-pmu
+  8:          0          0          0          0     GICv2 176 Level     arm-pmu
+  9:          0          0          0          0     GICv2 177 Level     arm-pmu
+ 10:          0          0          0          0     GICv2 178 Level     arm-pmu
+ 12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
+ 13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
+ 14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
+ 15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
+ 16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
+ 17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
+ 18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
+ 19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
+ 20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+ 21:          0          0          0          0     GICv2 109 Level     zynqmp-dma
+ 22:          0          0          0          0     GICv2 110 Level     zynqmp-dma
+ 23:          0          0          0          0     GICv2 111 Level     zynqmp-dma
+ 24:          0          0          0          0     GICv2 112 Level     zynqmp-dma
+ 25:          0          0          0          0     GICv2 113 Level     zynqmp-dma
+ 26:          0          0          0          0     GICv2 114 Level     zynqmp-dma
+ 27:          0          0          0          0     GICv2 115 Level     zynqmp-dma
+ 28:          0          0          0          0     GICv2 116 Level     zynqmp-dma
+ 31:          5          0          0          0     GICv2  50 Level     cdns-i2c
+ 32:          0          0          0          0     GICv2  42 Level     ff960000.memory-controller
+ 33:          0          0          0          0     GICv2  57 Level     axi-pmon
+ 34:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
+ 35:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
+ 36:      33419          0          0          0     GICv2  80 Level     mmc0
+ 37:     956548          0          0          0     GICv2  81 Level     mmc1
+ 38:          0          0          0          0     GICv2  51 Level     ff040000.spi
+ 39:          0          0          0          0     GICv2  52 Level     ff050000.spi
+ 41:        694          0          0          0     GICv2  54 Level     xuartps
+ 43:          0          0          0          0     GICv2  84 Edge      ff150000.watchdog
+ 44:          0          0          0          0     GICv2  88 Level     ams-irq
+ 45:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
+ 46:          0          0          0          0     GICv2 151 Level     fd4a0000.zynqmp-display
+ 47:          0          0          0          0     GICv2  61 Level     ff9a0100.zynqmp_r5_rproc
+ 51:          0          0          0          0     GICv2 123 Edge      cdma_interrupt
+ 71:         86          0          0          0     GICv2 102 Level     xhci-hcd:usb1
+ 75:          0          0          0          0  zynq-gpio  23 Edge      sw4
+IPI0:     24688      40562     468018      40529       Rescheduling interrupts
+IPI1:        13         19         16         17       Function call interrupts
+IPI2:         0          0          0          0       CPU stop interrupts
+IPI3:         0          0          0          0       CPU stop (for crash dump) interrupts
+IPI4:     14473      47186      30586      44459       Timer broadcast interrupts
+IPI5:         1          0          0          0       IRQ work interrupts
+IPI6:         0          0          0          0       CPU wake-up interrupts
+Err:          0
+
+
+[ 5569.488847] Ultra96 Interrupt Module
+[ 5569.492455] Ultra96  Interrupt Driver Loading.
+[ 5569.496925] Using Major Number 241 on cdma_interrupt
+[ 5569.502284] In probe funtion
+[ 5569.505149] Probe IRQ # = 51
+[ 5569.508218] Driver registered with no error
+[ 5569.512595] cdma_interrupt 1.0 Initialized
+```
+6. The kernel module needs to have the exact name of the '.compatible' as in the DTB.
+
+7. Extract the DTS from the DTB using:
+
+``` bash
+$ dtc -I dtb -O dts system.dtb
+
+```
+``` bash
+	Capture_Timer@a0030000 {
+			clock-names = "s00_axi_aclk";
+			clocks = <0x3 0x47>;
+			compatible = "xlnx,Capture-Timer-1.0";
+			interrupt-names = "interrupt_out";
+			interrupt-parent = <0x4>;
+			interrupts = <0x0 0x5c 0x4>;
+			reg = <0x0 0xa0030000 0x0 0x10000>;
+			xlnx,s00-axi-addr-width = <0x6>;
+			xlnx,s00-axi-data-width = <0x20>;
+		};
+
+
+dma@b0000000 {
+			#dma-cells = <0x1>;
+			clock-names = "m_axi_aclk", "s_axi_lite_aclk";
+			clocks = <0x3 0x47 0x3 0x47>;
+			compatible = "xlnx,cdma_int";
+			interrupt-names = "cdma_introut";
+			interrupt-parent = <0x4>;
+			interrupts = <0x0 0x5b 0x4>;
+			reg = <0x0 0xb0000000 0x0 0x1000>;
+			xlnx,addrwidth = <0x28>;
+
+			dma-channel@b0000000 {
+				compatible = "xlnx,axi-cdma-channel";
+				interrupts = <0x0 0x5b 0x4>;
+				xlnx,datawidth = <0x20>;
+				xlnx,device-id = <0x0>;
+				xlnx,max-burst-len = <0x20>;
+			};
+
+```
+
+6. Now the SIGIO needs to be handled, which can be done using the signal_handler as follows
+
+```c
+
+void sigio_signal_handler(int signo){
+	
+	
+	/* user code */
+	sigio_signal_count ++;
+	det_int = 1;
+}
+
+	struct sigaction sig_action;
+	memset(&sig_action, 0, sizeof sig_action);
+	sig_action.sa_handler = sigio_signal_handler;
+
+	//Block all signals while our signal handler is executing:
+	(void)sigfillset(&sig_action.sa_mask);
+
+	rc = sigaction(SIGIO, &sig_action, NULL);
+
+	if (rc == -1) {
+		perror("sigaction() failed");
+		return -1;
+	}
+
+	//Open the device file
+
+	captime_dev_fd = open(CAPTIME_DEV_PATH, O_RDWR);
+	if(captime_dev_fd == -1)    {
+		perror("open() of " CAPTIME_DEV_PATH " failed");
+		return -1;
+	}
+
+	//Set our process to receive SIGIO signals from the GPIO device:
+
+	rc = fcntl(captime_dev_fd, F_SETOWN, getpid());
+
+	if (rc == -1) {
+		perror("fcntl() SETOWN failed\n");
+		return -1;
+	}
+
+	//Enable reception of SIGIO signals for the captime_dev_fd descriptor
+
+	int fd_flags = fcntl(captime_dev_fd, F_GETFL);
+	rc = fcntl(captime_dev_fd, F_SETFL, fd_flags | O_ASYNC);
+
+	if (rc == -1) {
+		perror("fcntl() SETFL failed\n");
+		return -1;
+	}
+```	
 
 ## Useful information for writing the code 
 
-#test1
+1. Saving the values in .csv file
 
-1. PL0_REF_CTRL_ADD         0xFF5E0000
-2. PS_APLL_BASE             0xFD1A0000, with an offset of 0x20, 0x24, 0x44 for CTRL, CFG, STATUS.
-3. BRAM_ADD                 0xA0028000
+``` c
+void save_file(char *filename, *array){
 
-#test2
-
-1. PL0_REF_CTRL_ADD         0xFF5E0000
-2. PS_APLL_BASE             0xFD1A0000, with an offset of 0x20, 0x24, 0x44 for CTRL, CFG, STATUS.
-3. OCM_ADD                  0xFFFC000
-
-#test3
-
-1.                       OCM1 (0xFFFC0000) --- |      | --- BRAM (0xB0028000)                  
-                                               |      |                                        
-                                               | CDMA |                                      
-                                               |      |                                        
-                         BRAM (0xB0028000) --- |      | --- OCM2 (0xFFFC2000)                 
-
-2. 
-```c
-
-#define CDMACR              0x00           //CDMA Control
-#define CDMASR              0x04           //Status
-#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
-#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
-#define TAILDESC_PNTR       0x10	   //Tail Description Pointer
-#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
-#define SA                  0x18           //Source Address
-#define SA_MSB              0x1C           //Source Address MSB
-#define DA                  0x20           //Destination Address
-#define DA_MSB              0x24           //Destination Address MSB
-#define BTT                 0x28           //Bytes to Transfer
-#define OCM_MAP_SIZE        65536UL
-#define MAP_SIZE            65536UL
-#define MAP_MASK            (MAP_SIZE - 1)
-
+FILE *fp;
+ 
+char *filename = "data.csv";
+ 
+fp = fopen(filename,"w+");
+ 
+fprintf(fp,"Sample Cycles");
+ 
+for(i=0;i<NUM_ITERATIONS;i++){
+ 
+    fprintf(fp,"\n%d",i);
+    fprintf(fp,",%d ",array[i]);
+    }
+ 
+fclose(fp);
+}
 ```
 
 ## Codes
 
 1. [test1.c](codes/test1.c)
 2. [test2.c](codes/test2.c)
-3. [test3.c](codes/test3.c)
+  
