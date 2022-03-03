@@ -186,11 +186,10 @@ uint32_t* BRAM_virtual_address;
 
 
 
-void change_ps_freq(int dh){
+void change_ps_freq(int dh, int n){
 
 	//changing PS Frequency
 
-	int seed_ps= rand()%5;
 	int g = 0;
 	uint32_t *reg, *ps_clk_ctrl, *ps_clk_cfg, *ps_clk_status;
 
@@ -205,7 +204,7 @@ void change_ps_freq(int dh){
 
 	ps_clk_status = reg + (((PS_APLL_BASE + PLL_STATUS_OFF) & MAP_MASK) >> 2);
 
-	switch(seed_ps){
+	switch(n){
 
 		case 0:
 			//1499 MHz
@@ -246,46 +245,6 @@ void change_ps_freq(int dh){
 #endif
 			break;
 		case 1:
-			//1333 MHz
-			//APLL_CTRL = 0x0000_2800
-			//APLL_CFG  = 0x7E73_AC6C
-
-
-			//1. Program the new FIDIV, CLKOUT
-			*ps_clk_ctrl = PS_APLL_CTRL_1333;
-
-			//2. Program the control data
-			*ps_clk_cfg  = PS_APLL_CFG_1333;
-
-			//3. Program the bypass -> APLL_CTRL[3] = 1;
-			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
-
-			//4. Assert Reset -> APLL_CTRL[0] = 1;
-			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
-
-			//5. Deassert Reset -> APLL_CTRL[0] = 0;
-			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
-
-			//6. Check for LOCK -> PLL_STATUS[0]
-			g = 0;
-			while((*ps_clk_status & 0x00000001) != 1){
-				g++;
-			}
-#ifdef PRINT_COUNT
-			printf("waited %d loop cycles for STATUS = 1\n", g);
-#endif
-
-			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
-			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
-
-			munmap(ps_clk_ctrl, MAP_SIZE_F);
-
-#ifdef PRINT_COUNT
-			printf("PS Frequncy changed to 1333 MHz\n");
-#endif
-
-			break;
-		case 2:
 			//999 MHz
 			//APLL_CTRL = 0x0000_1E00
 			//APLL_CFG  = 0x7E7D_0C86
@@ -325,47 +284,7 @@ void change_ps_freq(int dh){
 			printf("PS Frequncy changed to 999 MHz\n");
 #endif
 			break;
-		case 3:
-			//733 MHz
-			//APLL_CTRL = 0x0001_2C00
-			//APLL_CFG  = 0x7E67_4C6C
-
-
-
-			//1. Program the new FIDIV, CLKOUT
-			*ps_clk_ctrl = PS_APLL_CTRL_733;
-
-			//2. Program the control data
-			*ps_clk_cfg  = PS_APLL_CFG_733;
-
-			//3. Program the bypass -> APLL_CTRL[3] = 1;
-			*ps_clk_ctrl = (*ps_clk_ctrl) | (1<<3);
-
-			//4. Assert Reset -> APLL_CTRL[0] = 1;
-			*ps_clk_ctrl = (*ps_clk_ctrl) | 1;
-
-			//5. Deassert Reset -> APLL_CTRL[0] = 0;
-			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFFE;
-
-			//6. Check for LOCK -> PLL_STATUS[0]
-			g = 0;
-			while((*ps_clk_status & 0x00000001) != 1){
-				g++;
-			}
-#ifdef PRINT_COUNT
-			printf("waited %d loop cycles for STATUS = 1\n", g);
-#endif
-
-			//7. Deassert the bypass -> APLL_CTRL[3] = 0;
-			*ps_clk_ctrl = (*ps_clk_ctrl) & 0xFFFFFFF7;
-
-			munmap(ps_clk_ctrl, MAP_SIZE_F);
-
-#ifdef PRINT_COUNT
-			printf("PS Frequncy changed to 733 MHz\n");
-#endif
-			break;
-		case 4:
+		case 2:
 			//416.6 MHz
 			//APLL_CTRL = 0x0001_1900
 			//APLL_CFG  = 0x7E7D_0C6A
@@ -405,15 +324,15 @@ void change_ps_freq(int dh){
 #endif
 			break;
 
-
+		default: 
+			break;
 	}
 }
 
 
-void change_pl_freq(int dh){
+void change_pl_freq(int dh, int m){
 
 	//changing PL Frequency
-	int seed_pl = rand() % 5;
 	uint32_t *pl_clk_reg;
 	uint32_t *pl0;
 	pl_clk_reg = mmap(NULL,
@@ -422,7 +341,7 @@ void change_pl_freq(int dh){
 			MAP_SHARED, dh, PL0_REF_CTRL_ADD & ~MAP_MASK_F);
 	pl0 = pl_clk_reg + (((PL0_REF_CTRL_ADD + 0xC0) & MAP_MASK) >> 2);
 
-	switch(seed_pl){
+	switch(m){
 
 
 		//address for PL0_REF_CTRL register = 0x00_FF5E_00C0;
@@ -440,18 +359,6 @@ void change_pl_freq(int dh){
 			break;
 
 		case 1:
-			//250 MHz
-			//PL0_REF_CTRL = 0x0101_0600
-
-			*pl0 = PL_0_250;
-
-			munmap(pl_clk_reg, MAP_SIZE_F);
-
-#ifdef PRINT_COUNT
-			printf("PL Frequncy changed to 250 MHz\n");
-#endif
-			break;
-		case 2:
 			//187.5 MHz
 			//PL0_REF_CTRL = 0x0101_0800
 
@@ -463,19 +370,7 @@ void change_pl_freq(int dh){
 			printf("PL Frequncy changed to 187.5 MHz\n");
 #endif
 			break;
-		case 3:
-			//150 MHz
-			//PL0_REF_CTRL = 0x0101_0A00
-
-			*pl0 = PL_0_150;
-
-			munmap(pl_clk_reg, MAP_SIZE_F);
-
-#ifdef PRINT_COUNT
-			printf("PL Frequncy changed to 150 MHz\n");
-#endif
-			break;
-		case 4:
+		case 2:
 			//100 MHz
 			//PL0_REF_CTRL = 0x0101_0F00
 
@@ -486,6 +381,8 @@ void change_pl_freq(int dh){
 #ifdef PRINT_COUNT
 			printf("PL Frequncy changed to 100 MHz\n");
 #endif
+			break;
+		default: 
 			break;
 
 
@@ -568,10 +465,38 @@ int main(int argc, char *argv[]) {
 	/* ---------------------------------------------------------------------
 	 * Reset sigio_signal_processed flag:
 	 */
+	if(argc>3){
+		printf("USAGE: ./test1 (n PS Freq) (m PL Freq)\n");
+		return -1;
+	}
 
+	int n,m;
+	if(argc == 3){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+	}
+        
+	if(n==0)
+		printf("Setting PS Freq. to 1499 MHz\n");
+	else if(n==1)
+		printf("Setting PS Freq. to 999 MHz\n");
+	else if(n==2)
+		printf("Setting PS Freq. to 416.6 MHz\n");
+
+	else if(n>2)
+		printf("Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\n");
 
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
+	if(m==0)
+		printf("Setting PL Freq. to 300 MHz\n");
+	else if(m==1)
+		printf("Setting PL Freq. to 187.5 MHz\n");
+	else if(m==2)
+		printf("Setting PL Freq. to 100 MHz\n");
+	else if(m>2)
+		printf("Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\n");
+
 
 	if(dh == -1){
 		printf("Unable to open /dev/mem. Ensure if it exists.\n");
@@ -632,7 +557,6 @@ int main(int argc, char *argv[]) {
 	//Generating random data and address
 	int count = 0;
 	int LOOPS = xx;
-	srand(time(0));
 			       int i =0; 
 
 			       cdma_virtual_address = mmap(NULL, 
@@ -649,8 +573,8 @@ int main(int argc, char *argv[]) {
 					       BRAM & ~MAP_MASK); // Memory map AXI Lite register block
 			       while(xx){
 
-				       change_ps_freq(dh);
-				       change_pl_freq(dh);
+				       change_ps_freq(dh, n);
+				       change_pl_freq(dh, m);
 				       srand(time(0));
 
 				       int status;    
@@ -827,7 +751,9 @@ int main(int argc, char *argv[]) {
 			       munmap(ocm_2, OCM_MAP_SIZE);
 			       munmap(cdma_virtual_address, MAP_SIZE);
 			       munmap(BRAM_virtual_address, MAP_SIZE);
-	return 0;
+
+			       save_file(intr_latency_measurements);
+		       	       return 0;
 }
 
 unsigned long int_sqrt(unsigned long n){
@@ -931,7 +857,23 @@ void compute_interrupt_latency_stats_back(
         *std_deviation_p = std_deviation;
 }
 
+void save_file(long *array){
 
+FILE *fp;
+ 
+char *filename = "data.csv";
+ 
+fp = fopen(filename,"w+");
+ 
+fprintf(fp,"Sample Cycles");
+ 
+for(int i=0;i<NUM_MEASUREMENTS;i++){
+ 
+    fprintf(fp,",%ld ",array[i]);
+    }
+ 
+fclose(fp);
+}
 
 
 
