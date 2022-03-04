@@ -22,17 +22,15 @@ First, run the following command in the specified directories to setup the envir
 
 ```bash
 
-/your_path/lab2/kernal_modules# source insert.sh   #this makes the kernel modules and inserts them in the kernel
+/your_path/lab2/kernal_modules# ./insert.sh   #this makes the kernel modules and inserts them in the kernel
+#(uncomment the rmmod lines if running the script more than once, followed by $ chmod +x insert.sh
 
-/your_path/lab2/codes# source bitstream_lab2.bit   #to insert the bit file
-
-/your_path/lab2/codes# make clean
-/your_path/lab2/codes# make
+/your_path/lab2/codes# ./bitstream_lab2.bit   #to insert the bit file
 
 
 ```
 
-Once you are in the lab2/codes directory and  have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
+Once you are in the lab2/codes directory and have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
 $ make clean
@@ -65,7 +63,7 @@ Setting PS Freq. to 416.6 MHz
 PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz.
 For now, setting it to 300 MHz..
 
-DMA's OCM/BRAM traffic tests with 200 and 1024 words successful!!!
+DMA: OCM/BRAM traffic tests with 200 and 1024 words successful!!!
 
 For OCM to BRAM:
 Minimum Latency:    6601
@@ -194,13 +192,7 @@ parameter IDLE  = 3'b100,
 ```bash 
 error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . 
 
-error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. 
-
-correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] 
-
-[[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its 
-
-own disables file order sorting.
+error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting.
 ```
 Above mentioned error is a simulation bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
 
@@ -211,7 +203,7 @@ set_property library xil_defaultlib [get_files]
 
 8. Flow -> Generate Bitstrem -> Save the block design -> Synthesis and Implementation is out-of-date? -> Launch Runs.
 
-9. Open reports under 'Design Runs' contain the Static Timing Analysis.
+9. Reports under 'Design Runs' contain the Static Timing Analysis.
 
 10. File -> Export -> Export Hardware -> include bit stream
 
