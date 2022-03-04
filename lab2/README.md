@@ -14,7 +14,7 @@ Email: jatinkhare@utexas.edu
 4. [Setting the Frequency](#setting-the-frequency)
 5. [Useful information for writing the code](#useful-information-for-writing-the-code)
 6. [Codes](#codes)
-7. [Measurement Analysis](#measure-analysis)
+7. [Measurement Analysis](#measurement-analysis)
 
 ## How to run the code
 
