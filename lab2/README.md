@@ -40,7 +40,9 @@ The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
 n and m values determine the PS-PL frequency combinations 
 
 n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
+
 m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
+
 (Loops): -1 (Default value = 500), maximum input value allowed = 10000
 ```bash
 root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 2 -1 200
@@ -81,7 +83,9 @@ The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
 n and m values determine the PS-PL frequency combinations 
 
 n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
+
 m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
+
 (Loops): -1 (Default value = 10000), maximum input value allowed = 10000
 
 ```bash
@@ -272,7 +276,7 @@ root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
 
 ## Frequency Values
 
-Vary the frequencies using the method from Lab 1 [README.md](advancesmcusystems/lab1/README.md)
+Vary the frequencies using the method from Lab 1 [README.md](https://github.com/JatinKhare/advancesmcusystems/blob/main/lab1/README.md)
 
 # Interrupt handling
 
@@ -303,7 +307,7 @@ insmod captimer_int.ko
 2. The mknod will make a device node inside the /dev/ and the insmod will insert the kernel module to the /proc/interrupts.
 3. The 240 and 241 are the major number for the driver, and the 'c' stands for the character device.
 4. The .ko is the object file for the kernel modules and can be formed using the Makefile provided.
-5. We can check for the interrupt number to which the linux maps our hardware interrupts 240 and 241 to the application end by the following command-
+5. We can check for the interrupt number to which the linux maps our hardware interrupts to the application end with the following command (interrupt number 48 and 51)-
 
 ``` bash
 root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2# more /proc/interrupts 
@@ -551,4 +555,34 @@ fclose(fp);
 
 1. [test1.c](codes/test1.c)
 2. [test2.c](codes/test2.c)
-  
+ 
+## Measurement Analysis
+
+For the analysis od the latency data, we have 9 sets of values for each test case. The data plots and conclusions driven from those go as follows-
+
+** (* few outlier values have been omitted while plotting so that the plots can be analysized more accurately) **
+
+<img src="images\ps_1_1499.png" width="392" height="105"> <br/>
+<img src="images\ps_1_999.png" width="392" height="105"> <br/>
+<img src="images\ps_1_416.png" width="392" height="105"> <br/>
+<img src="images\pl_1_300.png" width="392" height="105"> <br/>
+<img src="images\pl_1_187.png" width="392" height="105"> <br/>
+<img src="images\pl_1_100.png" width="392" height="105"> <br/>
+
+<img src="images\ps_2_1499.png" width="392" height="105"> <br/>
+<img src="images\ps_2_999.png" width="392" height="105"> <br/>
+<img src="images\ps_2_416.png" width="392" height="105"> <br/>
+<img src="images\pl_2_300.png" width="392" height="105"> <br/>
+<img src="images\pl_2_187.png" width="392" height="105"> <br/>
+<img src="images\pl_2_100.png" width="392" height="105"> <br/>
+
+#### Observations
+
+1. Latency is inversely proportional to the PS frequency. Which totally makes sense, if the tranfer rate is higher, the time taken to tranfer will be higher. On the other hand, the PL frequency does not really affect the latency as the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
+
+2. The counter value depends on two factors: the PL frequency (the speed of counting) and the PS frequency (how long to count for). Keeping the PS constant, the counter value increases with increase in PL frequency, and keeping PL constant, the counter value increases with decrease in the PS frequency. 
+
+
+<img src="images\min_max.png" width="392" height="105"> <br/>
+
+We can see there is a lot of jitter in the maximum latency, and the minimum latency is in  a very close range of values. 
