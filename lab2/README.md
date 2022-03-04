@@ -18,6 +18,19 @@ Email: jatinkhare@utexas.edu
 
 ## How to run the code
 
+First, run the following command in the specified directories to setup the environment:
+
+```bash
+
+/your_path/lab2/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
+
+/your_path/lab2/codes# source bitstream_lab2.bit       #to insert the bit file
+
+/your_path/lab2/codes# make
+
+
+```
+
 Once you have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
@@ -564,51 +577,52 @@ For the analysis od the latency data, we have 9 sets of values for each test cas
 
 ### Test1: Keeping PS constant and changing the PL frequency
 
-<p float="left">
   <img src="images\ps_1_1499.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
   <img src="images\ps_1_999.png" width="1000" /> 
+<hr style="border:2px solid gray"> </hr>
   <img src="images\ps_1_416.png" width="1000" /> 
-</p>
 <hr style="border:2px solid gray"> </hr>
 
 
 ### Test1: Keeping PL constant and changing the PS frequency
 
-<p float="left">
   <img src="images\pl_1_300.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
   <img src="images\pl_1_187.png" width="1000" /> 
+<hr style="border:2px solid gray"> </hr>
   <img src="images\pl_1_100.png" width="1000" /> 
-</p>
 <hr style="border:2px solid gray"> </hr>
 
 
 ### Test2: Keeping PS constant and changing the PL frequency
 
-<p float="left">
   <img src="images\ps_2_1499.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
   <img src="images\ps_2_999.png" width="1000" /> 
+<hr style="border:2px solid gray"> </hr>
   <img src="images\ps_2_416.png" width="1000" /> 
-</p>
 <hr style="border:2px solid gray"> </hr>
 
 
 ### Test2: Keeping PL constant and changing the PS frequency
-<p float="left">
   <img src="images\pl_2_300.png" width="1000" />
-  <img src="images\pl_2_187.png" width="1000" /> 
-  <img src="images\pl_2_100.png" width="1000" /> 
-</p>
 <hr style="border:2px solid gray"> </hr>
-
-
+  <img src="images\pl_2_187.png" width="1000" /> 
+<hr style="border:2px solid gray"> </hr>
+  <img src="images\pl_2_100.png" width="1000" /> 
+<hr style="border:2px solid gray"> </hr>
 
 #### Observations
 
-1. Latency is inversely proportional to the PS frequency. Which totally makes sense, if the tranfer rate is higher, the time taken to tranfer will be higher. On the other hand, the PL frequency does not really affect the latency as the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
+1. Latency is inversely proportional to the PS frequency, which totally makes sense. If the tranfer rate is higher, the time taken to tranfer will be higher. On the other hand, the PL frequency does not really affect the latency, because the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
 
 2. The counter value depends on two factors: the PL frequency (the speed of counting) and the PS frequency (how long to count for). Keeping the PS constant, the counter value increases with increase in PL frequency, and keeping PL constant, the counter value increases with decrease in the PS frequency. 
 
 
 <img src="images\min_max.png" width="1000" /> 
 
-We can see there is a lot of jitter in the maximum latency, and the minimum latency is in  a very close range of values. 
+[Blue dots: max points, Red points: min points]
+
+1. We can see there is a lot of jitter in the maximum latency, and the minimum latency is in a very close range of values. 
+(here also few values have been omited while plotting to make sure the range is small enough to visualize the data more clearly)

@@ -326,7 +326,7 @@ void sigio_signal_handler(int signo){
 	//assert(signo == SIGIO);   // Confirm correct signal #
 	//printf("sigio_signal_handler called (signo=%d)\n", signo);
 	//*slv_reg1 = *slv_reg1 & 0x0;
-	*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
+	*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;    //stop the count and negate the interrupt_out bit
 	sigio_signal_count ++;
 	det_int = 1;
 }
@@ -431,6 +431,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	//signal(SIGINT, m_unmap_ctrl_c);
+
+	//Mapping to the PL Registers
 	slv_reg_base = mmap(NULL,
 			MAP_SIZE,
 			PROT_READ|PROT_WRITE,
@@ -440,14 +442,16 @@ int main(int argc, char *argv[]) {
 	slv_reg1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
 	slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
 	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
+
 	change_ps_freq(dh, n);
 	change_pl_freq(dh, m);
-		int sample = 0;
-       //for(int j = 0; j< STAT_MEASUREMENTS; j++){	
-	for(int i = 0;i<xx;i++){ 
-		*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
 
-		*slv_reg1 = *slv_reg1 | 0x3;
+	int sample = 0;
+        //for(int j = 0; j< STAT_MEASUREMENTS; j++){	
+	for(int i = 0;i<xx;i++){ 
+		*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;    //resetting the timer and the interrupt_out
+
+		*slv_reg1 = *slv_reg1 | 0x3;           //start the counter and initiate the interrupt
 		count1 = *slv_reg2;
 		while(!det_int){
 			;
