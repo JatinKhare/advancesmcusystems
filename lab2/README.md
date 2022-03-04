@@ -23,7 +23,7 @@ First, run the following commands in the specified directories to setup the envi
 ```bash
 
 /your_path/lab2/kernal_modules# ./insert.sh   #this makes the kernel modules and inserts them in the kernel
-#(uncomment the rmmod lines if running the script more than once, followed by $ chmod +x insert.sh
+#(the rm and rmmod lines will throw error on the first run as there is no device/module tor remove at first, so please ingnore those errors)
 
 /your_path/lab2/codes# ./bitstream_lab2.bit   #to insert the bit file
 
@@ -31,12 +31,23 @@ First, run the following commands in the specified directories to setup the envi
 ```
 This will give you:
 ``` bash
-make -C /usr/src/plnx_kernel M=/home/ee382n/labs/advmcu_codes/advancesmcusystems/lab2/kernal_modules modules
+root@ultra96:~/lab2/kernal_modules# ./insert.sh 
+make -C /usr/src/plnx_kernel M=/home/ee382n/lab2/kernal_modules modules
 make[1]: Entering directory '/usr/src/4.14.0-xilinx-v2018.3'
+  CC [M]  /home/ee382n/lab2/kernal_modules/cdma_int.o
+  CC [M]  /home/ee382n/lab2/kernal_modules/captimer_int.o
   Building modules, stage 2.
   MODPOST 2 modules
+  CC      /home/ee382n/lab2/kernal_modules/captimer_int.mod.o
+  LD [M]  /home/ee382n/lab2/kernal_modules/captimer_int.ko
+  CC      /home/ee382n/lab2/kernal_modules/cdma_int.mod.o
+  LD [M]  /home/ee382n/lab2/kernal_modules/cdma_int.ko
 make[1]: Leaving directory '/usr/src/4.14.0-xilinx-v2018.3'
-
+rm: cannot remove '/dev/cdma_int': No such file or directory
+rm: cannot remove '/dev/captimer_int': No such file or directory
+rmmod: ERROR: Module cdma_int is not currently loaded
+rmmod: ERROR: Module captimer_int is not currently loaded
+$
 lsmod output:
 
 Module                  Size  Used by
@@ -46,11 +57,12 @@ wilc_sdio             118784  0
 zynqmp_r5_remoteproc    16384  0
 mali                  245760  0
 uio_pdrv_genirq        16384  0
-
+$
 /proc/interrupts
 
- 48:          3          0          0          0     GICv2 124 Edge      captime_interrupt
- 51:          2          0          0          0     GICv2 123 Edge      cdma_interrupt
+ 48:          0          0          0          0     GICv2 124 Edge      captime_interrupt
+ 51:          0          0          0          0     GICv2 123 Edge      cdma_interrupt
+
 ```
 and
 
