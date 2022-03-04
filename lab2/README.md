@@ -25,7 +25,7 @@ First, run the following commands in the specified directories to setup the envi
 /your_path/lab2/kernal_modules# source insert.sh   #this makes the kernel modules and inserts them in the kernel
 #(the rm and rmmod lines will throw error on the first run as there is no device/module tor remove at first, so please ingnore those errors)
 
-/your_path/lab2/codes# source bitstream_lab2.bit   #to insert the bit file
+/your_path/lab2/codes# source bit_insert.sh    #to insert the bit file
 
 
 ```
