@@ -26,12 +26,13 @@ First, run the following command in the specified directories to setup the envir
 
 /your_path/lab2/codes# source bitstream_lab2.bit       #to insert the bit file
 
+/your_path/lab2/codes# make clean
 /your_path/lab2/codes# make
 
 
 ```
 
-Once you have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
+Once you are in the lab2/codes directory and  have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
 $ make clean
@@ -624,7 +625,7 @@ For the analysis od the latency data, we have 9 sets of values for each test cas
 
 <img src="images\min_max.png" width="1000" /> 
 
-[Blue dots: max points, Red points: min points]
+[Blue dots: max points, Red dots: min points]
 
 1. We can see there is a lot of jitter in the maximum latency, and the minimum latency is in a very close range of values. 
 (here also few values have been omited while plotting to make sure the range is small enough to visualize the data more clearly)
