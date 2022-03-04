@@ -194,6 +194,8 @@ parameter WAIT  = 3'b011,
 parameter IDLE  = 3'b100,
 ```
 
+<img src="images\sim.png" width="1000" /> 
+
 ```bash 
 error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting. ~ ~ ~
 ```
