@@ -29,7 +29,36 @@ First, run the following command in the specified directories to setup the envir
 
 
 ```
+This will give you:
+``` bash
+make -C /usr/src/plnx_kernel M=/home/ee382n/labs/advmcu_codes/advancesmcusystems/lab2/kernal_modules modules
+make[1]: Entering directory '/usr/src/4.14.0-xilinx-v2018.3'
+  Building modules, stage 2.
+  MODPOST 2 modules
+make[1]: Leaving directory '/usr/src/4.14.0-xilinx-v2018.3'
 
+lsmod output:
+
+Module                  Size  Used by
+captimer_int           16384  0
+cdma_int               16384  0
+wilc_sdio             118784  0
+zynqmp_r5_remoteproc    16384  0
+mali                  245760  0
+uio_pdrv_genirq        16384  0
+
+/proc/interrupts
+
+ 48:          3          0          0          0     GICv2 124 Edge      captime_interrupt
+ 51:          2          0          0          0     GICv2 123 Edge      cdma_interrupt
+```
+and
+
+``` bash
+Time taken to load BIN is 3710.000000 Milli Seconds
+BIN FILE loaded through zynqMP FPGA manager successfully
+
+```
 Once you are in the lab2/codes directory and have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
