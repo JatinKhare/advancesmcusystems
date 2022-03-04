@@ -1,5 +1,5 @@
  
-# Lab 2
+# Lab 2: 
 ```
 Name: Jatin Khare
 UT EID: jk47976
@@ -9,12 +9,11 @@ Email: jatinkhare@utexas.edu
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
-2. [Setting up the environment](#setting-up-the-environment)
-3. [Lab 2](#lab-2)
-4. [Setting up the Board](#setting-up-the-board)
-5. [Setting the Frequency](#setting-the-frequency)
-6. [Useful information for writing the code](#useful-information-for-writing-the-code)
-7. [Codes](#codes)
+2. [Starting with Lab 2](#starting-with-lab-2)
+3. [Setting up the Board](#setting-up-the-board)
+4. [Setting the Frequency](#setting-the-frequency)
+5. [Useful information for writing the code](#useful-information-for-writing-the-code)
+6. [Codes](#codes)
 
 
 ## How to run the code
@@ -33,18 +32,37 @@ USAGE:
 
 ```bash
 
-./test1 (n) (m)
+./test1 (n PS Freq) (m PL Freq) (Loops)
 
 ```
-The test runs 1000 transfers (1024 words each, to and fro from OCM->BRAM)
+The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
 
 n and m values determine the PS-PL frequency combinations 
 
-n: 0 (), 1 (), 3 ()
-m: 0 (), 1 (), 3 () 
-
+n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), default PS frequency = 1499 MHz
+m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), default PL frequency = 300 MHz
+(Loops): Default value = 500, maximum input value allowed = 10000
 ```bash
-//Output
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 0 2 100
+Setting PS Freq. to 1499 MHz
+Setting PL Freq. to 100 MHz
+
+DMA's OCM/BRAM traffic tests with 100 and 1024 words successful!!!
+
+For OCM to BRAM:
+Minimum Latency:    3069
+Maximum Latency:    8605
+Average Latency:    3674.000000
+Standard Deviation: 1042.000000
+Number of samples:  100
+
+For BRAM to OCM:
+Minimum Latency:    1890
+Maximum Latency:    8301
+Average Latency:    2451.000000
+Standard Deviation: 1088.000000
+Number of samples:  100
+Number of Interrupts: 200
 
 ```
 ### ./test2
@@ -53,16 +71,41 @@ USAGE:
 
 ```bash
 
-./test2
+./test2 (n PS Freq) (m PL Freq) (Loops)
 
 ```
-The test runs 10000 interrupt latency measurements
+The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
+
+n and m values determine the PS-PL frequency combinations 
+
+n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), default PS frequency = 1499 MHz
+m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), default PL frequency = 300 MHz
+(Loops): Default value = 500, maximum input value allowed = 10000
 
 ```bash
-//Output
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 0 2 100
+Setting PS Freq. to 1499 MHz
+Setting PL Freq. to 100 MHz
+
+DMA's OCM/BRAM traffic tests with 100 and 1024 words successful!!!
+
+For OCM to BRAM:
+Minimum Latency:    3069
+Maximum Latency:    8605
+Average Latency:    3674.000000
+Standard Deviation: 1042.000000
+Number of samples:  100
+
+For BRAM to OCM:
+Minimum Latency:    1890
+Maximum Latency:    8301
+Average Latency:    2451.000000
+Standard Deviation: 1088.000000
+Number of samples:  100
+Number of Interrupts: 200
 
 ```
-## Setting up the environment
+## Starting with Lab 2
 
 ```bash
 
@@ -103,9 +146,8 @@ jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado/BASELINE_ULTRA96_20
 start_gui
 
 ```
-## Lab 1
 
-### When the GUI is open-
+## When the GUI is open-
 1. Open the project from lab1.
 2. Create a new IP block for capture timer.
 3. Integrate the new IP into the pre-existing block diagram and make the connections.
@@ -238,8 +280,7 @@ root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
 
 ## Frequency Values
 
-1. TEST #1: Vary CPU and [FPGA Frequency](#pl-frequency-table).
-2. TEST #2: Vary only [CPU Frequency](#ps-frequency-table). 
+Vary the frequencies using Lab 1 README.md.
 
 # Interrupt handling
 

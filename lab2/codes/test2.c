@@ -94,7 +94,7 @@ sigset_t signal_mask, signal_mask_old, signal_mask_most;
 unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
 unsigned long min_latency_measurements[STAT_MEASUREMENTS];
 unsigned long max_latency_measurements[STAT_MEASUREMENTS];
-
+int xx = 10000;
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
 
@@ -366,37 +366,53 @@ int main(int argc, char *argv[]) {
 		perror("fcntl() SETFL failed\n");
 		return -1;
 	}
-	if(argc>3){
-		printf("USAGE: ./test1 (n PS Freq) (m PL Freq)\n");
-		return -1;
-	}
 
-	int n,m;
-	if(argc == 3){
-		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
-		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
-	}
+	if(argc>4){
+                printf("USAGE: ./test1 (n PS Freq) (m PL Freq) (Loops)\n");
+                return -1;
+        }
 
-	if(n==0)
-		printf("Setting PS Freq. to 1499 MHz\n");
-	else if(n==1)
-		printf("Setting PS Freq. to 999 MHz\n");
-	else if(n==2)
-		printf("Setting PS Freq. to 416.6 MHz\n");
+        int n = -1, m = -1;
+        if(argc == 1){
+                printf("Default loop number = 500\n");
+        }
+        if(argc == 2){
+                n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+                printf("Default loop number = 500\n");
+        }
+        if(argc == 3){
+                n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+                m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+                printf("Default loop number = 500\n");
+        }
+        if(argc == 4){
+                n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+                m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+                xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
+                printf("Loop number = %d\n", xx);
+        }
+        if(n==0)
+                printf("Setting PS Freq. to 1499 MHz\n");
+        else if(n==1)
+                printf("Setting PS Freq. to 999 MHz\n");
+        else if(n==2)
+                printf("Setting PS Freq. to 416.6 MHz\n");
 
-	else
-		printf("Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\n");
+        else if(n>2||n==-1)
+                printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting itto 1499 MHz..\n");
 
-	//    signal(SIGINT, m_unmap_ctrl_c);
-	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
-	if(m==0)
-		printf("Setting PL Freq. to 300 MHz\n\n");
-	else if(m==1)
-		printf("Setting PL Freq. to 187.5 MHz\n\n");
-	else if(m==2)
-		printf("Setting PL Freq. to 100 MHz\n\n");
-	else
-		printf("Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\n");
+  //    signal(SIGINT, m_unmap_ctrl_c);
+        int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
+        if(m==0)
+                printf("Setting PL Freq. to 300 MHz\n");
+        else if(m==1)
+                printf("Setting PL Freq. to 187.5 MHz\n");
+        else if(m==2)
+                printf("Setting PL Freq. to 100 MHz\n");
+        else if(m>2||m==-1)
+                printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
+
+
 
 
 
@@ -419,8 +435,8 @@ int main(int argc, char *argv[]) {
 	change_pl_freq(dh, m);
 	int status;   
 		int sample = 0;
-       for(int j = 0; j< STAT_MEASUREMENTS; j++){	
-	for(int i = 0;i<NUM_MEASUREMENTS;i++){ 
+       //for(int j = 0; j< STAT_MEASUREMENTS; j++){	
+	for(int i = 0;i<xx;i++){ 
 		*slv_reg1 = *slv_reg1 & 0xFFFFFFFC;
 
 		*slv_reg1 = *slv_reg1 | 0x3;
@@ -435,7 +451,7 @@ int main(int argc, char *argv[]) {
 		intr_latency_measurements[i] = count2 - count1;
 	}
 
-	//	for(int i=0;i<NUM_MEASUREMENTS;i++){
+	//	for(int i=0;i<xx;i++){
 	//		printf("%d ", intr_latency_measurements[i]);
 	//	}
 	//	printf("\n\n");
@@ -454,20 +470,20 @@ int main(int argc, char *argv[]) {
 		min_latency_measurements[sample] = min_latency;
 		max_latency_measurements[sample] = max_latency;
 		sample ++;
-//	printf("Minimum Latency:    %lu\n"
-//			"Maximum Latency:    %lu\n"
-//			"Average Latency:    %f\n"
-//			"Standard Deviation: %f\n"
-//			"Number of samples:  %d\n",
-//			min_latency,
-//			max_latency,
-//			average_latency,
-//			std_deviation,
-//			NUM_MEASUREMENTS 
-//	      );
+	printf("Minimum Latency:    %lu\n"
+			"Maximum Latency:    %lu\n"
+			"Average Latency:    %f\n"
+			"Standard Deviation: %f\n"
+			"Number of samples:  %d\n",
+			min_latency,
+			max_latency,
+			average_latency,
+			std_deviation,
+			xx 
+	      );
 	//printf("Number of Interrupts: %d\n", sigio_signal_count); 
-        //save_file(intr_latency_measurements);
-       }
+       save_file(intr_latency_measurements);
+      // }
 /*		for(int i=0;i<STAT_MEASUREMENTS;i++){
 			printf("%d ", min_latency_measurements[i]);
 		}
@@ -475,8 +491,8 @@ int main(int argc, char *argv[]) {
 			printf("%d ", max_latency_measurements[i]);
 		}
 	//	printf("\n\n");*/
-	save_file(min_latency_measurements, STAT_MEASUREMENTS);
-	save_file(max_latency_measurements, STAT_MEASUREMENTS);
+//	save_file(min_latency_measurements, STAT_MEASUREMENTS);
+//	save_file(max_latency_measurements, STAT_MEASUREMENTS);
 	return 0;
 
 }
@@ -512,7 +528,7 @@ void compute_interrupt_latency_stats(
 	unsigned long   sum = 0;
 	unsigned long   sum_squares = 0;
 
-	for (i = 0; i < NUM_MEASUREMENTS; i ++) {
+	for (i = 0; i < xx; i ++) {
 		val = intr_latency_measurements[i];
 
 		if (val < min) {
@@ -530,9 +546,9 @@ void compute_interrupt_latency_stats(
 	*min_latency_p = min;
 	*max_latency_p = max;
 
-	unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+	unsigned long average = (unsigned long)sum / xx;
 
-	unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
+	unsigned long std_deviation = int_sqrt((sum_squares / xx) -
 			(average * average));
 
 

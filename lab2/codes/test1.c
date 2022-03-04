@@ -80,7 +80,7 @@
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
 #define CDMA_DEV_PATH       "/dev/cdma_int"
-#define NUM_MEASUREMENTS    500
+#define HIGHEST_MEAS_NUMBER         10000
 //#define PRINT_COUNT
 
 void sigio_signal_handler(int signo);
@@ -90,8 +90,9 @@ volatile int sigio_signal_count = 0;
 int cdma_dev_fd  = -1;
 int det_int;
 sigset_t signal_mask, signal_mask_old, signal_mask_most;
-unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
-unsigned long intr_latency_measurements_back[NUM_MEASUREMENTS];
+int xx = 500;
+unsigned long intr_latency_measurements_back[HIGHEST_MEAS_NUMBER];
+unsigned long intr_latency_measurements[HIGHEST_MEAS_NUMBER];
 
 //DMA Set
 
@@ -465,17 +466,30 @@ int main(int argc, char *argv[]) {
 	/* ---------------------------------------------------------------------
 	 * Reset sigio_signal_processed flag:
 	 */
-	if(argc>3){
-		printf("USAGE: ./test1 (n PS Freq) (m PL Freq)\n");
+	if(argc>4){
+		printf("USAGE: ./test1 (n PS Freq) (m PL Freq) (Loops)\n");
 		return -1;
 	}
 
-	int n,m;
+	int n = -1, m = -1;
+	if(argc == 1){
+		printf("Default loop number = 500\n");
+	}
+	if(argc == 2){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		printf("Default loop number = 500\n");
+	}
 	if(argc == 3){
 		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
 		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+		printf("Default loop number = 500\n");
 	}
-        
+	if(argc == 4){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+		xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
+		printf("Loop number = %d\n", xx);
+	}
 	if(n==0)
 		printf("Setting PS Freq. to 1499 MHz\n");
 	else if(n==1)
@@ -483,8 +497,8 @@ int main(int argc, char *argv[]) {
 	else if(n==2)
 		printf("Setting PS Freq. to 416.6 MHz\n");
 
-	else if(n>2)
-		printf("Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\n");
+	else if(n>2||n==-1)
+		printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting itto 1499 MHz..\n");
 
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
@@ -494,8 +508,8 @@ int main(int argc, char *argv[]) {
 		printf("Setting PL Freq. to 187.5 MHz\n");
 	else if(m==2)
 		printf("Setting PL Freq. to 100 MHz\n");
-	else if(m>2)
-		printf("Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\n");
+	else if(m>2||m==-1)
+		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
 
 
 	if(dh == -1){
@@ -527,9 +541,8 @@ int main(int argc, char *argv[]) {
 	if(xx == 0)
 		sw = 0;
 */
-	int xx = 500;   //default value of number of loops to run
 	int yy = 1024;   //default value of number of words to test per loop
-
+	int LOOPS = xx, loop_count = xx;
 	uint32_t* ocm_1 = mmap(NULL, 
 			OCM_MAP_SIZE, 
 			PROT_READ | PROT_WRITE, 
@@ -555,8 +568,6 @@ int main(int argc, char *argv[]) {
 	slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
 	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
 	//Generating random data and address
-	int count = 0;
-	int LOOPS = xx;
 			       int i =0; 
 
 			       cdma_virtual_address = mmap(NULL, 
@@ -571,7 +582,7 @@ int main(int argc, char *argv[]) {
 					       MAP_SHARED, 
 					       dh, 
 					       BRAM & ~MAP_MASK); // Memory map AXI Lite register block
-			       while(xx){
+			       while(loop_count){
 
 				       change_ps_freq(dh, n);
 				       change_pl_freq(dh, m);
@@ -697,10 +708,9 @@ int main(int argc, char *argv[]) {
 				       }
 
 				       //printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - xx + 1, yy);
-				       xx--;
+				       loop_count--;
 
 			       }
-
 //			       for(int i=0;i<500;i++){
 //				       printf("%d ", intr_latency_measurements[i]);
 //			       }
@@ -728,7 +738,7 @@ int main(int argc, char *argv[]) {
 					       max_latency,
 					       average_latency,
 					       std_deviation,
-					       NUM_MEASUREMENTS
+					       xx
 				     );
 
 			       compute_interrupt_latency_stats_back(&min_latency, &max_latency, &average_latency, &std_deviation);
@@ -742,10 +752,10 @@ int main(int argc, char *argv[]) {
 					       max_latency,
 					       average_latency,
 					       std_deviation,
-					       NUM_MEASUREMENTS
+					       xx
 				     );
 
-			       printf("Number of Interrupts: %d\n", sigio_signal_count);
+			       printf("Total number of Interrupts for to-and-fro transfer: %d\n", sigio_signal_count);
 			       (void)close(cdma_dev_fd);
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
@@ -787,7 +797,7 @@ void compute_interrupt_latency_stats(
 	unsigned long   sum = 0;
 	unsigned long   sum_squares = 0;
 
-	for (i = 0; i < NUM_MEASUREMENTS; i ++) {
+	for (i = 0; i < xx; i ++) {
 		val = intr_latency_measurements[i];
 
 		if (val < min) {
@@ -805,9 +815,9 @@ void compute_interrupt_latency_stats(
 	*min_latency_p = min;
 	*max_latency_p = max;
 
-	unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+	unsigned long average = (unsigned long)sum / xx;
 
-	unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
+	unsigned long std_deviation = int_sqrt((sum_squares / xx) -
 			(average * average));
 
 
@@ -829,7 +839,7 @@ void compute_interrupt_latency_stats_back(
         unsigned long   sum = 0;
         unsigned long   sum_squares = 0;
 
-        for (i = 0; i < NUM_MEASUREMENTS; i ++) {
+        for (i = 0; i < xx; i ++) {
                 val = intr_latency_measurements_back[i];
 
                 if (val < min) {
@@ -847,9 +857,9 @@ void compute_interrupt_latency_stats_back(
         *min_latency_p = min;
         *max_latency_p = max;
 
-        unsigned long average = (unsigned long)sum / NUM_MEASUREMENTS;
+        unsigned long average = (unsigned long)sum / xx;
 
-        unsigned long std_deviation = int_sqrt((sum_squares / NUM_MEASUREMENTS) -
+        unsigned long std_deviation = int_sqrt((sum_squares / xx) -
                         (average * average));
 
 
@@ -867,7 +877,7 @@ fp = fopen(filename,"w+");
  
 fprintf(fp,"Sample Cycles");
  
-for(int i=0;i<NUM_MEASUREMENTS;i++){
+for(int i=0;i<xx;i++){
  
     fprintf(fp,",%ld ",array[i]);
     }
