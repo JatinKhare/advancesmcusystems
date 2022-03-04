@@ -22,16 +22,16 @@ First, run the following commands in the specified directories to setup the envi
 
 ```bash
 
-/your_path/lab2/kernal_modules# ./insert.sh   #this makes the kernel modules and inserts them in the kernel
+/your_path/lab2/kernal_modules# source insert.sh   #this makes the kernel modules and inserts them in the kernel
 #(the rm and rmmod lines will throw error on the first run as there is no device/module tor remove at first, so please ingnore those errors)
 
-/your_path/lab2/codes# ./bitstream_lab2.bit   #to insert the bit file
+/your_path/lab2/codes# source bitstream_lab2.bit   #to insert the bit file
 
 
 ```
 This will give you:
 ``` bash
-root@ultra96:~/lab2/kernal_modules# ./insert.sh 
+root@ultra96:~/lab2/kernal_modules# source insert.sh 
 make -C /usr/src/plnx_kernel M=/home/ee382n/lab2/kernal_modules modules
 make[1]: Entering directory '/usr/src/4.14.0-xilinx-v2018.3'
   CC [M]  /home/ee382n/lab2/kernal_modules/cdma_int.o

@@ -19,4 +19,4 @@ lsmod
 echo $'\n/proc/interrupts\n'
 more /proc/interrupts > proc_interrupts.txt
 tail -12 proc_interrupts.txt | head -2
-
+rm proc_interrupts.txt
