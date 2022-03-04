@@ -27,8 +27,8 @@ PWD   := $(shell pwd)
 
 default:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
-	$(CC)  intr_latency.c -o intr_latency.exe
-	$(CC)  intr_latency.c -g -o intr_latency_gdb
+#	$(CC)  intr_latency.c -o intr_latency.exe
+#	$(CC)  intr_latency.c -g -o intr_latency_gdb
 #	$(CC)  intr_latency_csv.c -o intr_latency_csv
 
 clean::

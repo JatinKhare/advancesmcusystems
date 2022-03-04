@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 
 #define CDMA                0xB0000000
@@ -89,11 +90,23 @@ static volatile sig_atomic_t sigio_signal_processed = 0;
 volatile int sigio_signal_count = 0;
 int cdma_dev_fd  = -1;
 int det_int;
-sigset_t signal_mask, signal_mask_old, signal_mask_most;
 int xx = 500;
 unsigned long intr_latency_measurements_back[HIGHEST_MEAS_NUMBER];
 unsigned long intr_latency_measurements[HIGHEST_MEAS_NUMBER];
 
+
+void compute_interrupt_latency_stats(
+		unsigned long   *min_latency_p,
+		unsigned long   *max_latency_p,
+		double          *average_latency_p,
+		double          *std_deviation_p);
+
+void compute_interrupt_latency_stats_back(
+		unsigned long   *min_latency_p,
+		unsigned long   *max_latency_p,
+		double          *average_latency_p,
+		double          *std_deviation_p);
+void save_file(long unsigned *array);
 //DMA Set
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
@@ -488,7 +501,7 @@ int main(int argc, char *argv[]) {
 		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
 		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
 		xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
-		printf("Loop number = %d\n", xx);
+		printf("Setting loop number = %d\n", xx);
 	}
 	if(n==0)
 		printf("Setting PS Freq. to 1499 MHz\n");
@@ -498,7 +511,7 @@ int main(int argc, char *argv[]) {
 		printf("Setting PS Freq. to 416.6 MHz\n");
 
 	else if(n>2||n==-1)
-		printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting itto 1499 MHz..\n");
+		printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting it to 1499 MHz..\n");
 
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
@@ -586,7 +599,6 @@ int main(int argc, char *argv[]) {
 
 				       change_ps_freq(dh, n);
 				       change_pl_freq(dh, m);
-				       srand(time(0));
 
 				       int status;    
 				       uint32_t data[yy];
@@ -784,12 +796,12 @@ unsigned long int_sqrt(unsigned long n){
 	return root;
 }
 
+
 void compute_interrupt_latency_stats(
 		unsigned long   *min_latency_p,
 		unsigned long   *max_latency_p,
 		double          *average_latency_p,
 		double          *std_deviation_p){
-
 	int i;
 	unsigned long   val;
 	unsigned long   min = ULONG_MAX;
@@ -867,7 +879,7 @@ void compute_interrupt_latency_stats_back(
         *std_deviation_p = std_deviation;
 }
 
-void save_file(long *array){
+void save_file(long unsigned *array){
 
 FILE *fp;
  

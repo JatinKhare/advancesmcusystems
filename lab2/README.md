@@ -39,30 +39,32 @@ The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
 
 n and m values determine the PS-PL frequency combinations 
 
-n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), default PS frequency = 1499 MHz
-m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), default PL frequency = 300 MHz
-(Loops): Default value = 500, maximum input value allowed = 10000
+n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
+m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
+(Loops): -1 (Default value = 500), maximum input value allowed = 10000
 ```bash
-root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 0 2 100
-Setting PS Freq. to 1499 MHz
-Setting PL Freq. to 100 MHz
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 2 -1 200
+Setting loop number = 200
+Setting PS Freq. to 416.6 MHz
+PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
+For now, setting it to 300 MHz..
 
-DMA's OCM/BRAM traffic tests with 100 and 1024 words successful!!!
+DMA's OCM/BRAM traffic tests with 200 and 1024 words successful!!!
 
 For OCM to BRAM:
-Minimum Latency:    3069
-Maximum Latency:    8605
-Average Latency:    3674.000000
-Standard Deviation: 1042.000000
-Number of samples:  100
+Minimum Latency:    6601
+Maximum Latency:    24878
+Average Latency:    7721.000000
+Standard Deviation: 1509.000000
+Number of samples:  200
 
 For BRAM to OCM:
-Minimum Latency:    1890
-Maximum Latency:    8301
-Average Latency:    2451.000000
-Standard Deviation: 1088.000000
-Number of samples:  100
-Number of Interrupts: 200
+Minimum Latency:    4869
+Maximum Latency:    14799
+Average Latency:    6263.000000
+Standard Deviation: 1077.000000
+Number of samples:  200
+Total number of Interrupts for to-and-fro transfer: 400
 
 ```
 ### ./test2
@@ -78,31 +80,22 @@ The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
 
 n and m values determine the PS-PL frequency combinations 
 
-n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), default PS frequency = 1499 MHz
-m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), default PL frequency = 300 MHz
-(Loops): Default value = 500, maximum input value allowed = 10000
+n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
+m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
+(Loops): -1 (Default value = 10000), maximum input value allowed = 10000
 
 ```bash
-root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 0 2 100
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test2 0 2 1000
+Setting loop number = 1000
 Setting PS Freq. to 1499 MHz
 Setting PL Freq. to 100 MHz
 
-DMA's OCM/BRAM traffic tests with 100 and 1024 words successful!!!
-
-For OCM to BRAM:
-Minimum Latency:    3069
-Maximum Latency:    8605
-Average Latency:    3674.000000
-Standard Deviation: 1042.000000
-Number of samples:  100
-
-For BRAM to OCM:
-Minimum Latency:    1890
-Maximum Latency:    8301
-Average Latency:    2451.000000
-Standard Deviation: 1088.000000
-Number of samples:  100
-Number of Interrupts: 200
+Minimum Latency:    452
+Maximum Latency:    295891
+Average Latency:    832.000000
+Standard Deviation: 9343.000000
+Number of samples:  1000
+Number of Interrupts: 1000
 
 ```
 ## Starting with Lab 2
@@ -169,18 +162,25 @@ start_gui
 6. Design the state machine required for this project, find the verilog modules [here](verilog_codes/). Simulation of the module written can be performed by forcing constant values/clock cycles to the module ports. 
 
 ``` verilog
-
-	parameter RESET = 3'b000,
-        parameter LOAD  = 3'b001,
-        parameter COUNT = 3'b010,
-        parameter WAIT  = 3'b011,
-        parameter IDLE  = 3'b100,
+//Split view of register bits
+slv_reg0 <= {16'hBEAD, 8'h0, timer_enable, 1'b0, 1'b0, capture_complete, 1'b0, 1'b0, 1'b0, capture_gate};
+slv_reg1[31:2] <= {16'hFEED, 14'h0};
+slv_reg2 <= Cap_Timer_Out[31:0];
+slv_reg3 <= {28'h5555_CAB, 1'b0, current_state[2:0]};
+```
+``` verilog
+//State assignment
+parameter RESET = 3'b000,
+parameter LOAD  = 3'b001,
+parameter COUNT = 3'b010,
+parameter WAIT  = 3'b011,
+parameter IDLE  = 3'b100,
 ```
 
 ```bash 
 error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting. ~ ~ ~
 ```
-Above mentioned error is a bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
+Above mentioned error is a simulation bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
 
 ```bash
 set_property library xil_defaultlib [get_files]
@@ -195,8 +195,6 @@ set_property library xil_defaultlib [get_files]
 
 
 # Setting up the Board
-
-## Enabling SSH access
 
 1. sudo screen -L /dev/ttyUSB1 115200
 2. wpa_passphrase SpectrumSetup-FE PASSWORD
@@ -258,12 +256,6 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 ```
 9. Once the bit file is loaded in the hardware, check for the debug register values
 
-``` verilog
-        slv_reg0 <= {16'hBEAD, 8'h0, timer_enable, 1'b0, 1'b0, capture_complete, 1'b0, 1'b0, 1'b0, capture_gate};
-        slv_reg1[31:2] <= {16'hFEED, 14'h0};
-        slv_reg2 <= Cap_Timer_Out[31:0];
-        slv_reg3 <= {28'h5555_CAB, 1'b0, current_state[2:0]};
-```
 ``` bash
 root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030000
 0xa0030000 = 0xbead0000
@@ -280,7 +272,7 @@ root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
 
 ## Frequency Values
 
-Vary the frequencies using Lab 1 README.md.
+Vary the frequencies using the method from Lab 1 [README.md](advancesmcusystems/lab1/README.md)
 
 # Interrupt handling
 
@@ -291,18 +283,21 @@ Vary the frequencies using Lab 1 README.md.
 ```bash
 #!/bin/sh
 
+make clean
 make
+
 rm /dev/cdma_int
 mknod /dev/cdma_int c 241 0
 
-rmmod cdma_int.ko
+#rmmod cdma_int.ko
 insmod cdma_int.ko
 
 rm /dev/captimer_int
 mknod /dev/captimer_int c 240 0
 
-rmmod captimer_int.ko
+#rmmod captimer_int.ko
 insmod captimer_int.ko
+
 ```
 
 2. The mknod will make a device node inside the /dev/ and the insmod will insert the kernel module to the /proc/interrupts.
@@ -311,8 +306,9 @@ insmod captimer_int.ko
 5. We can check for the interrupt number to which the linux maps our hardware interrupts 240 and 241 to the application end by the following command-
 
 ``` bash
-         CPU0       CPU1       CPU2       CPU3       
-  3:     188581      42967     125880      56554     GICv2  30 Level     arch_timer
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2# more /proc/interrupts 
+           CPU0       CPU1       CPU2       CPU3       
+  3:      55746      74969      30077     172018     GICv2  30 Level     arch_timer
   6:          0          0          0          0     GICv2  67 Level     ff9905c0.mailbox
   7:          0          0          0          0     GICv2 175 Level     arm-pmu
   8:          0          0          0          0     GICv2 176 Level     arm-pmu
@@ -340,36 +336,29 @@ insmod captimer_int.ko
  33:          0          0          0          0     GICv2  57 Level     axi-pmon
  34:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
  35:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
- 36:      33419          0          0          0     GICv2  80 Level     mmc0
- 37:     956548          0          0          0     GICv2  81 Level     mmc1
+ 36:      31292          0          0          0     GICv2  80 Level     mmc0
+ 37:     706998          0          0          0     GICv2  81 Level     mmc1
  38:          0          0          0          0     GICv2  51 Level     ff040000.spi
  39:          0          0          0          0     GICv2  52 Level     ff050000.spi
- 41:        694          0          0          0     GICv2  54 Level     xuartps
+ 41:        535          0          0          0     GICv2  54 Level     xuartps
  43:          0          0          0          0     GICv2  84 Edge      ff150000.watchdog
  44:          0          0          0          0     GICv2  88 Level     ams-irq
  45:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
  46:          0          0          0          0     GICv2 151 Level     fd4a0000.zynqmp-display
  47:          0          0          0          0     GICv2  61 Level     ff9a0100.zynqmp_r5_rproc
- 51:          0          0          0          0     GICv2 123 Edge      cdma_interrupt
- 71:         86          0          0          0     GICv2 102 Level     xhci-hcd:usb1
+ 48:      75006          0          0          0     GICv2 124 Edge      captime_interrupt
+ 51:       9408          0          0          0     GICv2 123 Edge      cdma_interrupt
+ 71:         87          0          0          0     GICv2 102 Level     xhci-hcd:usb1
  75:          0          0          0          0  zynq-gpio  23 Edge      sw4
-IPI0:     24688      40562     468018      40529       Rescheduling interrupts
-IPI1:        13         19         16         17       Function call interrupts
+IPI0:     24773     281618      55990      96623       Rescheduling interrupts
+IPI1:        18         11         15         20       Function call interrupts
 IPI2:         0          0          0          0       CPU stop interrupts
 IPI3:         0          0          0          0       CPU stop (for crash dump) interrupts
-IPI4:     14473      47186      30586      44459       Timer broadcast interrupts
-IPI5:         1          0          0          0       IRQ work interrupts
+IPI4:     33637      34042      41189       9056       Timer broadcast interrupts
+IPI5:       180          0          0          0       IRQ work interrupts
 IPI6:         0          0          0          0       CPU wake-up interrupts
 Err:          0
 
-
-[ 5569.488847] Ultra96 Interrupt Module
-[ 5569.492455] Ultra96  Interrupt Driver Loading.
-[ 5569.496925] Using Major Number 241 on cdma_interrupt
-[ 5569.502284] In probe funtion
-[ 5569.505149] Probe IRQ # = 51
-[ 5569.508218] Driver registered with no error
-[ 5569.512595] cdma_interrupt 1.0 Initialized
 ```
 6. The kernel module needs to have the exact name of the '.compatible' as in the DTB.
 
@@ -473,26 +462,91 @@ void sigio_signal_handler(int signo){
 1. Saving the values in .csv file
 
 ``` c
-void save_file(char *filename, *array){
+void save_file(long unsigned *array){
 
 FILE *fp;
- 
+
 char *filename = "data.csv";
- 
+
 fp = fopen(filename,"w+");
- 
+
 fprintf(fp,"Sample Cycles");
- 
-for(i=0;i<NUM_ITERATIONS;i++){
- 
-    fprintf(fp,"\n%d",i);
-    fprintf(fp,",%d ",array[i]);
+
+for(int i=0;i<xx;i++){
+
+    fprintf(fp,",%ld ",array[i]);
     }
- 
+
 fclose(fp);
 }
-```
 
+```
+2. Useful constant values:
+
+```c
+
+#define CDMA                0xB0000000
+#define BRAM                0xB0028000
+#define OCM_1               0xFFFC0000
+#define OCM_2               0xFFFC2000
+
+#define SLV_REG_BASE        0xA0030000
+#define SLV_REG_0_OFF       0x00000000
+#define SLV_REG_1_OFF       0x00000004
+#define SLV_REG_2_OFF       0x00000008
+#define SLV_REG_3_OFF       0x0000000c
+
+#define PL0_REF_CTRL_ADD    0xFF5E0000
+
+//register values for PS
+
+#define PS_APLL_BASE        0xFD1A0000
+#define APLL_CTRL_OFF       0x20
+#define APLL_CFG_OFF        0x24
+#define PLL_STATUS_OFF      0x44
+
+#define PS_APLL_CTRL_1499   0x00002D00
+#define PS_APLL_CTRL_1333   0x00002800
+#define PS_APLL_CTRL_999    0x00001E00
+#define PS_APLL_CTRL_733    0x00012C00
+#define PS_APLL_CTRL_416_6  0x00011900
+
+#define PS_APLL_CFG_1499    0x7E672C6C
+#define PS_APLL_CFG_1333    0x7E73AC6C
+#define PS_APLL_CFG_999     0x7E7D0C86
+#define PS_APLL_CFG_733     0x7E6A4C6C
+#define PS_APLL_CFG_416_6   0x7E7D0C6A
+
+//register values for PL
+
+#define PL_0_300            0x01010500
+#define PL_0_250            0x01010600
+#define PL_0_187_5          0x01010800
+#define PL_0_150            0x01010A00
+#define PL_0_100            0x01010F00
+
+#define CDMACR              0x00           //CDMA Control
+#define CDMASR              0x04           //Status
+#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
+#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
+#define TAILDESC_PNTR       0x10           //Tail Description Pointer
+#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
+#define SA                  0x18           //Source Address
+#define SA_MSB              0x1C           //Source Address MSB
+#define DA                  0x20           //Destination Address
+#define DA_MSB              0x24           //Destination Address MSB
+#define BTT                 0x28           //Bytes to Transfer
+#define OCM_MAP_SIZE        131072UL
+#define OCM_MAP_MASK        (OCM_MAP_SIZE - 1)
+#define MAP_SIZE            4096UL
+#define MAP_MASK            (MAP_SIZE - 1)
+#define MAP_SIZE_F          4096UL
+#define MAP_MASK_F          (MAP_SIZE_F - 1)
+#define CDMA_DEV_PATH       "/dev/cdma_int"
+#define HIGHEST_MEAS_NUMBER         10000
+//#define PRINT_COUNT
+
+```
 ## Codes
 
 1. [test1.c](codes/test1.c)

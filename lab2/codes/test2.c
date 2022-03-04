@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 
 
 #define CDMA                0xB0000000
@@ -94,6 +95,14 @@ sigset_t signal_mask, signal_mask_old, signal_mask_most;
 unsigned long intr_latency_measurements[NUM_MEASUREMENTS];
 unsigned long min_latency_measurements[STAT_MEASUREMENTS];
 unsigned long max_latency_measurements[STAT_MEASUREMENTS];
+void compute_interrupt_latency_stats(
+                unsigned long   *min_latency_p,
+                unsigned long   *max_latency_p,
+                double          *average_latency_p,
+                double          *std_deviation_p);
+
+void save_file(long unsigned *array, int size);
+
 int xx = 10000;
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
@@ -374,22 +383,22 @@ int main(int argc, char *argv[]) {
 
         int n = -1, m = -1;
         if(argc == 1){
-                printf("Default loop number = 500\n");
+                printf("Default loop number = 10000\n");
         }
         if(argc == 2){
                 n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
-                printf("Default loop number = 500\n");
+                printf("Default loop number = 10000\n");
         }
         if(argc == 3){
                 n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
                 m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
-                printf("Default loop number = 500\n");
+                printf("Default loop number = 10000\n");
         }
         if(argc == 4){
                 n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
                 m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
                 xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
-                printf("Loop number = %d\n", xx);
+                printf("Setting loop number = %d\n", xx);
         }
         if(n==0)
                 printf("Setting PS Freq. to 1499 MHz\n");
@@ -399,18 +408,18 @@ int main(int argc, char *argv[]) {
                 printf("Setting PS Freq. to 416.6 MHz\n");
 
         else if(n>2||n==-1)
-                printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting itto 1499 MHz..\n");
+                printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting it to 1499 MHz..\n");
 
   //    signal(SIGINT, m_unmap_ctrl_c);
         int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
         if(m==0)
-                printf("Setting PL Freq. to 300 MHz\n");
+                printf("Setting PL Freq. to 300 MHz\n\n");
         else if(m==1)
-                printf("Setting PL Freq. to 187.5 MHz\n");
+                printf("Setting PL Freq. to 187.5 MHz\n\n");
         else if(m==2)
-                printf("Setting PL Freq. to 100 MHz\n");
+                printf("Setting PL Freq. to 100 MHz\n\n");
         else if(m>2||m==-1)
-                printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
+                printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n\n");
 
 
 
@@ -433,7 +442,6 @@ int main(int argc, char *argv[]) {
 	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
 	change_ps_freq(dh, n);
 	change_pl_freq(dh, m);
-	int status;   
 		int sample = 0;
        //for(int j = 0; j< STAT_MEASUREMENTS; j++){	
 	for(int i = 0;i<xx;i++){ 
@@ -481,8 +489,8 @@ int main(int argc, char *argv[]) {
 			std_deviation,
 			xx 
 	      );
-	//printf("Number of Interrupts: %d\n", sigio_signal_count); 
-       save_file(intr_latency_measurements);
+	printf("Number of Interrupts: %d\n", sigio_signal_count); 
+       save_file(intr_latency_measurements, xx);
       // }
 /*		for(int i=0;i<STAT_MEASUREMENTS;i++){
 			printf("%d ", min_latency_measurements[i]);
@@ -556,7 +564,7 @@ void compute_interrupt_latency_stats(
 	*std_deviation_p = std_deviation;
 }
 int flag = 1;
-void save_file(long *array, int size){
+void save_file(long unsigned *array, int size){
 
 FILE *fp;
 
