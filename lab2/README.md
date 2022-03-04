@@ -560,21 +560,47 @@ fclose(fp);
 
 For the analysis od the latency data, we have 9 sets of values for each test case. The data plots and conclusions driven from those go as follows-
 
-** (* few outlier values have been omitted while plotting so that the plots can be analysized more accurately) **
+(* few outlier values have been omitted while plotting so that the plots can be analysized more accurately)
 
-<img src="images\ps_1_1499.png" width="392" height="105"> <br/>
-<img src="images\ps_1_999.png" width="392" height="105"> <br/>
-<img src="images\ps_1_416.png" width="392" height="105"> <br/>
-<img src="images\pl_1_300.png" width="392" height="105"> <br/>
-<img src="images\pl_1_187.png" width="392" height="105"> <br/>
-<img src="images\pl_1_100.png" width="392" height="105"> <br/>
+### Test1: Keeping PS constant and changing the PL frequency
 
-<img src="images\ps_2_1499.png" width="392" height="105"> <br/>
-<img src="images\ps_2_999.png" width="392" height="105"> <br/>
-<img src="images\ps_2_416.png" width="392" height="105"> <br/>
-<img src="images\pl_2_300.png" width="392" height="105"> <br/>
-<img src="images\pl_2_187.png" width="392" height="105"> <br/>
-<img src="images\pl_2_100.png" width="392" height="105"> <br/>
+<p float="left">
+  <img src="images\ps_1_1499.png" width="1000" />
+  <img src="images\ps_1_999.png" width="1000" /> 
+  <img src="images\ps_1_416.png" width="1000" /> 
+</p>
+<hr style="border:2px solid gray"> </hr>
+
+
+### Test1: Keeping PL constant and changing the PS frequency
+
+<p float="left">
+  <img src="images\pl_1_300.png" width="1000" />
+  <img src="images\pl_1_187.png" width="1000" /> 
+  <img src="images\pl_1_100.png" width="1000" /> 
+</p>
+<hr style="border:2px solid gray"> </hr>
+
+
+### Test2: Keeping PS constant and changing the PL frequency
+
+<p float="left">
+  <img src="images\ps_2_1499.png" width="1000" />
+  <img src="images\ps_2_999.png" width="1000" /> 
+  <img src="images\ps_2_416.png" width="1000" /> 
+</p>
+<hr style="border:2px solid gray"> </hr>
+
+
+### Test2: Keeping PL constant and changing the PS frequency
+<p float="left">
+  <img src="images\pl_2_300.png" width="1000" />
+  <img src="images\pl_2_187.png" width="1000" /> 
+  <img src="images\pl_2_100.png" width="1000" /> 
+</p>
+<hr style="border:2px solid gray"> </hr>
+
+
 
 #### Observations
 
@@ -583,6 +609,6 @@ For the analysis od the latency data, we have 9 sets of values for each test cas
 2. The counter value depends on two factors: the PL frequency (the speed of counting) and the PS frequency (how long to count for). Keeping the PS constant, the counter value increases with increase in PL frequency, and keeping PL constant, the counter value increases with decrease in the PS frequency. 
 
 
-<img src="images\min_max.png" width="392" height="105"> <br/>
+<img src="images\min_max.png" width="1000" /> 
 
 We can see there is a lot of jitter in the maximum latency, and the minimum latency is in  a very close range of values. 
