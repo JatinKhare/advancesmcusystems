@@ -84,6 +84,7 @@
 #define HIGHEST_MEAS_NUMBER         10000
 //#define PRINT_COUNT
 
+
 void sigio_signal_handler(int signo);
 volatile int rc;
 static volatile sig_atomic_t sigio_signal_processed = 0;
@@ -499,9 +500,10 @@ int main(int argc, char *argv[]) {
 	else if(n==2)
 		printf("Setting PS Freq. to 416.6 MHz\n");
 
-	else if(n>2||n==-1)
+	else if(n>2||n==-1){
+		n = 0;
 		printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting it to 1499 MHz..\n");
-
+	}
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
 	if(m==0)
@@ -510,9 +512,10 @@ int main(int argc, char *argv[]) {
 		printf("Setting PL Freq. to 187.5 MHz\n");
 	else if(m==2)
 		printf("Setting PL Freq. to 100 MHz\n");
-	else if(m>2||m==-1)
+	else if(m>2||m==-1){
+		m = 0;
 		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
-
+	}
 
 	if(dh == -1){
 		printf("Unable to open /dev/mem. Ensure if it exists.\n");

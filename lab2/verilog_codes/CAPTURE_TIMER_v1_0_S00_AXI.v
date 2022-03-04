@@ -470,44 +470,43 @@
                         endcase
                 end
 
-	       always @(posedge S_AXI_ACLK)
-		      begin
-        
-			if(current_state == RESET)
-                            begin 
-                                Cap_Timer_Out <= 0;
-                                capture_complete <=0;
-                                
-                            end
-            else if(current_state == LOAD)
-                            begin
-                                Cap_Timer_Out <= 0;
-                                capture_complete <=0;
-                            end
-			else if(current_state == COUNT)        
-                            begin
-                                Cap_Timer_Out <= Cap_Timer_Out + 1;
+       always @(posedge S_AXI_ACLK)
+	      begin
 
-                            end
+		if(current_state == RESET)
+		    begin 
+			Cap_Timer_Out <= 0;
+			capture_complete <=0;
+			
+		    end
+	        else if(current_state == LOAD)
+		    begin
+			Cap_Timer_Out <= 0;
+			capture_complete <=0;
+		    end
+		else if(current_state == COUNT)        
+		    begin
+			Cap_Timer_Out <= Cap_Timer_Out + 1;
+		    end
 
-			else if(current_state == WAIT)       
-                            begin
-                                capture_complete <= 1;
-                            end
+		else if(current_state == WAIT)       
+		    begin
+			capture_complete <= 1;
+		    end
 		end
 
-	        always @(posedge S_AXI_ACLK)
-		begin
-			if(S_AXI_ARESETN == 0)
-			    begin
-				    current_state <= RESET;
-			    end
-			else
-			    begin
-				    current_state <= next_state;
-			    end
-		end
- 
+	always @(posedge S_AXI_ACLK)
+	begin
+		if(S_AXI_ARESETN == 0)
+		    begin
+			    current_state <= RESET;
+		    end
+		else
+	    begin
+		    current_state <= next_state;
+	    end
+	end
+
 	// User logic ends
 
 	endmodule

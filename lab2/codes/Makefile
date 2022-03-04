@@ -13,6 +13,6 @@ test2:  $(test2_OBJS)
 	$(CC) $(CFLAGS) -o$@ $^ 
 
 clean: 
-	$(RM) count *.o *~ test1 test23
+	$(RM) count *.o *~ test1 test2
 
 .PHONY: all clean

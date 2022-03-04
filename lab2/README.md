@@ -14,7 +14,7 @@ Email: jatinkhare@utexas.edu
 4. [Setting the Frequency](#setting-the-frequency)
 5. [Useful information for writing the code](#useful-information-for-writing-the-code)
 6. [Codes](#codes)
-
+7. [Measurement Analysis](#measure-analysis)
 
 ## How to run the code
 
@@ -681,3 +681,65 @@ For the analysis of the latency data, we have 9 sets of values for each test cas
 
 1. We can see there is a lot of jitter in the maximum latency, and the minimum latency is in a very close range of values. 
 (here also few values have been omitted while plotting to make sure the range is small enough to visualize the data more clearly)
+
+### Values when the kernel is busy doing other tasks
+
+When the Kernel is not busy-
+
+``` bash
+
+Default loop number = 500
+PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.
+For now, setting it to 1499 MHz..
+PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
+For now, setting it to 300 MHz..
+
+DMA's OCM/BRAM traffic tests with 500 and 1024 words successful!!!
+
+For OCM to BRAM:
+Minimum Latency:    5392
+Maximum Latency:    18934
+Average Latency:    7762.000000
+Standard Deviation: 2943.000000
+Number of samples:  500
+
+For BRAM to OCM:
+Minimum Latency:    4076
+Maximum Latency:    22343
+Average Latency:    6517.000000
+Standard Deviation: 1284.000000
+Number of samples:  500
+Total number of Interrupts for to-and-fro transfer: 1000
+
+
+```
+After runnning this command in a separate window
+``` bash
+while (cd /) do ls -algR; done
+```
+``` bash
+Default loop number = 500
+PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.
+For now, setting it to 1499 MHz..
+PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
+For now, setting it to 300 MHz..
+
+DMA's OCM/BRAM traffic tests with 500 and 1024 words successful!!!
+
+For OCM to BRAM:
+Minimum Latency:    5406
+Maximum Latency:    497015
+Average Latency:    9087.000000
+Standard Deviation: 24183.000000
+Number of samples:  500
+
+For BRAM to OCM:
+Minimum Latency:    4058
+Maximum Latency:    684226
+Average Latency:    8246.000000
+Standard Deviation: 32305.000000
+Number of samples:  500
+Total number of Interrupts for to-and-fro transfer: 1000
+
+```
+Observation: The maximum latency is now significantly higher for the case when the kernel is kept busy doing the recursive task.
