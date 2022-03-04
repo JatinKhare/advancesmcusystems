@@ -22,9 +22,9 @@ First, run the following command in the specified directories to setup the envir
 
 ```bash
 
-/your_path/lab2/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
+/your_path/lab2/kernal_modules# source insert.sh   #this makes the kernel modules and inserts them in the kernel
 
-/your_path/lab2/codes# source bitstream_lab2.bit       #to insert the bit file
+/your_path/lab2/codes# source bitstream_lab2.bit   #to insert the bit file
 
 /your_path/lab2/codes# make clean
 /your_path/lab2/codes# make
@@ -62,7 +62,7 @@ m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
 root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 2 -1 200
 Setting loop number = 200
 Setting PS Freq. to 416.6 MHz
-PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
+PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz.
 For now, setting it to 300 MHz..
 
 DMA's OCM/BRAM traffic tests with 200 and 1024 words successful!!!
@@ -121,17 +121,11 @@ Number of Interrupts: 1000
 ```bash
 
 jkhare@mario (/misc/scratch/jkhare) % cd ..
-jkhare@mario (/misc/scratch) % ls
-avenkkateshraj    dpinheiroleal  hbarclay  jkhare  jwu2             mlei   mwang3  sli4   vivado.jou  wkelly
-dperaltavelazque  etaka          hychiang  jmehta  mbadrinarayanan  mshah  sdutta  tvema  vivado.log
 jkhare@mario (/misc/scratch) % cd jkhare/
 jkhare@mario (/misc/scratch/jkhare) % cd advancesmcusystems/
 jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % mkdir vivado
 jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % cd vivado
-
-
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % cp /home/projects/courses/spring_22/ee382n-16775/arch/labs/BASELINE_ULTRA96_2018.3.tar.gz .
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % # tar xvf BASELINE_ULTRA96_2018.3.tar.gz
+jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % tar xvf BASELINE_ULTRA96_2018.3.tar.gz
 jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % ls -1
 BASELINE_ULTRA96_2018.3
 BASELINE_ULTRA96_2018.3.tar.gz
@@ -198,7 +192,15 @@ parameter IDLE  = 3'b100,
 <img src="images\sim.png" width="1000" /> 
 
 ```bash 
-error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting. ~ ~ ~
+error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . 
+
+error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. 
+
+correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] 
+
+[[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its 
+
+own disables file order sorting.
 ```
 Above mentioned error is a simulation bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
 
@@ -342,7 +344,9 @@ root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2# more /proc/interrupts
  17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
  18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
  19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
- 20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, Mali_PP0_MMU, Mali_PP0, Mali_PP1_MMU, Mali_PP1
+ 20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, 
+									 Mali_PP0_MMU, Mali_PP0, 
+									 Mali_PP1_MMU, Mali_PP1
  21:          0          0          0          0     GICv2 109 Level     zynqmp-dma
  22:          0          0          0          0     GICv2 110 Level     zynqmp-dma
  23:          0          0          0          0     GICv2 111 Level     zynqmp-dma
