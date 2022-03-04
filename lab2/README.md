@@ -18,7 +18,7 @@ Email: jatinkhare@utexas.edu
 
 ## How to run the code
 
-First, run the following command in the specified directories to setup the environment:
+First, run the following commands in the specified directories to setup the environment:
 
 ```bash
 
@@ -326,20 +326,25 @@ Vary the frequencies using the method from Lab 1 [README.md](https://github.com/
 ```bash
 #!/bin/sh
 
-make clean
 make
-
 rm /dev/cdma_int
 mknod /dev/cdma_int c 241 0
-
-#rmmod cdma_int.ko
-insmod cdma_int.ko
 
 rm /dev/captimer_int
 mknod /dev/captimer_int c 240 0
 
-#rmmod captimer_int.ko
+rmmod cdma_int.ko
+insmod cdma_int.ko
+
+rmmod captimer_int.ko
 insmod captimer_int.ko
+
+echo $'\nlsmod output:\n'
+lsmod
+
+echo $'\n/proc/interrupts\n'
+more /proc/interrupts > proc_interrupts.txt
+tail -12 proc_interrupts.txt | head -2
 
 ```
 
@@ -651,9 +656,9 @@ For the analysis of the latency data, we have 9 sets of values for each test cas
   <img src="images\pl_2_100.png" width="1000" /> 
 <hr style="border:2px solid gray"> </hr>
 
-#### Observations
+### Observations
 
-1. Latency is inversely proportional to the PS frequency, which totally makes sense. If the tranfer rate is higher, the time taken to tranfer will be higher. On the other hand, the PL frequency does not really affect the latency, because the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
+1. Latency is inversely proportional to the PS frequency, which totally makes sense. If the tranfer rate is higher, the time taken to transfer will be higher. On the other hand, the PL frequency does not really affect the latency, because the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
 
 2. The counter value depends on two factors: the PL frequency (the speed of counting) and the PS frequency (how long to count for). Keeping the PS constant, the counter value increases with increase in PL frequency, and keeping PL constant, the counter value increases with decrease in the PS frequency. 
 
@@ -663,4 +668,4 @@ For the analysis of the latency data, we have 9 sets of values for each test cas
 [Blue dots: max points, Red dots: min points]
 
 1. We can see there is a lot of jitter in the maximum latency, and the minimum latency is in a very close range of values. 
-(here also few values have been omited while plotting to make sure the range is small enough to visualize the data more clearly)
+(here also few values have been omitted while plotting to make sure the range is small enough to visualize the data more clearly)
