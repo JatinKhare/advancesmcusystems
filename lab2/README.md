@@ -65,7 +65,7 @@ Once you are in the lab2/codes directory and have the .c files (test1.c, test2.c
 $ make clean
 $ make 
 ```
-This will generate the corresponding object files and executables for all the three test cases. 
+This will generate the corresponding object files and executables for all the two test cases. 
 
 ### ./test1
 
@@ -526,7 +526,17 @@ fclose(fp);
 }
 
 ```
-2. Useful constant values:
+2. Enabling and Disabling interrupts: CDMA transfer
+
+``` c
+// do this right before the transfer
+dma_set(cdma_virtual_address, CDMACR, 0x1000); //enabling interrupts
+dma_set(cdma_virtual_address, CDMACR, 0x000);  // disable interrupts
+
+```
+
+
+3. Useful constant values:
 
 ```c
 
@@ -599,9 +609,9 @@ fclose(fp);
  
 ## Measurement Analysis
 
-For the analysis od the latency data, we have 9 sets of values for each test case. The data plots and conclusions driven from those go as follows-
+For the analysis of the latency data, we have 9 sets of values for each test case. The data plots and conclusions driven from those go as follows-
 
-(* few outlier values have been omitted while plotting so that the plots can be analysized more accurately)
+(* few outlier values have been omitted while plotting, so that the plots can be analysized more accurately)
 
 ### Test1: Keeping PS constant and changing the PL frequency
 
