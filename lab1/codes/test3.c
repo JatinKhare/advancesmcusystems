@@ -26,7 +26,7 @@
 #include <signal.h>
 
 #define CDMA                0xB0000000
-#define BRAM                0xB0028000
+#define BRAM                0xB0030000
 #define OCM_1               0xFFFC0000
 #define OCM_2               0xFFFC2000
 
@@ -155,14 +155,14 @@ int main(int argc, char *argv[]) {
 			   PROT_READ | PROT_WRITE, 
 			   MAP_SHARED, 
 			   dh, 
-			   OCM_1 & ~OCM_MAP_MASK);
+			   OCM_1);
 
     uint32_t* ocm_2 = mmap(NULL, 
 			   OCM_MAP_SIZE, 
 			   PROT_READ | PROT_WRITE, 
 			   MAP_SHARED, 
 			   dh, 
-			   OCM_2 & ~OCM_MAP_MASK);
+			   OCM_2);
 
     //Generating random data and address
     int count = 0;
@@ -185,14 +185,26 @@ int main(int argc, char *argv[]) {
 	    while(xx){
 		    uint32_t data[yy];
 		    srand(time(0));
+		    for(int i=0; i<yy; i++)
+		    {
+		     printf("ocm1[%d] = x%.8x, ocm2[%d] = x%.8x\n", i, ocm_1[i], i, ocm_2[i]);
+		    }
+		    printf("\n");
 		    for(int i = 0; i < yy; i++){
 			    data[i] = rand();
+			    printf("data[%d] = x%.8x\n", i, data[i]);
 		    }
 
+		    printf("\n");
 
 		    for(int i=0; i<yy; i++)
-			ocm_1[i] = data[i];
+			*(ocm_1 + i) = data[i];
 		    
+		    for(int i=0; i<yy; i++)
+		    {
+		     printf("ocm1 = %p: ocm1[%d] = x%.8x, ocm2 = %p: ocm2[%d] = x%.8x\n",ocm_1+i, i, *(ocm_1+i), ocm_2+i, i, *(ocm_2 + i));
+		    }
+		    printf("\n");
 		    // RESET DMA
 		    dma_set(cdma_virtual_address, CDMACR, 0x04);
 		   
@@ -212,6 +224,8 @@ int main(int argc, char *argv[]) {
 		    
 		    for(int i=0; i<yy; i++)
 		    {
+		     printf("ocm1[%d] = x%.8x, ocm2[%d] = x%.8x\n", i, ocm_1[i], i, ocm_2[i]);
+
 			if(ocm_2[i] != ocm_1[i])
 			{
 			    printf("\nTest failed!!\n");

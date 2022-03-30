@@ -25,6 +25,7 @@
 
 #define CDMA                0xB0000000
 #define BRAM                0xB0028000
+//#define BRAM                0xB0030000
 #define OCM_1               0xFFFC0000
 #define OCM_2               0xFFFC2000
 
@@ -76,7 +77,7 @@
 #define BTT                 0x28           //Bytes to Transfer
 #define OCM_MAP_SIZE        131072UL
 #define OCM_MAP_MASK        (OCM_MAP_SIZE - 1)
-#define MAP_SIZE            4096UL
+#define MAP_SIZE            131072UL
 #define MAP_MASK            (MAP_SIZE - 1)
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
@@ -156,9 +157,22 @@ void transfer(unsigned int *cdma_virtual_address, int length){
 	printf("Transfering data from OCM to BRAM\n");	
 #endif
 	dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, CDMACR, 0x1000);
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, BTT, length*4);
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
+
 	//cdma_sync(cdma_virtual_address);
 }
 
@@ -171,17 +185,6 @@ void set_TE(){
 	*slv_reg1 = *slv_reg1 | 2; 
 }
 
-/*int capture_complete(){
-  int count_value;
-//check for the capture_complete flag
-if((*slv_reg0 >> 4) & 1){
-count_value = *slv_reg2;
-reset_TE();
-return count_value;
-}
-return -1;
-
-}*/
 //Transfer from BRAM to OCM
 
 void transfer_back(unsigned int *cdma_virtual_address, int length){
@@ -190,9 +193,21 @@ void transfer_back(unsigned int *cdma_virtual_address, int length){
 	printf("Transfering data from BRAM to OCM\n");	
 #endif
 	dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, SA, BRAM); // Write source address
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, CDMACR, 0x1000);
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	dma_set(cdma_virtual_address, BTT, length*4);
+#ifdef PRINT_COUNT
+			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 	//cdma_sync(cdma_virtual_address);
 }
 
@@ -409,7 +424,7 @@ void sigio_signal_handler(int signo){
 	//assert(signo == SIGIO);   // Confirm correct signal #
 	sigio_signal_count ++;
 	int l = 5;
-	reset_TE();
+	//reset_TE();
 	//while(l){
 	l--;
 	//}
@@ -417,7 +432,7 @@ void sigio_signal_handler(int signo){
 	//printf("sigio_signal_handler called (signo=%d)\n", signo);
 	if(signo == SIGINT){
 		munmap(cdma_virtual_address, MAP_SIZE);
-		munmap(BRAM_virtual_address, MAP_SIZE);
+		//munmap(BRAM_virtual_address, MAP_SIZE);
 		printf("\n\nmunmap() done!\nNow terminating the process with grace...\n\n");
 		kill(0,SIGKILL);
 	}
@@ -529,14 +544,14 @@ int main(int argc, char *argv[]) {
 			PROT_READ | PROT_WRITE, 
 			MAP_SHARED, 
 			dh, 
-			OCM_1 & ~OCM_MAP_MASK);
+			OCM_1);
 
 	uint32_t* ocm_2 = mmap(NULL, 
 			OCM_MAP_SIZE, 
 			PROT_READ | PROT_WRITE, 
 			MAP_SHARED, 
 			dh, 
-			OCM_2 & ~OCM_MAP_MASK);
+			OCM_2);
 
 	//mapping to the PL registers
 
@@ -558,13 +573,13 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			CDMA & ~MAP_MASK); // Memory map AXI Lite register block
-	BRAM_virtual_address = mmap(NULL, 
+/*	BRAM_virtual_address = mmap(NULL, 
 			MAP_SIZE, 
 			PROT_READ | PROT_WRITE, 
 			MAP_SHARED, 
 			dh, 
 			BRAM & ~MAP_MASK); // Memory map AXI Lite register block
-	while(loop_count){
+*/	while(loop_count){
 
 		change_ps_freq(dh, n);
 		change_pl_freq(dh, m);
@@ -592,26 +607,26 @@ int main(int argc, char *argv[]) {
 		printf("[transfer:] after reset TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
 
-		set_TE();
-		count1 = *slv_reg2;
 
-#ifdef PRINT_COUNT
-		printf("from the main() count1 = %d\n", count1);
-#endif
 		int childpid = vfork();
 
 #ifdef PRINT_COUNT
 		printf("[transfer:] after set TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
 		if(childpid ==0){
-#ifdef PRINT_COUNT
-			printf("[transfer:] inside child before transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
-#endif
 
+			set_TE();
+			count1 = *slv_reg2;
+#ifdef PRINT_COUNT
+		printf("count1 from child = %d\n", count1);
+#endif
+#ifdef PRINT_COUNT
+			printf("[transfer:] inside child before transfer(), slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
+#endif
 			transfer(cdma_virtual_address, yy);
 
 #ifdef PRINT_COUNT
-			printf("[transfer:] inside child after transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
+			printf("[transfer:] inside child after transfer(), slv_reg0 = x%.8x,slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 #endif
 			exit(0);
 		}
@@ -620,18 +635,23 @@ int main(int argc, char *argv[]) {
 			waitpid(childpid, &status, WCONTINUED);
 			while(!det_int);
 			det_int = 0;
+			reset_TE();
 			dma_set(cdma_virtual_address, CDMACR, 0x0000);
 #ifdef PRINT_COUNT
 			printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 #endif
 		}
 
+#ifdef PRINT_COUNT
+			printf("from the main after transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
+#endif
 		count2 = *slv_reg2;
 #ifdef PRINT_COUNT
 		printf("from the main() count1 = %d, count2 = %d\n", count1, count2);
 #endif
 		intr_latency_measurements[i] = count2 - count1;
 
+		dma_set(cdma_virtual_address, CDMACR, 0x04);
 		count1_back = 0;
 		count2_back = 0;
 
@@ -640,15 +660,17 @@ int main(int argc, char *argv[]) {
 #ifdef PRINT_COUNT
 		printf("[transfer back:] after reset TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
-
-		set_TE();
-		count1_back = *slv_reg2;
 		childpid = vfork();
 
 #ifdef PRINT_COUNT
 		printf("[transfer back:] after set TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
 		if(childpid ==0){
+			set_TE();
+			count1_back = *slv_reg2;
+#ifdef PRINT_COUNT
+		printf("count1_back from child = %d\n", count1_back);
+#endif
 #ifdef PRINT_COUNT
 			printf("[transfer back:] inside child before transfer_back(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
@@ -663,6 +685,7 @@ int main(int argc, char *argv[]) {
 			waitpid(childpid, &status, WCONTINUED);
 			while(!det_int);    //be stuck until you get the interrupt
 			det_int = 0;
+			reset_TE();
 			dma_set(cdma_virtual_address, CDMACR, 0x0000);
 #ifdef PRINT_COUNT
 			printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
@@ -670,6 +693,12 @@ int main(int argc, char *argv[]) {
 		}
 
 		count2_back = *slv_reg2;
+#ifdef PRINT_COUNT
+			printf("from the main after transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
+#endif
+#ifdef PRINT_COUNT
+		printf("from the main() count1_back = %d, count2_back = %d\n", count1_back, count2_back);
+#endif
 		intr_latency_measurements_back[i] = count2_back - count1_back;
 
 		i++;
@@ -683,7 +712,7 @@ int main(int argc, char *argv[]) {
 				munmap(ocm_1, OCM_MAP_SIZE);
 				munmap(ocm_2, OCM_MAP_SIZE);
 				munmap(cdma_virtual_address, MAP_SIZE);
-				munmap(BRAM_virtual_address, MAP_SIZE);
+				//munmap(BRAM_virtual_address, MAP_SIZE);
 				return -1;
 			}
 		}
