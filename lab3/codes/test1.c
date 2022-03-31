@@ -82,7 +82,7 @@
 #define MAP_SIZE_F          4096UL
 #define MAP_MASK_F          (MAP_SIZE_F - 1)
 #define CDMA_DEV_PATH       "/dev/cdma_int"
-#define HIGHEST_MEAS_NUMBER         10000
+#define HIGHEST_MEAS_NUMBER         1000
 //#define PRINT_COUNT
 
 
