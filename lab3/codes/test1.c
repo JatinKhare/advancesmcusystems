@@ -58,7 +58,7 @@
 
 //register values for PL
 
-#define PL_0_300            0x01010500
+#define PL_0_300            0x01010600
 #define PL_0_250            0x01010600
 #define PL_0_187_5          0x01010800
 #define PL_0_150            0x01010A00
@@ -376,8 +376,8 @@ void change_pl_freq(int dh, int m){
 
 		//address for PL0_REF_CTRL register = 0x00_FF5E_00C0;
 		case 0:
-			//300 MHz
-			//PL0_REF_CTRL = 0x0101_0500
+			//250 MHz
+			//PL0_REF_CTRL = 0x0101_0600
 
 			*pl0 = PL_0_300;
 
@@ -441,6 +441,7 @@ void sigio_signal_handler(int signo){
 
 
 int main(int argc, char *argv[]) {
+	srand(time(NULL));
 	struct sigaction sig_action;
 	memset(&sig_action, 0, sizeof sig_action);
 	sig_action.sa_handler = sigio_signal_handler;
@@ -522,14 +523,14 @@ int main(int argc, char *argv[]) {
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
 	if(m==0)
-		printf("Setting PL Freq. to 300 MHz\n");
+		printf("Setting PL Freq. to 250 MHz\n");
 	else if(m==1)
 		printf("Setting PL Freq. to 187.5 MHz\n");
 	else if(m==2)
 		printf("Setting PL Freq. to 100 MHz\n");
 	else if(m>2||m==-1){
 		m = 0;
-		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
+		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 250 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
 	}
 
 	if(dh == -1){
@@ -579,7 +580,9 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			BRAM & ~MAP_MASK); // Memory map AXI Lite register block
-*/	while(loop_count){
+	
+*/	
+	while(loop_count){
 
 		change_ps_freq(dh, n);
 		change_pl_freq(dh, m);
@@ -768,8 +771,6 @@ int main(int argc, char *argv[]) {
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
 			       munmap(cdma_virtual_address, MAP_SIZE);
-			       munmap(BRAM_virtual_address, MAP_SIZE);
-
 			       //save the data in csv file
 			       save_file(intr_latency_measurements);
 		       	       return 0;
