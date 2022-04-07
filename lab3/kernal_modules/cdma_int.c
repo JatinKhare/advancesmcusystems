@@ -227,6 +227,29 @@ dma@b0000000 {
 			};			
 */
 
+/*
+ 	dma@b0000000 {
+			#dma-cells = <0x1>;
+			clock-names = "m_axi_aclk", "s_axi_lite_aclk";
+			clocks = <0x3 0x47 0x3 0x47>;
+			compatible = "xlnx,axi-cdma-4.1", "xlnx,axi-cdma-1.00.a";
+			interrupt-names = "cdma_introut";
+			interrupt-parent = <0x4>;
+			interrupts = <0x0 0x5b 0x4>;
+			reg = <0x0 0xb0000000 0x0 0x1000>;
+			xlnx,addrwidth = <0x28>;
+
+			dma-channel@b0000000 {
+				compatible = "xlnx,axi-cdma-channel";
+				interrupts = <0x0 0x5b 0x4>;
+				xlnx,datawidth = <0x400>;
+				xlnx,device-id = <0x0>;
+				xlnx,max-burst-len = <0x20>;
+			};
+		};
+
+*/
+
 /* number 48
 	Capture_Timer@a0030000 {
 			clock-names = "s00_axi_aclk";
@@ -242,7 +265,8 @@ dma@b0000000 {
 */
 
 static const struct of_device_id zynq_cdma_of_match[] = {
-    { .compatible = "xlnx,cdma_int" },
+    //{ .compatible = "xlnx,axi-cdma-4.1", "xlnx,axi-cdma-1.00.a"},
+    { .compatible = "xlnx,cdma_int"},
     { /* end of table */ }
 };    
     

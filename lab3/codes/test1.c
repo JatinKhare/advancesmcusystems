@@ -482,8 +482,6 @@ int main(int argc, char *argv[]) {
 		return -1;
 	}
 
-
-
 	//Reset sigio_signal_processed flag:
 	if(argc>4){
 		printf("USAGE: ./test1 (n PS Freq) (m PL Freq) (Loops)\n");
@@ -614,7 +612,7 @@ int main(int argc, char *argv[]) {
 		int childpid = vfork();
 
 #ifdef PRINT_COUNT
-		printf("[transfer:] after set TE, slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
+		printf("[transfer:] after set TE, slv_reg0 = x%.8x,  slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 #endif
 		if(childpid ==0){
 
