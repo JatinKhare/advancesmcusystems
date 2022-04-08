@@ -9,10 +9,9 @@ Email: jatinkhare@utexas.edu
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
-2. [Starting with Lab 3](#starting-with-lab-2)
+2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-desgin))
 3. [Setting up the Board](#setting-up-the-board)
 4. [Setting the Frequency](#setting-the-frequency)
-5. [Useful information for writing the code](#useful-information-for-writing-the-code)
 6. [Codes](#codes)
 
 
@@ -92,7 +91,7 @@ Total number of Interrupts for to-and-fro transfer: 1000
 3. Generate the bitstreams and analyse the performance improvements.
 
 
-## Understanding the data flow in the given design
+## Understanding the Data Flow in the Design
 
 Before we go on with changing the bus width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to and fro  from OCM to BRAM.
 
@@ -143,10 +142,10 @@ We explore the three combination out of it, i.e. slave port being LPD (same as l
 ### Bus Widths
 The bus width options available for CDMA are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bus bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
 
-### Burst size
+### Burst Size
 The burst size gets auto set when we change the bus width, but for the sake of consistency, the burst size for all the bust widths has been set to 32 bits.
 
-### CDMA store and forward
+### CDMA Store and Forward (S & F)
 As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
 
 <img src="images\cdma_vivado.png" width="600" />
@@ -244,6 +243,12 @@ Let us talk numbers. The following table shows the latency for the different con
 
 5. **Ports**: All the three buses perform nearly equally. The ACP gives comparatively the worst performance of all. The reason might be that the data being transferedf is more than the cache size of the ACP.
 
+### Utilization 
+The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled- 
+
+<img src="images\util.png" width="800" />
+<hr style="border:2px solid gray"> </hr>
+
 Let us answer the questions now:
 
 **1. Determine which busses to maximize between the PS-PL.
@@ -270,9 +275,9 @@ Even after we increase the bus width to the maximum of the options available, we
 ```
 
 **4. Determine which busses to maximize in the PL to the point where there are still some
-FPGA resources available (i.e., 3)**
-```bash
-```
+FPGA resources available (i.e., above 3%)**
+The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
+Find the [utilization](#utilization) report here.
 
 **5.Maximize the PL synthesis clock frequency in Vivado to the point where there are no
 timing issues. 
