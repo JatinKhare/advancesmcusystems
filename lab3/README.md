@@ -9,11 +9,11 @@ Email: jatinkhare@utexas.edu
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
-2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-design)
+2. [Undersanding the Data Flow in the Design](#understanding-the-data-flow-in-the-design)
 3. [Setting up the Board](#setting-up-the-board)
-4. [Setting the Frequency](#setting-the-frequency)
-6. [Codes](#codes)
-
+4. [Codes](#codes)
+5. [Performance Analysis](#performance-analysis)
+6. [Answering the Questions in the Lab Document](#answering-the-questions-in-the-lab-document)
 
 ## How to run the code
 
@@ -31,7 +31,7 @@ First, run the following command in the specified directories to setup the envir
 
 ```
 
-Once you are in the lab3/codes directory and  have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
+Once you are in the lab3/codes directory and  have the .c files (test1.c) in the same directory as the Makefile, do the following:
 
 ``` bash
 $ make clean
@@ -276,7 +276,7 @@ The maximum utilization is for the configuration which uses maximum BRAMs and ha
 
 ## Speedup
 
-I am calculating the speedup with the best performance in lab2 vs best performance achieved in lab3.
+The speedup is being calculated with the best performance in lab2 vs best performance achieved in lab3.
 
 **Lab 2** lowest latency (for 128 ----- 32 ----- 32) with PS Freq. 1499 MHz and PL Freq. 375 MHz
 (we went to 300 MHz in lab2, but turns out if we change the divisor factor from 5 to 4, a freq. of 375 MHz also works, but beyond that it crashes.)
@@ -292,7 +292,7 @@ Lab 3 --> 468.2/250 = 1.8728 micro seconds
 SPEEDUP = 3.536/1.8728 = 1.88  
 ```
 
-## Let us answer the questions now:
+## Answering the Questions in the Lab Document
 
 **1. Determine which busses to maximize between the PS-PL.
 a. Explain how and why?**
@@ -371,7 +371,7 @@ performance improvements.**
 ```
 a and b: Find the graph and explaination in the Observations section above.
 ```
-[Observations](#observations).
+[Observations](#observations)
 
 **9. Determine if should now modify your application software and kernel module to take
 advantage of the new hardware configuration.**
