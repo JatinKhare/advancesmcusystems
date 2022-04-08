@@ -94,7 +94,7 @@ Total number of Interrupts for to-and-fro transfer: 1000
 
 ## Understanding the data flow in the given design
 
-Before we go on with changing the bit width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to and fro  from OCM to BRAM.
+Before we go on with changing the bus width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to and fro  from OCM to BRAM.
 
 <img src="images\design.png" width="1000" />
 <hr style="border:2px solid gray"> </hr>
@@ -107,26 +107,26 @@ The using the red colored path the CDMA reads the content of the OCM using the s
 Based on the data flow discussed above, following are the components and their respective properties that have been explored in this lab.
 
 
-1. **Zynq Unit **
- - Master bus bit width and Master ports types
- - Slave bus bit width and Slave ports types
+1. **Zynq Unit**
+ - Master bus width and Master ports types
+ - Slave bus width and Slave ports types
 
-2.**CDMA Unit **
+2.**CDMA Unit**
  - Bit Width
  - Burst Size
  - CDMA store and forward option
 
-3. **BRAM Controller **
+3. **BRAM Controller**
  - Bit Width
 
-4. **Synthesis Frequency **
+4. **Synthesis Frequency**
  - The maximum possible (without any timing violations)
 
 
 ## Zynq Unit
 
 ### Bit Width
-The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit width for the zynq master and slave buses is the maximum we can make them upto.
+The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit bus width for the zynq master and slave buses is the maximum we can make them upto.
 
 ### Ports 
 Following is the screenshot from showing the various port options available for the master and slave interfaces. 
@@ -135,24 +135,27 @@ Following is the screenshot from showing the various port options available for 
 <img src="images\ports.png" width="400" />
 <hr style="border:2px solid gray"> </hr>
 
-We explore the three combination out of it, i.e. slave port being LPD (same as lab2), High Performace (HP), and ACP (Acceleration Co-herancy Port)
+We explore the three combination out of it, i.e. slave port being LPD (same as lab2), High Performace (HP), and Accelerator Coherancy Port (ACP).
 
 
 ## CDMA Unit
 
-Bus Widths: The bus width options available for CDMA are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
+### Bus Widths
+The bus width options available for CDMA are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bus bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
 
-Burst size: The burst size gets auto set when we change the bus width, but for the sake of consistency, the burst size for all the bust widths has been set to 32 bits.
+### Burst size
+The burst size gets auto set when we change the bus width, but for the sake of consistency, the burst size for all the bust widths has been set to 32 bits.
 
-CDMA store and forward: As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
-
+### CDMA store and forward
+As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
 
 <img src="images\cdma_vivado.png" width="600" />
 <hr style="border:2px solid gray"> </hr>
 
 ## BRAM Controller
 
-Bus Width: The bus width options available for BRAM are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
+### Bus Width
+The bus width options available for BRAM are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bus bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
 
 ## Synthesis Frequnecy
 
@@ -161,51 +164,36 @@ The PL synthesis frequency was set to 100 MHz for lab2. But as the aim for lab3 
 # Setting up the Board
 
 1. sudo screen -L /dev/ttyUSB1 115200
-2. wpa_passphrase SpectrumSetup-FE PASSWORD
-3. sudo ./wifi.sh sets up the wifi 
-```bash
-#udhcpc: lease of **XXX.XXX.X.XXX** obtained, lease time 43200.
-```
-4. transfer system.bit and system.dtb files to the board.
-5. Enable root access, and Mount the device to enable the boot access. 
+2. transfer system.bit and system.dtb files to the board.
+8. Check the device-tree.
 
 ``` bash
-root@ultra96:/sys/firmware/devi sudo bash
-root@ultra96: mount /dev/mmchblk0p1 BOOT/
-
-Filesystem     1K-blocks     Used Available Use% Mounted on
-/dev/root       29513292 15625940  12365100  56% /
-
-```
-6. fpgautil -b system.bit
-7. Halt and restart the board. 
-8. Check the device-tree by doing ls at **/proc/device-tree/amba_pl@0/**:
-
-``` bash
+root@ultra96:/proc/device-tree/amba_pl@0# ll
 total 0
-drwxr-xr-x 15 root root  0 Feb  3 01:57  ./
-drwxr-xr-x 44 root root  0 Feb  3 01:57  ../
--r--r--r--  1 root root  4 Feb  3 01:57 '#address-cells'
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'axi_bram_ctrl@a0028000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'Capture_Timer@a0030000'/
--r--r--r--  1 root root 11 Feb  3 01:57  compatible
-drwxr-xr-x  3 root root  0 Feb  3 01:57 'dma@b0000000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0020000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0021000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0022000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'gpio@a0025000'/
--r--r--r--  1 root root  8 Feb  3 01:57  name
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'PWM_w_Int@a0023000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'PWM_w_Int@a0024000'/
--r--r--r--  1 root root  0 Feb  3 01:57  ranges
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'serial@a0000000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'serial@a0010000'/
--r--r--r--  1 root root  4 Feb  3 01:57 '#size-cells'
-drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
-drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
+drwxr-xr-x 18 root root  0 Apr  8 13:51  ./
+drwxr-xr-x 44 root root  0 Dec 10 03:15  ../
+-r--r--r--  1 root root  4 Apr  8 13:51 '#address-cells'
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'axi_bram_ctrl@b0020000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'axi_bram_ctrl@b0030000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'CAPTURE_TIMER@a0030000'/
+-r--r--r--  1 root root 11 Apr  8 13:51  compatible
+drwxr-xr-x  3 root root  0 Apr  8 13:51 'dma@b0000000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'gpio@a0020000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'gpio@a0021000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'gpio@a0022000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'gpio@a0025000'/
+-r--r--r--  1 root root  8 Apr  8 13:51  name
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'PERIPHERAL@ff380000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'PERIPHERAL@ff990000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'PWM_w_Int@a0023000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'PWM_w_Int@a0024000'/
+-r--r--r--  1 root root  0 Apr  8 13:51  ranges
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'serial@a0000000'/
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'serial@a0010000'/
+-r--r--r--  1 root root  4 Apr  8 13:51 '#size-cells'
+drwxr-xr-x  2 root root  0 Apr  8 13:51 'system_management_wiz@a0026000'/
 
 ```
-
 
 # Setting the Frequency
 
@@ -222,14 +210,15 @@ Follow the same steps from the lab2 for this.
 ## Codes
 
 1. [test1.c](codes/test1.c)
-2. [test2.c](codes/test2.c)
  
 ## Performance Analysis
 
 Let us talk numbers: 
 
 The following table shows the latency for the different configurations tested for the lab3.
+
 (Note: the transfer latency numbers are for PS freq: 1499 MHz and PL freq: Synthesis Freq)
+(All the bus widths are in bits)
 |S. No.|Zynq-CDMA Width|Slave Port|CDMA-BRAM width|CDMA Burst Size|CDMA S & F|Synthesis Frquency|Capture Timer Count|Transfer Time (micro sec)|
 |------|---------|---------|---------|---------|---------|---------|---------|---------|
 |1. |    128 |LPD|    32   |     32   |**enabled**|  250 MHz | 1295    |  5.18|
@@ -241,53 +230,93 @@ The following table shows the latency for the different configurations tested fo
 |7. |    128 |**ACP**|    1024   |     32   |enabled|  250 MHz |   443  |  1.772|
 |8. |    128 |LPD|    1024   |     32   |**disabled**|  250 MHz |   431  |  1.724|
 
-Observations:
+## Observations
 
-1. Effect of increasing the Bit Width: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bit width. It is the max change from 32 to 128, then becomes nearly constant with very small changes from 256 bits onwards.
+1.** Effect of increasing the Bus Width**: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bus width. The maximum change is from 32 to 128, and then it becomes nearly constant with very small improvements from 256 bits onwards. The following graph depicts this result. (Red dot reperesnts the configuration when CDMA S & F is disabled, where for all the black dots, it is enabled)
 
-2. Effect of Burst size: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. Hence we have kept the burst size as 32 throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis, we stick to the 32 bit burst size.
+<img src="images\plot.png" width="750" />
+<hr style="border:2px solid gray"> </hr>
 
-3. CDMA S & F: This enables the internal buffer in the AXI CDMA. But one would except improvement after using the internal buffer, but this is not the real result is. The performace does down, which can be compared eith the results from (7) and (8)
+2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
 
-4. BRAM controller: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So the bus width of the bram_ctrl_1 will change with the CDMA width change. We can set the bus width of the bram_ctrl_0 to any number, as long as the width(bram_ctrl_0):width(bram_ctrl_1).
+3.** CDMA S & F**: This enables the internal buffer in the AXI CDMA. One would except improvement after using the internal buffer, but this is not observed in the results is. The performace does down, which can be seene with the results from (7) and (8). This can be explained by the argument that it might be consuming some extra time in storing the values before it transfers the big chunk of the collected data.
+
+4. **BRAM controller**: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So, the bus width of the bram_ctrl_1 will change as the CDMA bus width changes. We can set the bus width of the other bram_ctrl_0 to any number (as long as the bus width ratio of (bram_ctrl_0):(bram_ctrl_1) > 1:4).
 
 
-5. Ports:
-
+5. **Ports**: All the three buses perform nearly equally. The ACP gives comparatively the worst performance of all. The reason might be that the data being transferedf is more than the cache size of the ACP.
 
 Let us answer the questions now:
 
-1. Determine which busses to maximize between the PS-PL.
-a. Explain how and why?
-2. If necessary, change the SmartConnect configuration.
-a. Explain why?
-3. Determine which busses to maximize in the PL to the point where there are no timing
+**1. Determine which busses to maximize between the PS-PL.
+a. Explain how and why?**
+```bash
+Zynq-CDMA bus width = 128 (max possible)
+CDMA-BRAM bus width = 1024, Burst Size = 32
+
+How: Double click on each component and select the frequency from the drop down options. 
+Why: On the similar lines as discissed in the point 2 of 'Observations', we want to minimize the to-and-from AXI signals and trnasfer a lot of data at one transaction so that we can speed up the process.
+```
+**2. If necessary, change the SmartConnect configuration.
+a. Explain why?**
+```bash
+No changes made to the smartconnect
+```
+**3. Determine which busses to maximize in the PL to the point where there are no timing
 issues.
-a. Explain how and why?
-4. Determine which busses to maximize in the PL to the point where there are still some
-FPGA resources available (i.e., 3)
-5. Maximize the PL synthesis clock frequency in Vivado to the point where there are no
+a. Explain how and why?**
+```bash
+Even after we increase the bus width to the maximum of the options available, we do not get any timing issues.
+```
+
+**4. Determine which busses to maximize in the PL to the point where there are still some
+FPGA resources available (i.e., 3)**
+```bash
+```
+
+**5.Maximize the PL synthesis clock frequency in Vivado to the point where there are no
 timing issues.
-a. Explain how and why?
-6. Synthesize your new Vivado schematic and generate a new bit file.
-7. Download the new DTB from here
+a. Explain how and why?**
+```bash
+How: Double click on the Zynq block and go to the PL clock frequency option. We can change the divisor values and change the frequency. It was observed that the maximum we can go on increasing the frequency is 250 MHz. Beyond that we start getting timing violations. 
+Why: The BRAM blocks are scattered all over the place on the chip. As for the transfer, the data needs to travel to all these scattered BRAMS, we can only increase the PL frequency to a certain extent, after which we run into negative slack values. 
+```
+
+
+**6. Synthesize your new Vivado schematic and generate a new bit file.**
+```bash
+-done-
+```
+
+**7. Download the new DTB from here
 a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K
 b. Convert the DTB to a DTS and confirm that the new address map is correct.
 c. Change the compatible statement to match what you have in your kernel
-module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector
-8. Run Lab_2 Test 1 using the new PS and PL configurations to determine the baseline
+module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
+```bash
+-done-
+```
+
+
+**8. Run Lab2 Test 1 using the new PS and PL configurations to determine the baseline
 performance improvements.
-a. Graph the performance improvements versus what you got in Lab_2.
+a. Graph the performance improvements versus what you got in Lab2.
 b. If there are performance improvements explain where they are coming from. If
-not explain why there was no improvement. You may need to generate
-additional instrumentation blocks to help determine what is going on.
-9. Determine if should now modify your application software and kernel module to take
+not explain why there was no improvement. You may need to generate 
+additional instrumentation blocks to help determine what is going on.**
+
+(A) a and b: Find the graph and explaination in the [Observations](#observations) section above.
+
+**9. Determine if should now modify your application software and kernel module to take
 advantage of the new hardware configuration.
 a. Graph the performance improvements with the new software changes.
 b. If there are performance improvements explain where they are coming from. If
 not explain why there was no improvement. You may need to generate
-additional instrumentation blocks to help determine what is going on.
+additional instrumentation blocks to help determine what is going on.**
 
+```bash
+Do not think we need to any modifications to the software side as of now.
+```
 
 
 
