@@ -246,7 +246,7 @@ Let us talk numbers. The following table shows the latency for the different con
 ### Utilization 
 The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled- 
 
-<img src="images\util.png" width="800" />
+<img src="images\util.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
 
 Let us answer the questions now:
@@ -265,10 +265,14 @@ minimize the to-and-from AXI signals and trnasfer a lot of data  at  one transac
 **2. If necessary, change the SmartConnect configuration.
 a. Explain why?**
 ```bash
-No changes made to the smartconnect
+We need to make slight changed to the smartconnect connections when we change our slave ports from LPD to ACP/HP. 
+[Note:] I will not advice changing the ports when the frequency is set to 250 MHz. When one tries to change the
+port when the PL clock frequency is set to a frequency != 100, the systhesis is very  likely  to  fail.  Hence,
+set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and then run the synthesis.
 ```
 **3. Determine which busses to maximize in the PL to the point where there are no timing
 issues.
+
 a. Explain how and why?**
 ```bash
 Even after we increase the bus width to the maximum of the options available, we do not get any timing issues.
@@ -280,7 +284,8 @@ The highest resource utilization is with 1024 bus width and CDMA S & F enabled, 
 Find the [utilization](#utilization) report here.
 
 **5.Maximize the PL synthesis clock frequency in Vivado to the point where there are no
-timing issues. 
+timing issues.
+ 
 a. Explain how and why?**
 ```bash
 How: Double click on the Zynq block and go to the PL clock frequency option. We can change 
@@ -299,10 +304,12 @@ frequency to a certain extent, after which we run into negative slack values.
 ```
 
 **7. Download the new DTB from here
+
 a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K
+
 b. Convert the DTB to a DTS and confirm that the new address map is correct.
-c. Change the compatible statement to match what you have in your kernel
-module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
+
+c. Change the compatible statement to match what you have in your kernel module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
 ```bash
 -done-
 ```
@@ -310,19 +317,19 @@ module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
 
 **8. Run Lab2 Test 1 using the new PS and PL configurations to determine the baseline
 performance improvements.
+
 a. Graph the performance improvements versus what you got in Lab2.
-b. If there are performance improvements explain where they are coming from. If
-not explain why there was no improvement. You may need to generate 
-additional instrumentation blocks to help determine what is going on.**
+
+b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
 (A) a and b: Find the graph and explaination in the [Observations](#observations) section above.
 
 **9. Determine if should now modify your application software and kernel module to take
 advantage of the new hardware configuration.
+
 a. Graph the performance improvements with the new software changes.
-b. If there are performance improvements explain where they are coming from. If
-not explain why there was no improvement. You may need to generate
-additional instrumentation blocks to help determine what is going on.**
+
+b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
 ```bash
 Do not think we need to any modifications to the software side as of now.
