@@ -94,7 +94,11 @@ start_gui
 
 ## Understanding the data flow in the given design
 
-Before we go on with changing the bit width of various components in the design, we need to know how does the data flow in the design. The image shows the path the data follows while we transfer content from OCM to BRAM and vise-versa.
+Before we go on with changing the bit width of various components in the design, we need to know how does the data flow in the design. The following image shows the path the data follows while we transfer content from OCM to BRAM and vise-versa.
+
+<img src="images\design.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
+
 The red colored path is the one by which the CDMA reads the content of the OCM, and then using the smartconnect, writes the data to the BRAM via the green path. 
 
 
@@ -141,7 +145,7 @@ Burst size: The burst size gets auto set when we change the bus width, but for t
 CDMA store and forward: As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
 
 
-<img src="images\cdma.png" width="1000" />
+<img src="images\cdma_vivado.png" width="1000" />
 <hr style="border:2px solid gray"> </hr>
 
 ## BRAM Controller
