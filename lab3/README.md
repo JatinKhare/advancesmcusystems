@@ -35,7 +35,10 @@ Once you are in the lab3/codes directory and  have the .c files (test1.c) in the
 
 ``` bash
 $ make clean
-$ make 
+$ make
+
+(Remember if you are runnning the lab2 bit stream, you need to use a different BRAM base address. This can be done 
+by commenting/uncommenting the #define statements on line 27 and 28 in the test1.c, followed by a make) 
 ```
 This will generate the corresponding object files and executables for the test case. 
 
