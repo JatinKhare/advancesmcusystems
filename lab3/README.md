@@ -9,7 +9,7 @@ Email: jatinkhare@utexas.edu
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
-2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-desgin)
+2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-design)
 3. [Setting up the Board](#setting-up-the-board)
 4. [Setting the Frequency](#setting-the-frequency)
 6. [Codes](#codes)
