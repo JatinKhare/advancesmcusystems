@@ -250,13 +250,15 @@ Here the CDMA trnasfers the bits it gets, and the resource utilization is also l
 	128 bits ----- 1024 bits ----- 1024 bits
  	 (Zynq)         (CDMA)         (BRAM)
 
-Here again there is a mismatch. Now the CDMA needs to store 8 iterations of Zynq data to transfer once to the BRAM.
-This is where the trade off comes in. We are sending a large amount of data, but also comsuming time in storing and combining it too. Sending large data is indeed improving performance, but storing it is not letting it improve by a very great amount.  
+Here again there is a mismatch. Now the CDMA needs to store 8 iterations of Zynq data to transfer once to the  BRAM.
+This is where the trade off comes in. We are sending a large amount of data, but also comsuming time in storing and 
+combining it too. Sending large data is indeed improving performance, but storing it is not letting it improve by a 
+very great amount.  
 ```
 
 2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
 
-3. **CDMA S & F**: This enables the internal buffer in the AXI CDMA. One would except improvement after using the internal buffer, but this is not observed in the results is. The performace does down, which can be seene with the results from (7) and (8). This can be explained by the argument that it might be consuming some extra time in storing the values before it transfers the big chunk of the collected data.
+3. **CDMA S & F**: This enables the internal buffer in the AXI CDMA. One would except improvement after using the internal buffer, but this is not observed in the results is. The performace does down, which can be seene with the results from (7) and (8). This can be explained by the argument that it might be consuming some extra time in storing the values before it transfers the big chunk of the collected data. As disabling this means not activating the internal buffer, making bus width for CDMA--BRAM connection > Zynq--CDMA connection will not help.
 
 4. **BRAM controller**: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So, the bus width of the bram_ctrl_1 will change as the CDMA bus width changes. We can set the bus width of the other bram_ctrl_0 to any number (as long as the bus width ratio of (bram_ctrl_0):(bram_ctrl_1) > 1:4).
 
@@ -305,9 +307,10 @@ minimize the to-and-from AXI signals and trnasfer a lot of data  at  one transac
 a. Explain why?**
 ```bash
 We need to make slight changed to the smartconnect connections when we change our slave ports from LPD to ACP/HP. 
-[Note:] I will not advice changing the ports when the frequency is set to 250 MHz. When one tries to change the
-port when the PL clock frequency is set to a frequency != 100, the systhesis is very  likely  to  fail.  Hence,
-set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and then run the synthesis.
+[Note:] I will not advice changing the ports when the frequency is set to 250 MHz. When one tries to  change the
+port when the PL clock frequency is set  to a frequency != 100, the systhesis  is very  likely  to  fail.  Hence,
+set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and then 
+run the synthesis.
 ```
 **3. Determine which busses to maximize in the PL to the point where there are no timing
 issues.**
@@ -319,7 +322,8 @@ Even after we increase the bus width to the maximum of the options available, we
 
 **4. Determine which busses to maximize in the PL to the point where there are still some
 FPGA resources available (i.e., above 3%)**
-
+```bash
+```
 (Answer) The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
 Find the [utilization](#utilization) report here.
 
@@ -361,7 +365,8 @@ performance improvements.**
 **a. Graph the performance improvements versus what you got in Lab2.**
 
 **b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
-
+```bash
+```
 (Answer) a and b: Find the graph and explaination in the [Observations](#observations) section above.
 
 **9. Determine if should now modify your application software and kernel module to take
