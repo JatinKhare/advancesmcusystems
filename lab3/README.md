@@ -111,7 +111,7 @@ Based on the data flow discussed above, following are the components and their r
  - Master bus width and Master ports types
  - Slave bus width and Slave ports types
 
-2.**CDMA Unit**
+2. **CDMA Unit**
  - Bit Width
  - Burst Size
  - CDMA store and forward option
@@ -123,7 +123,7 @@ Based on the data flow discussed above, following are the components and their r
  - The maximum possible (without any timing violations)
 
 
-## Zynq Unit
+## (1) Zynq Unit
 
 ### Bit Width
 The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit bus width for the zynq master and slave buses is the maximum we can make them upto.
@@ -138,7 +138,7 @@ Following is the screenshot from showing the various port options available for 
 We explore the three combination out of it, i.e. slave port being LPD (same as lab2), High Performace (HP), and Accelerator Coherancy Port (ACP).
 
 
-## CDMA Unit
+## (2) CDMA Unit
 
 ### Bus Widths
 The bus width options available for CDMA are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bus bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
@@ -152,12 +152,12 @@ As we can see in the screenshot below form Vivado, we can enable/disable the 'St
 <img src="images\cdma_vivado.png" width="600" />
 <hr style="border:2px solid gray"> </hr>
 
-## BRAM Controller
+## (3) BRAM Controller
 
 ### Bus Width
 The bus width options available for BRAM are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bus bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
 
-## Synthesis Frequnecy
+## (4) Synthesis Frequnecy
 
 The PL synthesis frequency was set to 100 MHz for lab2. But as the aim for lab3 is to push the design through all the limits and extract the best performance out of it, we can go for the maximum synthesis frequency possible (without a negative slack). This can be done by changing the divisor values in the corresponding registers.
  
@@ -213,9 +213,7 @@ Follow the same steps from the lab2 for this.
  
 ## Performance Analysis
 
-Let us talk numbers: 
-
-The following table shows the latency for the different configurations tested for the lab3.
+Let us talk numbers. The following table shows the latency for the different configurations tested for the lab3.
 
 (Note: the transfer latency numbers are for PS freq: 1499 MHz and PL freq: Synthesis Freq)
 (All the bus widths are in bits)
@@ -232,14 +230,14 @@ The following table shows the latency for the different configurations tested fo
 
 ## Observations
 
-1.** Effect of increasing the Bus Width**: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bus width. The maximum change is from 32 to 128, and then it becomes nearly constant with very small improvements from 256 bits onwards. The following graph depicts this result. (Red dot reperesnts the configuration when CDMA S & F is disabled, where for all the black dots, it is enabled)
+1. **Effect of increasing the Bus Width**: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bus width. The maximum change is from 32 to 128, and then it becomes nearly constant with very small improvements from 256 bits onwards. The following graph depicts this result. (Red dot reperesnts the configuration when CDMA S & F is disabled, where for all the black dots, it is enabled)
 
-<img src="images\plot.png" width="750" />
+<img src="images\plot.png" width="300" />
 <hr style="border:2px solid gray"> </hr>
 
 2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
 
-3.** CDMA S & F**: This enables the internal buffer in the AXI CDMA. One would except improvement after using the internal buffer, but this is not observed in the results is. The performace does down, which can be seene with the results from (7) and (8). This can be explained by the argument that it might be consuming some extra time in storing the values before it transfers the big chunk of the collected data.
+3. **CDMA S & F**: This enables the internal buffer in the AXI CDMA. One would except improvement after using the internal buffer, but this is not observed in the results is. The performace does down, which can be seene with the results from (7) and (8). This can be explained by the argument that it might be consuming some extra time in storing the values before it transfers the big chunk of the collected data.
 
 4. **BRAM controller**: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So, the bus width of the bram_ctrl_1 will change as the CDMA bus width changes. We can set the bus width of the other bram_ctrl_0 to any number (as long as the bus width ratio of (bram_ctrl_0):(bram_ctrl_1) > 1:4).
 
@@ -255,7 +253,9 @@ Zynq-CDMA bus width = 128 (max possible)
 CDMA-BRAM bus width = 1024, Burst Size = 32
 
 How: Double click on each component and select the frequency from the drop down options. 
-Why: On the similar lines as discissed in the point 2 of 'Observations', we want to minimize the to-and-from AXI signals and trnasfer a lot of data at one transaction so that we can speed up the process.
+Why: On the similar lines as discissed in the point 2 of 'Observations', we want to minimize 
+the to-and-from AXI signals and trnasfer a lot of data at one transaction so that we can speed 
+up the process.
 ```
 **2. If necessary, change the SmartConnect configuration.
 a. Explain why?**
