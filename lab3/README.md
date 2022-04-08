@@ -232,7 +232,7 @@ Let us talk numbers. The following table shows the latency for the different con
 
 1. **Effect of increasing the Bus Width**: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bus width. The maximum change is from 32 to 128, and then it becomes nearly constant with very small improvements from 256 bits onwards. The following graph depicts this result. (Red dot reperesnts the configuration when CDMA S & F is disabled, where for all the black dots, it is enabled)
 
-<img src="images\plot.png" width="300" />
+<img src="images\plot.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
 
 2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
