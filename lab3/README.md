@@ -253,9 +253,9 @@ Zynq-CDMA bus width = 128 (max possible)
 CDMA-BRAM bus width = 1024, Burst Size = 32
 
 How: Double click on each component and select the frequency from the drop down options. 
-Why: On the similar lines as discissed in the point 2 of 'Observations', we want to minimize 
-the to-and-from AXI signals and trnasfer a lot of data at one transaction so that we can speed 
-up the process.
+Why: On the similar lines as discissed in the point 2 of  'Observations',  we  want  to 
+minimize the to-and-from AXI signals and trnasfer a lot of data  at  one transaction so
+ that we can speed up the process.
 ```
 **2. If necessary, change the SmartConnect configuration.
 a. Explain why?**
@@ -275,11 +275,16 @@ FPGA resources available (i.e., 3)**
 ```
 
 **5.Maximize the PL synthesis clock frequency in Vivado to the point where there are no
-timing issues.
+timing issues. 
 a. Explain how and why?**
 ```bash
-How: Double click on the Zynq block and go to the PL clock frequency option. We can change the divisor values and change the frequency. It was observed that the maximum we can go on increasing the frequency is 250 MHz. Beyond that we start getting timing violations. 
-Why: The BRAM blocks are scattered all over the place on the chip. As for the transfer, the data needs to travel to all these scattered BRAMS, we can only increase the PL frequency to a certain extent, after which we run into negative slack values. 
+How: Double click on the Zynq block and go to the PL clock frequency option. We can change 
+the divisor values and change the frequency. It was observed that the maximum we can go on 
+increasing the frequency is 250 MHz. Beyond that we start getting timing violations. 
+
+Why: The BRAM blocks are scattered all over the place on the chip. As  for  the  transfer, 
+the data needs to travel to all  these  scattered  BRAMS, we  can  only  increase  the  PL
+frequency to a certain extent, after which we run into negative slack values. 
 ```
 
 
