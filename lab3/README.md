@@ -130,7 +130,7 @@ Bit Width: The bus widths possible for the master and slave interface of the PS 
 Ports: Following is the screenshot from showing the various port options available for the master and slave interfaces. 
 
 
-<img src="images\ports.png" width="200" />
+<img src="images\ports.png" width="400" />
 <hr style="border:2px solid gray"> </hr>
 
 We explore the three combination out of it, i.e. slave port being LPD (same as lab2), High Performace (HP), and ACP (Acceleration Co-herancy Port)
