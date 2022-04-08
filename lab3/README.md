@@ -9,7 +9,7 @@ Email: jatinkhare@utexas.edu
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
-2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-desgin))
+2. [Undersanding the Data Flow in the Design](#understandong-the-data-flow-in-the-desgin)
 3. [Setting up the Board](#setting-up-the-board)
 4. [Setting the Frequency](#setting-the-frequency)
 6. [Codes](#codes)
@@ -23,7 +23,7 @@ First, run the following command in the specified directories to setup the envir
 
 /your_path/lab3/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
 
-/your_path/lab3/codes# source bitstream_lab3.bit       #to insert the bit file
+/your_path/lab3/codes# fpgautil -b lab3_bitstreams/<name-of-the-bit-file>.bit        #to insert the bit file
 
 /your_path/lab3/codes# make clean
 /your_path/lab3/codes# make
@@ -37,7 +37,7 @@ Once you are in the lab3/codes directory and  have the .c files (test1.c, test2.
 $ make clean
 $ make 
 ```
-This will generate the corresponding object files and executables for all the three test cases. 
+This will generate the corresponding object files and executables for the test case. 
 
 ### ./test1
 
@@ -93,7 +93,7 @@ Total number of Interrupts for to-and-fro transfer: 1000
 
 ## Understanding the Data Flow in the Design
 
-Before we go on with changing the bus width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to and fro  from OCM to BRAM.
+Before we go on with changing the bus width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to-and-fro from OCM to BRAM.
 
 <img src="images\design.png" width="1000" />
 <hr style="border:2px solid gray"> </hr>
@@ -101,7 +101,7 @@ Before we go on with changing the bus width of various components in the design,
 The using the red colored path the CDMA reads the content of the OCM using the smartconnect0, and writes the data to the BRAM via the green path. 
 
 
-## The different combinations possible
+## Different Possible Combinations
 
 Based on the data flow discussed above, following are the components and their respective properties that have been explored in this lab.
 
@@ -111,24 +111,24 @@ Based on the data flow discussed above, following are the components and their r
  - Slave bus width and Slave ports types
 
 2. **CDMA Unit**
- - Bit Width
+ - Bus Width
  - Burst Size
  - CDMA store and forward option
 
 3. **BRAM Controller**
- - Bit Width
+ - Bus Width
 
 4. **Synthesis Frequency**
- - The maximum possible (without any timing violations)
+ - Maximum possible (without any timing violations)
 
 
 ## (1) Zynq Unit
 
 ### Bit Width
-The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit bus width for the zynq master and slave buses is the maximum we can make them upto.
+The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence here we make no change to it whatsoever. The 128 bit bus width for the zynq master and slave buses is the maximum we can make them upto.
 
 ### Ports 
-Following is the screenshot from showing the various port options available for the master and slave interfaces. 
+Following is the screenshot from Vivado showing the various port options available for the master and slave interfaces. 
 
 
 <img src="images\ports.png" width="400" />
@@ -158,13 +158,13 @@ The bus width options available for BRAM are 32, 64, 128, 256, 512, 1024. The la
 
 ## (4) Synthesis Frequnecy
 
-The PL synthesis frequency was set to 100 MHz for lab2. But as the aim for lab3 is to push the design through all the limits and extract the best performance out of it, we can go for the maximum synthesis frequency possible (without a negative slack). This can be done by changing the divisor values in the corresponding registers.
+The PL synthesis frequency was set to 100 MHz for lab2. But as the aim for lab3 is to push the design beyond all the limits and extract the best performance out of it, we can go for the maximum synthesis frequency possible (without a negative slack). This can be done by changing the divisor values in the corresponding registers that change PL frequency.
  
 # Setting up the Board
 
 1. sudo screen -L /dev/ttyUSB1 115200
-2. transfer system.bit and system.dtb files to the board.
-8. Check the device-tree.
+2. update the system.bit and system.dtb files to the board.
+3. Check the device-tree and verify the new bram addressed.
 
 ``` bash
 root@ultra96:/proc/device-tree/amba_pl@0# ll
@@ -193,14 +193,9 @@ drwxr-xr-x  2 root root  0 Apr  8 13:51 'serial@a0010000'/
 drwxr-xr-x  2 root root  0 Apr  8 13:51 'system_management_wiz@a0026000'/
 
 ```
-
-# Setting the Frequency
-
-## Frequency Values
+## Changing the frequency
 
 Vary the frequencies using the method from Lab 1 [README.md](https://github.com/JatinKhare/advancesmcusystems/blob/main/lab1/README.md)
-
-# Interrupt handling
 
 ## Writing and inserting a kernel module
 
@@ -210,12 +205,14 @@ Follow the same steps from the lab2 for this.
 
 1. [test1.c](codes/test1.c)
  
-## Performance Analysis
+# Performance Analysis
 
 Let us talk numbers. The following table shows the latency for the different configurations tested for the lab3.
 
 (Note: the transfer latency numbers are for PS freq: 1499 MHz and PL freq: Synthesis Freq)
+
 (All the bus widths are in bits)
+
 |S. No.|Zynq-CDMA Width|Slave Port|CDMA-BRAM width|CDMA Burst Size|CDMA S & F|Synthesis Frquency|Capture Timer Count|Transfer Time (micro sec)|
 |------|---------|---------|---------|---------|---------|---------|---------|---------|
 |1. |    128 |LPD|    32   |     32   |**enabled**|  250 MHz | 1295    |  5.18|
@@ -223,7 +220,7 @@ Let us talk numbers. The following table shows the latency for the different con
 |3. |    128 |LPD|    **256**   |     32   |enabled|  250 MHz |   480  |  1.92|
 |4. |    128 |LPD|    **512**   |     32   |enabled|  250 MHz |   470  |  1.88|
 |5. |    128 |LPD|    **1024**   |     32   |enabled|  250 MHz |   468  | 1.872 |
-|6. |    128 |**HP0**|    1024   |     32   |enabled|  250 MHz |   436  |  1.744|
+|6. |    128 |**HP**|    1024   |     32   |enabled|  250 MHz |   436  |  1.744|
 |7. |    128 |**ACP**|    1024   |     32   |enabled|  250 MHz |   443  |  1.772|
 |8. |    128 |LPD|    1024   |     32   |**disabled**|  250 MHz |   431  |  1.724|
 
@@ -233,6 +230,29 @@ Let us talk numbers. The following table shows the latency for the different con
 
 <img src="images\plot.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
+
+```bash
+Reason behind this kind of performance trend:
+
+So in Lab2 we had this flow of data:
+
+	128 bits ----- 32  bits ----- 32  bits
+ 	 (Zynq)         (CDMA)         (BRAM)
+
+Here we send 128 bits, but the CDMA just trnasfers 32 bits. Not a good way to trnasfer, so we increase
+the bus width to match that of the Zynq to 128 bits.
+
+	128 bits ----- 128 bits ----- 128 bits
+ 	 (Zynq)         (CDMA)         (BRAM)
+
+Here the CDMA trnasfers the bits it gets, and the resource utilization is also low as compared to 1024 bits. 
+
+	128 bits ----- 1024 bits ----- 1024 bits
+ 	 (Zynq)         (CDMA)         (BRAM)
+
+Here again there is a mismatch. Now the CDMA needs to store 8 iterations of Zynq data to transfer once to the BRAM.
+This is where the trade off 
+```
 
 2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
 
@@ -244,9 +264,9 @@ Let us talk numbers. The following table shows the latency for the different con
 5. **Ports**: All the three buses perform nearly equally. The ACP gives comparatively the worst performance of all. The reason might be that the data being transferedf is more than the cache size of the ACP.
 
 ### Utilization 
-The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled- 
+The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled
 
-<img src="images\util.png" width="500" />
+**<img src="images\util.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
 
 Let us answer the questions now:
@@ -326,11 +346,11 @@ performance improvements.**
 (Answer) a and b: Find the graph and explaination in the [Observations](#observations) section above.
 
 **9. Determine if should now modify your application software and kernel module to take
-advantage of the new hardware configuration.
+advantage of the new hardware configuration.**
 
-a. Graph the performance improvements with the new software changes.
+**a. Graph the performance improvements with the new software changes.**
 
-b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
+**b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
 ```bash
 Do not think we need to any modifications to the software side as of now.

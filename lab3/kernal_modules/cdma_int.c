@@ -265,7 +265,6 @@ dma@b0000000 {
 */
 
 static const struct of_device_id zynq_cdma_of_match[] = {
-    //{ .compatible = "xlnx,axi-cdma-4.1", "xlnx,axi-cdma-1.00.a"},
     { .compatible = "xlnx,cdma_int"},
     { /* end of table */ }
 };    

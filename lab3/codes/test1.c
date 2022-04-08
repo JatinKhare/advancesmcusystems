@@ -18,14 +18,14 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
-#include <sys/time.h>
+#include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 
 
 #define CDMA                0xB0000000
-//#define BRAM                0xB0028000
-#define BRAM                0xB0030000
+#define BRAM                0xB0028000
+//#define BRAM                0xB0030000
 #define OCM_1               0xFFFC0000
 #define OCM_2               0xFFFC2000
 
@@ -59,7 +59,7 @@
 //register values for PL
 
 #define PL_0_300            0x01010600
-#define PL_0_250            0x01010600
+#define PL_0_250            0x01010300
 #define PL_0_187_5          0x01010800
 #define PL_0_150            0x01010A00
 #define PL_0_100            0x01010F00
@@ -379,7 +379,7 @@ void change_pl_freq(int dh, int m){
 			//250 MHz
 			//PL0_REF_CTRL = 0x0101_0600
 
-			*pl0 = PL_0_300;
+			*pl0 = PL_0_250;
 
 #ifdef PRINT_COUNT
 			printf("PL Frequncy changed to 300 MHz\n");
