@@ -234,25 +234,27 @@ Let us talk numbers. The following table shows the latency for the different con
 ```
 Reason behind this kind of performance trend:
 
-So in Lab2 we had this flow of data:
+In Lab2, the data flow looked liek this:
 
 	128 bits ----- 32  bits ----- 32  bits
  	 (Zynq)         (CDMA)         (BRAM)
 
-Here we send 128 bits, but the CDMA just trnasfers 32 bits. Not a good way to trnasfer, so we increase
-the bus width to match that of the Zynq to 128 bits.
+Here we send 128 bits, but the CDMA just transfers 32 bits. Not a good way to transfer, so we increase
+the bus width to match that of the Zynq of 128 bits.
 
 	128 bits ----- 128 bits ----- 128 bits
  	 (Zynq)         (CDMA)         (BRAM)
 
-Here the CDMA trnasfers the bits it gets, and the resource utilization is also low as compared to 1024 bits. 
+Here the CDMA trnasfers the all the bits it gets from Zynq. 
+
+Now we increase the width further to 1024
 
 	128 bits ----- 1024 bits ----- 1024 bits
  	 (Zynq)         (CDMA)         (BRAM)
 
 Here again there is a mismatch. Now the CDMA needs to store 8 iterations of Zynq data to transfer once to the  BRAM.
-This is where the trade off comes in. We are sending a large amount of data, but also comsuming time in storing and 
-combining it too. Sending large data is indeed improving performance, but storing it is not letting it improve by a 
+This is where we observe the trade off. We are sending a large amount of data, but also comsuming time in storing and 
+combining it. Sending large data is indeed improving the performance, but storing time is not letting it improve by a 
 very great amount.  
 ```
 
@@ -263,10 +265,10 @@ very great amount.
 4. **BRAM controller**: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So, the bus width of the bram_ctrl_1 will change as the CDMA bus width changes. We can set the bus width of the other bram_ctrl_0 to any number (as long as the bus width ratio of (bram_ctrl_0):(bram_ctrl_1) > 1:4).
 
 
-5. **Ports**: All the three buses perform nearly equally. The ACP gives comparatively the worst performance of all. The reason might be that the data being transferedf is more than the cache size of the ACP.
+5. **Ports**: All the three buses perform nearly equally. The ACP gives comparatively the worst performance of all. The reason might be that the data being transferred is more than the cache size of the ACP.
 
 ### Utilization 
-The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled
+The maximum utilization is for the configuration which uses maximum BRAMs and has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled
 
 <img src="images\util.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
@@ -283,11 +285,11 @@ Lab 2 --> 1326/375 = 3.536 micro seconds
 
 **Lab 3** lowest latency (with CDMA S & F enabled)
 
-Lab 3 --> 468.2/250 = 1.8728
+Lab 3 --> 468.2/250 = 1.8728 micro seconds
 
 
 ```
-SPEEDUP = 3.536/1.8728 = 1.88 micro seconds 
+SPEEDUP = 3.536/1.8728 = 1.88  
 ```
 
 ## Let us answer the questions now:
@@ -299,18 +301,18 @@ Zynq-CDMA bus width = 128 (max possible)
 CDMA-BRAM bus width = 1024, Burst Size = 32
 
 How: Double click on each component and select the frequency from the drop down options. 
-Why: On the similar lines as discissed in the point 2 of  'Observations',  we  want  to 
-minimize the to-and-from AXI signals and trnasfer a lot of data  at  one transaction so
- that we can speed up the process.
+Why: On the similar lines as discussed in the point 2 of  'Observations',  we  want  to 
+minimize  the to-and-fro AXI signals and trnasfer a lot of data  in  one transaction so
+that we can speed up the transfer.
 ```
 **2. If necessary, change the SmartConnect configuration.
 a. Explain why?**
 ```
-We need to make slight changed to the smartconnect connections when we change our slave ports from LPD to ACP/HP. 
+We need to make slight changes to the smartconnect connections when we change our slave ports from LPD to ACP/HP. 
 [Note:] I will not advice changing the ports when the frequency is set to 250 MHz. When one tries to  change the
-port when the PL clock frequency is set  to a frequency != 100, the systhesis  is very  likely  to  fail.  Hence,
-set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and then 
-run the synthesis.
+port when the PL clock frequency is set  to a frequency != 100, the synthesis  is very  likely  to  fail.  Hence,
+first set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and 
+then run the synthesis.
 ```
 **3. Determine which busses to maximize in the PL to the point where there are no timing
 issues.**
@@ -323,7 +325,8 @@ Even after we increase the bus width to the maximum of the options available, we
 **4. Determine which busses to maximize in the PL to the point where there are still some
 FPGA resources available (i.e., above 3%)**
 ```
-(Answer) The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
+The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a lot of resources
+left (definitely > 3%).
 ```
 Find the [utilization](#utilization) report here.
 
@@ -347,7 +350,7 @@ frequency to a certain extent, after which we run into negative slack values.
 -done-
 ```
 
-**7. Download the new DTB from here**
+**7. Download the new DTB file**
 
 **a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K**
 
@@ -366,8 +369,9 @@ performance improvements.**
 
 **b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 ```
+a and b: Find the graph and explaination in the Observations section above.
 ```
-(Answer) a and b: Find the graph and explaination in the [Observations](#observations) section above.
+[Observations](#observations).
 
 **9. Determine if should now modify your application software and kernel module to take
 advantage of the new hardware configuration.**
@@ -377,7 +381,7 @@ advantage of the new hardware configuration.**
 **b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
 ```
-Do not think we need to any modifications to the software side as of now.
+Don't think we need to any modifications to the software side as of now.
 ```
 
 
