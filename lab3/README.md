@@ -231,7 +231,7 @@ Let us talk numbers. The following table shows the latency for the different con
 <img src="images\plot.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
 
-```bash
+```
 Reason behind this kind of performance trend:
 
 So in Lab2 we had this flow of data:
@@ -286,7 +286,7 @@ Lab 2 --> 1326/375 = 3.536 micro seconds
 Lab 3 --> 468.2/250 = 1.8728
 
 
-```bash
+```
 SPEEDUP = 3.536/1.8728 = 1.88 micro seconds 
 ```
 
@@ -305,7 +305,7 @@ minimize the to-and-from AXI signals and trnasfer a lot of data  at  one transac
 ```
 **2. If necessary, change the SmartConnect configuration.
 a. Explain why?**
-```bash
+```
 We need to make slight changed to the smartconnect connections when we change our slave ports from LPD to ACP/HP. 
 [Note:] I will not advice changing the ports when the frequency is set to 250 MHz. When one tries to  change the
 port when the PL clock frequency is set  to a frequency != 100, the systhesis  is very  likely  to  fail.  Hence,
@@ -316,22 +316,22 @@ run the synthesis.
 issues.**
 
 **a. Explain how and why?**
-```bash
+```
 Even after we increase the bus width to the maximum of the options available, we do not get any timing issues.
 ```
 
 **4. Determine which busses to maximize in the PL to the point where there are still some
 FPGA resources available (i.e., above 3%)**
-```bash
 ```
 (Answer) The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
+```
 Find the [utilization](#utilization) report here.
 
 **5. Maximize the PL synthesis clock frequency in Vivado to the point where there are no
 timing issues.**
 
 **a. Explain how and why?**
-```bash
+```
 How: Double click on the Zynq block and go to the PL clock frequency option. We can change 
 the divisor values and change the frequency. It was observed that the maximum we can go on 
 increasing the frequency is 250 MHz. Beyond that we start getting timing violations. 
@@ -343,7 +343,7 @@ frequency to a certain extent, after which we run into negative slack values.
 
 
 **6. Synthesize your new Vivado schematic and generate a new bit file.**
-```bash
+```
 -done-
 ```
 
@@ -354,7 +354,7 @@ frequency to a certain extent, after which we run into negative slack values.
 **b. Convert the DTB to a DTS and confirm that the new address map is correct.**
 
 **c. Change the compatible statement to match what you have in your kernel module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
-```bash
+```
 -done-
 ```
 
@@ -365,7 +365,7 @@ performance improvements.**
 **a. Graph the performance improvements versus what you got in Lab2.**
 
 **b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
-```bash
+```
 ```
 (Answer) a and b: Find the graph and explaination in the [Observations](#observations) section above.
 
@@ -376,7 +376,7 @@ advantage of the new hardware configuration.**
 
 **b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
-```bash
+```
 Do not think we need to any modifications to the software side as of now.
 ```
 
