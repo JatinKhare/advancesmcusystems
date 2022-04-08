@@ -271,22 +271,23 @@ port when the PL clock frequency is set to a frequency != 100, the systhesis is 
 set the frequency from 250 MHz back to 100MHz, change the ports, and then set the frequency to 250 MHz, and then run the synthesis.
 ```
 **3. Determine which busses to maximize in the PL to the point where there are no timing
-issues.
+issues.**
 
-a. Explain how and why?**
+**a. Explain how and why?**
 ```bash
 Even after we increase the bus width to the maximum of the options available, we do not get any timing issues.
 ```
 
 **4. Determine which busses to maximize in the PL to the point where there are still some
 FPGA resources available (i.e., above 3%)**
-The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
+
+(Answer) The highest resource utilization is with 1024 bus width and CDMA S & F enabled, and that also has a fair amount of resources (definitely > 3%).
 Find the [utilization](#utilization) report here.
 
-**5.Maximize the PL synthesis clock frequency in Vivado to the point where there are no
-timing issues.
- 
-a. Explain how and why?**
+**5. Maximize the PL synthesis clock frequency in Vivado to the point where there are no
+timing issues.**
+
+**a. Explain how and why?**
 ```bash
 How: Double click on the Zynq block and go to the PL clock frequency option. We can change 
 the divisor values and change the frequency. It was observed that the maximum we can go on 
@@ -303,26 +304,26 @@ frequency to a certain extent, after which we run into negative slack values.
 -done-
 ```
 
-**7. Download the new DTB from here
+**7. Download the new DTB from here**
 
-a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K
+**a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K**
 
-b. Convert the DTB to a DTS and confirm that the new address map is correct.
+**b. Convert the DTB to a DTS and confirm that the new address map is correct.**
 
-c. Change the compatible statement to match what you have in your kernel module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
+**c. Change the compatible statement to match what you have in your kernel module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector**
 ```bash
 -done-
 ```
 
 
 **8. Run Lab2 Test 1 using the new PS and PL configurations to determine the baseline
-performance improvements.
+performance improvements.**
 
-a. Graph the performance improvements versus what you got in Lab2.
+**a. Graph the performance improvements versus what you got in Lab2.**
 
-b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
+**b. If there are performance improvements explain where they are coming from. If not explain why there was no improvement. You may need to generate additional instrumentation blocks to help determine what is going on.**
 
-(A) a and b: Find the graph and explaination in the [Observations](#observations) section above.
+(Answer) a and b: Find the graph and explaination in the [Observations](#observations) section above.
 
 **9. Determine if should now modify your application software and kernel module to take
 advantage of the new hardware configuration.
