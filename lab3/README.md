@@ -22,12 +22,12 @@ First, run the following command in the specified directories to setup the envir
 
 ```bash
 
-/your_path/lab2/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
+/your_path/lab3/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
 
-/your_path/lab2/codes# source bitstream_lab3.bit       #to insert the bit file
+/your_path/lab3/codes# source bitstream_lab3.bit       #to insert the bit file
 
-/your_path/lab2/codes# make clean
-/your_path/lab2/codes# make
+/your_path/lab3/codes# make clean
+/your_path/lab3/codes# make
 
 
 ```
@@ -58,76 +58,78 @@ n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz
 m: 0 (250 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 250 MHz)
 
 (Loops): -1 (Default value = 500), maximum input value allowed = 10000
-```bash
-root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 2 -1 200
-
- **COPY**
-
-## Starting with Lab 3
 
 ```bash
+root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab3/codes# ./test1 0 0 
+Default loop number = 500
+Setting PS Freq. to 1499 MHz
+Setting PL Freq. to 250 MHz
 
-jkhare@mario (/misc/scratch/jkhare) % cd ..
-jkhare@mario (/misc/scratch) % ls
-avenkkateshraj    dpinheiroleal  hbarclay  jkhare  jwu2             mlei   mwang3  sli4   vivado.jou  wkelly
-dperaltavelazque  etaka          hychiang  jmehta  mbadrinarayanan  mshah  sdutta  tvema  vivado.log
-jkhare@mario (/misc/scratch) % cd jkhare/
-jkhare@mario (/misc/scratch/jkhare) % cd advancesmcusystems/
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % module load xilinx/2018
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % vivado &
-[3] 23314
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % 
-****** Vivado v2018.3 (64-bit)
-  **** SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
-  **** IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
-    ** Copyright 1986-2018 Xilinx, Inc. All Rights Reserved.
+DMA's OCM/BRAM traffic tests with 500 and 1024 words successful!!!
 
-start_gui
+For OCM to BRAM:
+Minimum Latency:    465
+Maximum Latency:    588
+Average Latency:    467.000000
+Standard Deviation: 31.000000
+Number of samples:  500
+
+For BRAM to OCM:
+Minimum Latency:    474
+Maximum Latency:    494
+Average Latency:    475.000000
+Standard Deviation: 9.000000
+Number of samples:  500
+Total number of Interrupts for to-and-fro transfer: 1000
 
 ```
 
+## Starting with Lab 3
+
 ## When the GUI is open-
 1. Open the project from lab2.
-2. Change the different widths and burst sizes of the different blocks.
-3. Generate the bitstreams.
+2. Change the widths and burst sizes of the different blocks.
+3. Generate the bitstreams and analyse the performance improvements.
 
 
 ## Understanding the data flow in the given design
 
-Before we go on with changing the bit width of various components in the design, we need to know how does the data flow in the design. The following image shows the path the data follows while we transfer content from OCM to BRAM and vise-versa.
+Before we go on with changing the bit width of various components in the design, we need to know how does the data really flows. The following image shows the path the data follows while we transfer content to and fro  from OCM to BRAM.
 
 <img src="images\design.png" width="1000" />
 <hr style="border:2px solid gray"> </hr>
 
-The red colored path is the one by which the CDMA reads the content of the OCM, and then using the smartconnect, writes the data to the BRAM via the green path. 
+The using the red colored path the CDMA reads the content of the OCM using the smartconnect0, and writes the data to the BRAM via the green path. 
 
 
 ## The different combinations possible
 
-Based on the path of data flow discussed above, following are the components and their respective properties that have been explored in this lab.
+Based on the data flow discussed above, following are the components and their respective properties that have been explored in this lab.
 
 
-1. Zynq unit
- - Master bit width and Master ports 
- - Slave bit width and Slave ports
+1. **Zynq Unit **
+ - Master bus bit width and Master ports types
+ - Slave bus bit width and Slave ports types
 
-2. CDMA unit
+2.**CDMA Unit **
  - Bit Width
  - Burst Size
  - CDMA store and forward option
 
-3. BRAM Controller
+3. **BRAM Controller **
  - Bit Width
 
-4. Synthesis frequency
- - the maximum possible (without any negative slack)
+4. **Synthesis Frequency **
+ - The maximum possible (without any timing violations)
 
 
 ## Zynq Unit
 
-Bit Width: The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit width for the zynq master and slave buses is the maximum we can make them upto.
+### Bit Width
+The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit width for the zynq master and slave buses is the maximum we can make them upto.
 
-Ports: Following is the screenshot from showing the various port options available for the master and slave interfaces. 
+### Ports 
+Following is the screenshot from showing the various port options available for the master and slave interfaces. 
 
 
 <img src="images\ports.png" width="400" />
