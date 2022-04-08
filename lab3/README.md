@@ -145,7 +145,7 @@ Burst size: The burst size gets auto set when we change the bus width, but for t
 CDMA store and forward: As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
 
 
-<img src="images\cdma_vivado.png" width="1000" />
+<img src="images\cdma_vivado.png" width="600" />
 <hr style="border:2px solid gray"> </hr>
 
 ## BRAM Controller
