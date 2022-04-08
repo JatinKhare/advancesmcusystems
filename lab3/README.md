@@ -287,14 +287,14 @@ Lab 3 --> 468.2/250 = 1.8728
 
 
 ```bash
-SPEEDUP = 3.536/1.8728 = 1.88
+SPEEDUP = 3.536/1.8728 = 1.88 micro seconds 
 ```
 
 ## Let us answer the questions now:
 
 **1. Determine which busses to maximize between the PS-PL.
 a. Explain how and why?**
-```bash
+```
 Zynq-CDMA bus width = 128 (max possible)
 CDMA-BRAM bus width = 1024, Burst Size = 32
 
