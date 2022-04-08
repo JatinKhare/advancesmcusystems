@@ -14,74 +14,31 @@ Email: jatinkhare@utexas.edu
 4. [Setting the Frequency](#setting-the-frequency)
 5. [Useful information for writing the code](#useful-information-for-writing-the-code)
 6. [Codes](#codes)
-7. [Measurement Analysis](#measurement-analysis)
-
-### Using _scp_
-
 
 
 ## How to run the code
 
-First, run the following commands in the specified directories to setup the environment:
+First, run the following command in the specified directories to setup the environment:
 
 ```bash
 
-/your_path/lab2/kernal_modules# source insert.sh   #this makes the kernel modules and inserts them in the kernel
-#(the rm and rmmod lines will throw error on the first run as there is no device/module tor remove at first, so please ingnore those errors)
+/your_path/lab2/kernal_modules# source insert.sh       #this makes the kernel modules and inserts them in the kernel
 
-/your_path/lab2/codes# source bit_insert.sh    #to insert the bit file
+/your_path/lab2/codes# source bitstream_lab3.bit       #to insert the bit file
 
+/your_path/lab2/codes# make clean
+/your_path/lab2/codes# make
 
-```
-This will give you:
-``` bash
-root@ultra96:~/lab2/kernal_modules# source insert.sh 
-make -C /usr/src/plnx_kernel M=/home/ee382n/lab2/kernal_modules modules
-make[1]: Entering directory '/usr/src/4.14.0-xilinx-v2018.3'
-  CC [M]  /home/ee382n/lab2/kernal_modules/cdma_int.o
-  CC [M]  /home/ee382n/lab2/kernal_modules/captimer_int.o
-  Building modules, stage 2.
-  MODPOST 2 modules
-  CC      /home/ee382n/lab2/kernal_modules/captimer_int.mod.o
-  LD [M]  /home/ee382n/lab2/kernal_modules/captimer_int.ko
-  CC      /home/ee382n/lab2/kernal_modules/cdma_int.mod.o
-  LD [M]  /home/ee382n/lab2/kernal_modules/cdma_int.ko
-make[1]: Leaving directory '/usr/src/4.14.0-xilinx-v2018.3'
-rm: cannot remove '/dev/cdma_int': No such file or directory
-rm: cannot remove '/dev/captimer_int': No such file or directory
-rmmod: ERROR: Module cdma_int is not currently loaded
-rmmod: ERROR: Module captimer_int is not currently loaded
-$
-lsmod output:
-
-Module                  Size  Used by
-captimer_int           16384  0
-cdma_int               16384  0
-wilc_sdio             118784  0
-zynqmp_r5_remoteproc    16384  0
-mali                  245760  0
-uio_pdrv_genirq        16384  0
-$
-/proc/interrupts
-
- 48:          0          0          0          0     GICv2 124 Edge      captime_interrupt
- 51:          0          0          0          0     GICv2 123 Edge      cdma_interrupt
 
 ```
-and
 
-``` bash
-Time taken to load BIN is 3710.000000 Milli Seconds
-BIN FILE loaded through zynqMP FPGA manager successfully
-
-```
-Once you are in the lab2/codes directory and have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
+Once you are in the lab3/codes directory and  have the .c files (test1.c, test2.c) in the same directory as the Makefile, do the following:
 
 ``` bash
 $ make clean
 $ make 
 ```
-This will generate the corresponding object files and executables for all the two test cases. 
+This will generate the corresponding object files and executables for all the three test cases. 
 
 ### ./test1
 
@@ -98,94 +55,28 @@ n and m values determine the PS-PL frequency combinations
 
 n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
 
-m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
+m: 0 (250 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 250 MHz)
 
 (Loops): -1 (Default value = 500), maximum input value allowed = 10000
 ```bash
 root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test1 2 -1 200
-Setting loop number = 200
-Setting PS Freq. to 416.6 MHz
-PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz.
-For now, setting it to 300 MHz..
 
-DMA: OCM/BRAM traffic tests with 200 and 1024 words successful!!!
+ **COPY**
 
-For OCM to BRAM:
-Minimum Latency:    6601
-Maximum Latency:    24878
-Average Latency:    7721.000000
-Standard Deviation: 1509.000000
-Number of samples:  200
-
-For BRAM to OCM:
-Minimum Latency:    4869
-Maximum Latency:    14799
-Average Latency:    6263.000000
-Standard Deviation: 1077.000000
-Number of samples:  200
-Total number of Interrupts for to-and-fro transfer: 400
-
-```
-### ./test2
-
-USAGE: 
-
-```bash
-
-./test2 (n PS Freq) (m PL Freq) (Loops)
-
-```
-The test runs (input) transfers (1024 words each, to and fro from OCM->BRAM)
-
-n and m values determine the PS-PL frequency combinations 
-
-n: 0 (1499 MHz), 1 (999 MHz), 3 (416.6 MHz), -1 (default PS frequency = 1499 MHz)
-
-m: 0 (300 MHz), 1 (187.5 MHz), 3 (100 MHz), -1 (default PL frequency = 300 MHz)
-
-(Loops): -1 (Default value = 10000), maximum input value allowed = 10000
-
-```bash
-root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2/codes# ./test2 0 2 1000
-Setting loop number = 1000
-Setting PS Freq. to 1499 MHz
-Setting PL Freq. to 100 MHz
-
-Minimum Latency:    452
-Maximum Latency:    295891
-Average Latency:    832.000000
-Standard Deviation: 9343.000000
-Number of samples:  1000
-Number of Interrupts: 1000
-
-```
-## Starting with Lab 2
+## Starting with Lab 3
 
 ```bash
 
 jkhare@mario (/misc/scratch/jkhare) % cd ..
+jkhare@mario (/misc/scratch) % ls
+avenkkateshraj    dpinheiroleal  hbarclay  jkhare  jwu2             mlei   mwang3  sli4   vivado.jou  wkelly
+dperaltavelazque  etaka          hychiang  jmehta  mbadrinarayanan  mshah  sdutta  tvema  vivado.log
 jkhare@mario (/misc/scratch) % cd jkhare/
 jkhare@mario (/misc/scratch/jkhare) % cd advancesmcusystems/
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % mkdir vivado
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % cd vivado
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % tar xvf BASELINE_ULTRA96_2018.3.tar.gz
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % ls -1
-BASELINE_ULTRA96_2018.3
-BASELINE_ULTRA96_2018.3.tar.gz
-CONSTRAINTS
-ip_repo
-
-
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado) % cd BASELINE_ULTRA96_2018.3/
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado/BASELINE_ULTRA96_2018.3) % ls
-ip_upgrade.log       ultra96v2_oob.ip_user_files  ultra96v2_oob.srcs  vivado_8015.backup.jou  vivado.log
-ultra96v2_oob.cache  ultra96v2_oob.runs           ultra96v2_oob.tmp   vivado_8015.backup.log
-ultra96v2_oob.hw     ultra96v2_oob.sim            ultra96v2_oob.xpr   vivado.jou
-
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado/BASELINE_ULTRA96_2018.3) % module load xilinx/2018
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado/BASELINE_ULTRA96_2018.3) % vivado &
+jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % module load xilinx/2018
+jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % vivado &
 [3] 23314
-jkhare@mario (/misc/scratch/jkhare/advancesmcusystems/vivado/BASELINE_ULTRA96_2018.3) % 
+jkhare@mario (/misc/scratch/jkhare/advancesmcusystems) % 
 ****** Vivado v2018.3 (64-bit)
   **** SW Build 2405991 on Thu Dec  6 23:36:41 MST 2018
   **** IP Build 2404404 on Fri Dec  7 01:43:56 MST 2018
@@ -196,63 +87,71 @@ start_gui
 ```
 
 ## When the GUI is open-
-1. Open the project from lab1.
-2. Create a new IP block for capture timer.
-3. Integrate the new IP into the pre-existing block diagram and make the connections.
-4. Generate the bitstream.
+1. Open the project from lab2.
+2. Change the different widths and burst sizes of the different blocks.
+3. Generate the bitstreams.
 
 
-### IP Integration
+## Understanding the data flow in the given design
 
-1. Tools -> create and package new IP.
-
-2. Create a new AXI4 peripheral.
-
-3. Name the Peripheral CAPTURE_TIMER
-
-4. Add interfaces -> Lite, and number of Registers -> 4
-
-5. IP Catalog -> AXI Peripheral -> CAPTURE_TIMER -> Right Click -> Edit in the Packager (opens a new project window)
-
-6. Design the state machine required for this project, find the verilog modules [here](verilog_codes/). Simulation of the module written can be performed by forcing constant values/clock cycles to the module ports. 
-
-``` verilog
-//Split view of register bits
-slv_reg0 <= {16'hBEAD, 8'h0, timer_enable, 1'b0, 1'b0, capture_complete, 1'b0, 1'b0, 1'b0, capture_gate};
-slv_reg1[31:2] <= {16'hFEED, 14'h0};
-slv_reg2 <= Cap_Timer_Out[31:0];
-slv_reg3 <= {28'h5555_CAB, 1'b0, current_state[2:0]};
-```
-``` verilog
-//State assignment
-parameter RESET = 3'b000,
-parameter LOAD  = 3'b001,
-parameter COUNT = 3'b010,
-parameter WAIT  = 3'b011,
-parameter IDLE  = 3'b100,
-```
-
-<img src="images\sim.png" width="1000" /> 
-
-```bash 
-error: [xsim 43-3268] logical library nameshould not contain white space, new line, /, \, = or . 
-
-error: [xsim 43-3217] capture_timer_v1_0_vlog.prj (line 2): incorrect project file syntax. correct syntax is one of: vhdl <worklib> <file>, verilog <worklib> <file> [<file> ...] [[-d <macro>] ...] [[-i <include>] ...], or nosort. presence of nosort on a line of its own disables file order sorting.
-```
-Above mentioned error is a simulation bug (atleast with Vivado 2018.3), which can be fixed by running the following tcl command:
-
-```bash
-set_property library xil_defaultlib [get_files]
-```
-7. Repackage the IP and do not forget to Upgrade IP, and rerun the design.
-
-8. Flow -> Generate Bitstrem -> Save the block design -> Synthesis and Implementation is out-of-date? -> Launch Runs.
-
-9. Reports under 'Design Runs' contain the Static Timing Analysis.
-
-10. File -> Export -> Export Hardware -> include bit stream
+Before we go on with changing the bit width of various components in the design, we need to know how does the data flow in the design. The image shows the path the data follows while we transfer content from OCM to BRAM and vise-versa.
+The red colored path is the one by which the CDMA reads the content of the OCM, and then using the smartconnect, writes the data to the BRAM via the green path. 
 
 
+## The different combinations possible
+
+Based on the path of data flow discussed above, following are the components and their respective properties that have been explored in this lab.
+
+
+1. Zynq unit
+ - Master bit width and Master ports 
+ - Slave bit width and Slave ports
+
+2. CDMA unit
+ - Bit Width
+ - Burst Size
+ - CDMA store and forward option
+
+3. BRAM Controller
+ - Bit Width
+
+4. Synthesis frequency
+ - the maximum possible (without any negative slack)
+
+
+## Zynq Unit
+
+Bit Width: The bus widths possible for the master and slave interface of the PS are **32, 64, and 128**. We have been using the width size 128 since lab 1 and hence make no change to it whatsoever. The 128 bit width for the zynq master and slave buses is the maximum we can make them upto.
+
+Ports: Following is the screenshot from showing the various port options available for the master and slave interfaces. 
+
+
+<img src="images\ports.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
+
+We explore the three combination out of it, i.e. slave port being LPD (same as lab2), High Performace (HP), and ACP (Acceleration Co-herancy Port)
+
+
+## CDMA Unit
+
+Bus Widths: The bus width options available for CDMA are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
+
+Burst size: The burst size gets auto set when we change the bus width, but for the sake of consistency, the burst size for all the bust widths has been set to 32 bits.
+
+CDMA store and forward: As we can see in the screenshot below form Vivado, we can enable/disable the 'Store and Forward' option in the CDMA. This option has also been explored. 
+
+
+<img src="images\cdma.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
+
+## BRAM Controller
+
+Bus Width: The bus width options available for BRAM are 32, 64, 128, 256, 512, 1024. The lab2 configuration had 32 bit width. Here in this lab we explore multiple combinations starting from 128 to 256, 512, and 1024 bits. 
+
+## Synthesis Frequnecy
+
+The PL synthesis frequency was set to 100 MHz for lab2. But as the aim for lab3 is to push the design through all the limits and extract the best performance out of it, we can go for the maximum synthesis frequency possible (without a negative slack). This can be done by changing the divisor values in the corresponding registers.
+ 
 # Setting up the Board
 
 1. sudo screen -L /dev/ttyUSB1 115200
@@ -266,28 +165,15 @@ set_property library xil_defaultlib [get_files]
 
 ``` bash
 root@ultra96:/sys/firmware/devi sudo bash
-root@ultra96: mount /dev/mmcblk0p1 BOOT/
+root@ultra96: mount /dev/mmchblk0p1 BOOT/
 
 Filesystem     1K-blocks     Used Available Use% Mounted on
 /dev/root       29513292 15625940  12365100  56% /
 
 ```
-``` bash
-
-#copy system.bit and system.dtb files to /media/dev/.
-root@ultra96:/media/BOOT# ls
-bl31.bin   system.bit           u-boot.bin    uImage.7.19.21
-bl31.elf   system.bit.2.2.2222  u-boot.elf    uImage.broken
-BOOT.BIN   system.dtb           uboot.env     uImage.orig
-boot.scr   system.dtb.2.2.2222  uEnv.txt      vmlinux
-Image      system.dts           uEnv.txt.old  xxx.txt
-image.ub   System.map.linux     uImage        zynqmp_fsbl.elf
-pmufw.elf  system_orig.bit      uImage.5.4
-
-```
 6. fpgautil -b system.bit
 7. Halt and restart the board. 
-8. Check the device-tree at **/proc/device-tree/amba_pl@0/ls**:
+8. Check the device-tree by doing ls at **/proc/device-tree/amba_pl@0/**:
 
 ``` bash
 total 0
@@ -313,18 +199,6 @@ drwxr-xr-x  2 root root  0 Feb  3 01:57 'system_management_wiz@a0026000'/
 drwxr-xr-x  2 root root  0 Feb  3 01:57  zyxclmm_drm/
 
 ```
-9. Once the bit file is loaded in the hardware, check for the debug register values
-
-``` bash
-root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030000
-0xa0030000 = 0xbead0000
-root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030004
-0xa0030004 = 0xfeed0000
-root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa0030008
-0xa0030008 = 0x00000000
-root@ultra96:/proc/device-tree/amba_pl@0# dm 0xa003000c
-0xa003000c = 0x5555cab0
-```
 
 
 # Setting the Frequency
@@ -337,413 +211,77 @@ Vary the frequencies using the method from Lab 1 [README.md](https://github.com/
 
 ## Writing and inserting a kernel module
 
-1. Run the following script inside the kernel_modules directory-
+Follow the same steps from the lab2 for this. 
 
-```bash
-#!/bin/sh
-
-make
-rm /dev/cdma_int
-mknod /dev/cdma_int c 241 0
-
-rm /dev/captimer_int
-mknod /dev/captimer_int c 240 0
-
-rmmod cdma_int.ko
-insmod cdma_int.ko
-
-rmmod captimer_int.ko
-insmod captimer_int.ko
-
-echo $'\nlsmod output:\n'
-lsmod
-
-echo $'\n/proc/interrupts\n'
-more /proc/interrupts > proc_interrupts.txt
-tail -12 proc_interrupts.txt | head -2
-
-```
-
-2. The mknod will make a device node inside the /dev/ and the insmod will insert the kernel module to the /proc/interrupts.
-3. The 240 and 241 are the major number for the driver, and the 'c' stands for the character device.
-4. The .ko is the object file for the kernel modules and can be formed using the Makefile provided.
-5. We can check for the interrupt number to which the linux maps our hardware interrupts to the application end with the following command (interrupt number 48 and 51)-
-
-``` bash
-root@ultra96:~/labs/advmcu_codes/advancesmcusystems/lab2# more /proc/interrupts 
-           CPU0       CPU1       CPU2       CPU3       
-  3:      55746      74969      30077     172018     GICv2  30 Level     arch_timer
-  6:          0          0          0          0     GICv2  67 Level     ff9905c0.mailbox
-  7:          0          0          0          0     GICv2 175 Level     arm-pmu
-  8:          0          0          0          0     GICv2 176 Level     arm-pmu
-  9:          0          0          0          0     GICv2 177 Level     arm-pmu
- 10:          0          0          0          0     GICv2 178 Level     arm-pmu
- 12:          0          0          0          0     GICv2 156 Level     zynqmp-dma
- 13:          0          0          0          0     GICv2 157 Level     zynqmp-dma
- 14:          0          0          0          0     GICv2 158 Level     zynqmp-dma
- 15:          0          0          0          0     GICv2 159 Level     zynqmp-dma
- 16:          0          0          0          0     GICv2 160 Level     zynqmp-dma
- 17:          0          0          0          0     GICv2 161 Level     zynqmp-dma
- 18:          0          0          0          0     GICv2 162 Level     zynqmp-dma
- 19:          0          0          0          0     GICv2 163 Level     zynqmp-dma
- 20:          0          0          0          0     GICv2 164 Level     Mali_GP_MMU, Mali_GP, 
-									 Mali_PP0_MMU, Mali_PP0, 
-									 Mali_PP1_MMU, Mali_PP1
- 21:          0          0          0          0     GICv2 109 Level     zynqmp-dma
- 22:          0          0          0          0     GICv2 110 Level     zynqmp-dma
- 23:          0          0          0          0     GICv2 111 Level     zynqmp-dma
- 24:          0          0          0          0     GICv2 112 Level     zynqmp-dma
- 25:          0          0          0          0     GICv2 113 Level     zynqmp-dma
- 26:          0          0          0          0     GICv2 114 Level     zynqmp-dma
- 27:          0          0          0          0     GICv2 115 Level     zynqmp-dma
- 28:          0          0          0          0     GICv2 116 Level     zynqmp-dma
- 31:          5          0          0          0     GICv2  50 Level     cdns-i2c
- 32:          0          0          0          0     GICv2  42 Level     ff960000.memory-controller
- 33:          0          0          0          0     GICv2  57 Level     axi-pmon
- 34:          0          0          0          0     GICv2  58 Level     ffa60000.rtc
- 35:          0          0          0          0     GICv2  59 Level     ffa60000.rtc
- 36:      31292          0          0          0     GICv2  80 Level     mmc0
- 37:     706998          0          0          0     GICv2  81 Level     mmc1
- 38:          0          0          0          0     GICv2  51 Level     ff040000.spi
- 39:          0          0          0          0     GICv2  52 Level     ff050000.spi
- 41:        535          0          0          0     GICv2  54 Level     xuartps
- 43:          0          0          0          0     GICv2  84 Edge      ff150000.watchdog
- 44:          0          0          0          0     GICv2  88 Level     ams-irq
- 45:          0          0          0          0     GICv2 154 Level     fd4c0000.dma
- 46:          0          0          0          0     GICv2 151 Level     fd4a0000.zynqmp-display
- 47:          0          0          0          0     GICv2  61 Level     ff9a0100.zynqmp_r5_rproc
- 48:      75006          0          0          0     GICv2 124 Edge      captime_interrupt
- 51:       9408          0          0          0     GICv2 123 Edge      cdma_interrupt
- 71:         87          0          0          0     GICv2 102 Level     xhci-hcd:usb1
- 75:          0          0          0          0  zynq-gpio  23 Edge      sw4
-IPI0:     24773     281618      55990      96623       Rescheduling interrupts
-IPI1:        18         11         15         20       Function call interrupts
-IPI2:         0          0          0          0       CPU stop interrupts
-IPI3:         0          0          0          0       CPU stop (for crash dump) interrupts
-IPI4:     33637      34042      41189       9056       Timer broadcast interrupts
-IPI5:       180          0          0          0       IRQ work interrupts
-IPI6:         0          0          0          0       CPU wake-up interrupts
-Err:          0
-
-```
-6. The kernel module needs to have the exact name of the '.compatible' as in the DTB.
-
-7. Extract the DTS from the DTB using:
-
-``` bash
-$ dtc -I dtb -O dts system.dtb
-
-```
-``` bash
-	Capture_Timer@a0030000 {
-			clock-names = "s00_axi_aclk";
-			clocks = <0x3 0x47>;
-			compatible = "xlnx,Capture-Timer-1.0";
-			interrupt-names = "interrupt_out";
-			interrupt-parent = <0x4>;
-			interrupts = <0x0 0x5c 0x4>;
-			reg = <0x0 0xa0030000 0x0 0x10000>;
-			xlnx,s00-axi-addr-width = <0x6>;
-			xlnx,s00-axi-data-width = <0x20>;
-		};
-
-
-dma@b0000000 {
-			#dma-cells = <0x1>;
-			clock-names = "m_axi_aclk", "s_axi_lite_aclk";
-			clocks = <0x3 0x47 0x3 0x47>;
-			compatible = "xlnx,cdma_int";
-			interrupt-names = "cdma_introut";
-			interrupt-parent = <0x4>;
-			interrupts = <0x0 0x5b 0x4>;
-			reg = <0x0 0xb0000000 0x0 0x1000>;
-			xlnx,addrwidth = <0x28>;
-
-			dma-channel@b0000000 {
-				compatible = "xlnx,axi-cdma-channel";
-				interrupts = <0x0 0x5b 0x4>;
-				xlnx,datawidth = <0x20>;
-				xlnx,device-id = <0x0>;
-				xlnx,max-burst-len = <0x20>;
-			};
-
-```
-
-6. Now the SIGIO needs to be handled, which can be done using the signal_handler as follows
-
-```c
-
-void sigio_signal_handler(int signo){
-	
-	
-	/* user code */
-	sigio_signal_count ++;
-	det_int = 1;
-}
-
-	struct sigaction sig_action;
-	memset(&sig_action, 0, sizeof sig_action);
-	sig_action.sa_handler = sigio_signal_handler;
-
-	//Block all signals while our signal handler is executing:
-	(void)sigfillset(&sig_action.sa_mask);
-
-	rc = sigaction(SIGIO, &sig_action, NULL);
-
-	if (rc == -1) {
-		perror("sigaction() failed");
-		return -1;
-	}
-
-	//Open the device file
-
-	captime_dev_fd = open(CAPTIME_DEV_PATH, O_RDWR);
-	if(captime_dev_fd == -1)    {
-		perror("open() of " CAPTIME_DEV_PATH " failed");
-		return -1;
-	}
-
-	//Set our process to receive SIGIO signals from the GPIO device:
-
-	rc = fcntl(captime_dev_fd, F_SETOWN, getpid());
-
-	if (rc == -1) {
-		perror("fcntl() SETOWN failed\n");
-		return -1;
-	}
-
-	//Enable reception of SIGIO signals for the captime_dev_fd descriptor
-
-	int fd_flags = fcntl(captime_dev_fd, F_GETFL);
-	rc = fcntl(captime_dev_fd, F_SETFL, fd_flags | O_ASYNC);
-
-	if (rc == -1) {
-		perror("fcntl() SETFL failed\n");
-		return -1;
-	}
-```	
-
-## Useful information for writing the code 
-
-1. Saving the values in .csv file
-
-``` c
-void save_file(long unsigned *array){
-
-FILE *fp;
-
-char *filename = "data.csv";
-
-fp = fopen(filename,"w+");
-
-fprintf(fp,"Sample Cycles");
-
-for(int i=0;i<xx;i++){
-
-    fprintf(fp,",%ld ",array[i]);
-    }
-
-fclose(fp);
-}
-
-```
-2. Enabling and Disabling interrupts: CDMA transfer
-
-``` c
-// do this right before the transfer
-dma_set(cdma_virtual_address, CDMACR, 0x1000); //enabling interrupts
-dma_set(cdma_virtual_address, CDMACR, 0x000);  // disable interrupts
-
-```
-
-
-3. Useful constant values:
-
-```c
-
-#define CDMA                0xB0000000
-#define BRAM                0xB0028000
-#define OCM_1               0xFFFC0000
-#define OCM_2               0xFFFC2000
-
-#define SLV_REG_BASE        0xA0030000
-#define SLV_REG_0_OFF       0x00000000
-#define SLV_REG_1_OFF       0x00000004
-#define SLV_REG_2_OFF       0x00000008
-#define SLV_REG_3_OFF       0x0000000c
-
-#define PL0_REF_CTRL_ADD    0xFF5E0000
-
-//register values for PS
-
-#define PS_APLL_BASE        0xFD1A0000
-#define APLL_CTRL_OFF       0x20
-#define APLL_CFG_OFF        0x24
-#define PLL_STATUS_OFF      0x44
-
-#define PS_APLL_CTRL_1499   0x00002D00
-#define PS_APLL_CTRL_1333   0x00002800
-#define PS_APLL_CTRL_999    0x00001E00
-#define PS_APLL_CTRL_733    0x00012C00
-#define PS_APLL_CTRL_416_6  0x00011900
-
-#define PS_APLL_CFG_1499    0x7E672C6C
-#define PS_APLL_CFG_1333    0x7E73AC6C
-#define PS_APLL_CFG_999     0x7E7D0C86
-#define PS_APLL_CFG_733     0x7E6A4C6C
-#define PS_APLL_CFG_416_6   0x7E7D0C6A
-
-//register values for PL
-
-#define PL_0_300            0x01010500
-#define PL_0_250            0x01010600
-#define PL_0_187_5          0x01010800
-#define PL_0_150            0x01010A00
-#define PL_0_100            0x01010F00
-
-#define CDMACR              0x00           //CDMA Control
-#define CDMASR              0x04           //Status
-#define CURDESC_PNTR        0x08           //Current Descriptor Pointer
-#define CURDESC_PNTR_MSB    0x0C           //Current Description Pointer MSB
-#define TAILDESC_PNTR       0x10           //Tail Description Pointer
-#define TAILDESC_PNTR_MSB   0x14           //Tail Description Pointer MSB
-#define SA                  0x18           //Source Address
-#define SA_MSB              0x1C           //Source Address MSB
-#define DA                  0x20           //Destination Address
-#define DA_MSB              0x24           //Destination Address MSB
-#define BTT                 0x28           //Bytes to Transfer
-#define OCM_MAP_SIZE        131072UL
-#define OCM_MAP_MASK        (OCM_MAP_SIZE - 1)
-#define MAP_SIZE            4096UL
-#define MAP_MASK            (MAP_SIZE - 1)
-#define MAP_SIZE_F          4096UL
-#define MAP_MASK_F          (MAP_SIZE_F - 1)
-#define CDMA_DEV_PATH       "/dev/cdma_int"
-#define HIGHEST_MEAS_NUMBER         10000
-//#define PRINT_COUNT
-
-```
 ## Codes
 
 1. [test1.c](codes/test1.c)
 2. [test2.c](codes/test2.c)
  
-## Measurement Analysis
+## Performance Analysis
 
-For the analysis of the latency data, we have 9 sets of values for each test case. The data plots and conclusions driven from those go as follows-
+Let us talk numbers: 
 
-(* few outlier values have been omitted while plotting, so that the plots can be analysized more accurately)
+The following table shows the latency for the different configurations tested for the lab3.
+(Note: the transfer latency numbers are for PS freq: 1499 MHz and PL freq: Synthesis Freq)
+|S. No.|Zynq-CDMA Width|Slave Port|CDMA-BRAM width|CDMA Burst Size|CDMA S & F|Synthesis Frquency|Capture Timer Count|Transfer Time (micro sec)|
+|------|---------|---------|---------|---------|---------|---------|---------|---------|
+|1. |    128 |LPD|    32   |     32   |**enabled**|  250 MHz | 1295    |  5.18|
+|2. |    128 |LPD|    **128**   |     32   |enabled|  250 MHz |   690  |  2.76|
+|3. |    128 |LPD|    **256**   |     32   |enabled|  250 MHz |   480  |  1.92|
+|4. |    128 |LPD|    **512**   |     32   |enabled|  250 MHz |   470  |  1.88|
+|5. |    128 |LPD|    **1024**   |     32   |enabled|  250 MHz |   468  | 1.872 |
+|6. |    128 |**HP0**|    1024   |     32   |enabled|  250 MHz |   436  |  1.744|
+|7. |    128 |**ACP**|    1024   |     32   |enabled|  250 MHz |   443  |  1.772|
+|8. |    128 |LPD|    1024   |     32   |**disabled**|  250 MHz |   431  |  1.724|
 
-### Test1: Keeping PS constant and changing the PL frequency
+Observations:
 
-  <img src="images\ps_1_1499.png" width="1000" />
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\ps_1_999.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\ps_1_416.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
+1. Effect of increasing the Bit Width: As we increase the width from 32 to 1024, we can see that there is improvment in the performance, but the rate of improvement decreases with increase in the bit width. It is the max change from 32 to 128, then becomes nearly constant with very small changes from 256 bits onwards.
 
+2. Effect of Burst size: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. Hence we have kept the burst size as 32 throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis, we stick to the 32 bit burst size.
 
-### Test1: Keeping PL constant and changing the PS frequency
+3. CDMA S & F: This enables the internal buffer in the AXI CDMA. But one would except improvement after using the internal buffer, but this is not the real result is. The performace does down, which can be compared eith the results from (7) and (8)
 
-  <img src="images\pl_1_300.png" width="1000" />
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\pl_1_187.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\pl_1_100.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-
-
-### Test2: Keeping PS constant and changing the PL frequency
-
-  <img src="images\ps_2_1499.png" width="1000" />
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\ps_2_999.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\ps_2_416.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
+4. BRAM controller: We have one BRAM and 2 BRAM controllers. The bram_ctrl_0 is connected to the  Zynq via a smartconnect. The bram_ctrl_1 is connected to the CDMA. So the bus width of the bram_ctrl_1 will change with the CDMA width change. We can set the bus width of the bram_ctrl_0 to any number, as long as the width(bram_ctrl_0):width(bram_ctrl_1).
 
 
-### Test2: Keeping PL constant and changing the PS frequency
-  <img src="images\pl_2_300.png" width="1000" />
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\pl_2_187.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-  <img src="images\pl_2_100.png" width="1000" /> 
-<hr style="border:2px solid gray"> </hr>
-
-### Observations
-
-1. Latency is inversely proportional to the PS frequency, which totally makes sense. If the tranfer rate is higher, the time taken to transfer will be higher. On the other hand, the PL frequency does not really affect the latency, because the overall time taken to transfer must be same for any scenario involving constant PS frequency. 
-
-2. The counter value depends on two factors: the PL frequency (the speed of counting) and the PS frequency (how long to count for). Keeping the PS constant, the counter value increases with increase in PL frequency, and keeping PL constant, the counter value increases with decrease in the PS frequency. 
+5. Ports:
 
 
-<img src="images\min_max.png" width="1000" /> 
+Let us answer the questions now:
 
-[Blue dots: max points, Red dots: min points]
-
-1. We can see there is a lot of jitter in the maximum latency, and the minimum latency is in a very close range of values. 
-(here also few values have been omitted while plotting to make sure the range is small enough to visualize the data more clearly)
-
-### Values when the kernel is busy doing other tasks
-
-When the Kernel is not busy-
-
-``` bash
-
-Default loop number = 500
-PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.
-For now, setting it to 1499 MHz..
-PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
-For now, setting it to 300 MHz..
-
-DMA's OCM/BRAM traffic tests with 500 and 1024 words successful!!!
-
-For OCM to BRAM:
-Minimum Latency:    5392
-Maximum Latency:    18934
-Average Latency:    7762.000000
-Standard Deviation: 2943.000000
-Number of samples:  500
-
-For BRAM to OCM:
-Minimum Latency:    4076
-Maximum Latency:    22343
-Average Latency:    6517.000000
-Standard Deviation: 1284.000000
-Number of samples:  500
-Total number of Interrupts for to-and-fro transfer: 1000
+1. Determine which busses to maximize between the PS-PL.
+a. Explain how and why?
+2. If necessary, change the SmartConnect configuration.
+a. Explain why?
+3. Determine which busses to maximize in the PL to the point where there are no timing
+issues.
+a. Explain how and why?
+4. Determine which busses to maximize in the PL to the point where there are still some
+FPGA resources available (i.e., 3)
+5. Maximize the PL synthesis clock frequency in Vivado to the point where there are no
+timing issues.
+a. Explain how and why?
+6. Synthesize your new Vivado schematic and generate a new bit file.
+7. Download the new DTB from here
+a. We need a new DTB because the size of the BRAM memory grew from 8K to 64K
+b. Convert the DTB to a DTS and confirm that the new address map is correct.
+c. Change the compatible statement to match what you have in your kernel
+module. Convert the DTS back to a DTB and rewrite it back to the BOOT sector
+8. Run Lab_2 Test 1 using the new PS and PL configurations to determine the baseline
+performance improvements.
+a. Graph the performance improvements versus what you got in Lab_2.
+b. If there are performance improvements explain where they are coming from. If
+not explain why there was no improvement. You may need to generate
+additional instrumentation blocks to help determine what is going on.
+9. Determine if should now modify your application software and kernel module to take
+advantage of the new hardware configuration.
+a. Graph the performance improvements with the new software changes.
+b. If there are performance improvements explain where they are coming from. If
+not explain why there was no improvement. You may need to generate
+additional instrumentation blocks to help determine what is going on.
 
 
-```
-After runnning this command in a separate window
-``` bash
-while (cd /) do ls -algR; done
-```
-``` bash
-Default loop number = 500
-PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.
-For now, setting it to 1499 MHz..
-PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 300 MHz, 187.5 MHz, and 100 MHz respectively.
-For now, setting it to 300 MHz..
 
-DMA's OCM/BRAM traffic tests with 500 and 1024 words successful!!!
 
-For OCM to BRAM:
-Minimum Latency:    5406
-Maximum Latency:    497015
-Average Latency:    9087.000000
-Standard Deviation: 24183.000000
-Number of samples:  500
-
-For BRAM to OCM:
-Minimum Latency:    4058
-Maximum Latency:    684226
-Average Latency:    8246.000000
-Standard Deviation: 32305.000000
-Number of samples:  500
-Total number of Interrupts for to-and-fro transfer: 1000
-
-```
-Observation: The maximum latency is now significantly higher for the case when the kernel is kept busy doing the recursive task.
