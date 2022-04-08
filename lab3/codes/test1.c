@@ -24,7 +24,7 @@
 
 
 #define CDMA                0xB0000000
-//#define BRAM                0xB0028000
+//#define BRAM              0xB0028000
 #define BRAM                0xB0030000
 #define OCM_1               0xFFFC0000
 #define OCM_2               0xFFFC2000
