@@ -251,7 +251,7 @@ Here the CDMA trnasfers the bits it gets, and the resource utilization is also l
  	 (Zynq)         (CDMA)         (BRAM)
 
 Here again there is a mismatch. Now the CDMA needs to store 8 iterations of Zynq data to transfer once to the BRAM.
-This is where the trade off 
+This is where the trade off comes in. We are sending a large amount of data, but also comsuming time in storing and combining it too. Sending large data is indeed improving performance, but storing it is not letting it improve by a very great amount.  
 ```
 
 2. **Effect of Burst size**: As we know that the CDMA transfers the data in bursts and after each burst, there is exchange of few ack signals in the AXI protocol. Hence, the less we have the burst size the more will be the signals, which will degrade the performace. As a result,  the burst size has been kept as constant 32 bits throughout the experiment. (Why 32? Because when we set the bus width for the CDMA to 1024 bits, the maximum we can go for the burst size is 32, and hence for lower widths, even if it was possible to have a larger burst size, for the sake of the analysis I have stick to the 32 bit burst size.
@@ -266,10 +266,29 @@ This is where the trade off
 ### Utilization 
 The maximum utilization is for the configuration which uses maximum BRAMs, has the CDMA S & F enabled (which will activate the internal buffers, increasing the utilization. Here is the utilization report for 1024 bus width and 32 burst size, with CDMA S & F enabled
 
-**<img src="images\util.png" width="500" />
+<img src="images\util.png" width="500" />
 <hr style="border:2px solid gray"> </hr>
 
-Let us answer the questions now:
+
+## Speedup
+
+I am calculating the speedup with the best performance in lab2 vs best performance achieved in lab3.
+
+**Lab 2** lowest latency (for 128 ----- 32 ----- 32) with PS Freq. 1499 MHz and PL Freq. 375 MHz
+(we went to 300 MHz in lab2, but turns out if we change the divisor factor from 5 to 4, a freq. of 375 MHz also works, but beyond that it crashes.)
+
+Lab 2 --> 1326/375 = 3.536 micro seconds
+
+**Lab 3** lowest latency (with CDMA S & F enabled)
+
+Lab 3 --> 468.2/250 = 1.8728
+
+
+```bash
+SPEEDUP = 3.536/1.8728 = 1.88
+```
+
+## Let us answer the questions now:
 
 **1. Determine which busses to maximize between the PS-PL.
 a. Explain how and why?**

@@ -58,8 +58,8 @@
 
 //register values for PL
 
-#define PL_0_300            0x01010600
-#define PL_0_250            0x01010300
+#define PL_0_300            0x01010500
+#define PL_0_250            0x01010600
 #define PL_0_187_5          0x01010800
 #define PL_0_150            0x01010A00
 #define PL_0_100            0x01010F00
