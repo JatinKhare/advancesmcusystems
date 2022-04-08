@@ -6,6 +6,7 @@ UT EID: jk47976
 Email: jatinkhare@utexas.edu
 ```
 
+**(the various bit files used for analysis can be found in the directory lab3/codes/lab3_bitstreams/*.bit)**
 
 # Contents
 1. [How to run the code](#how-to-run-the-code)
