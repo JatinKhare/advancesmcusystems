@@ -34,7 +34,7 @@ First, run the following command in the specified directories to setup the envir
 
 Once you are in the lab3/codes directory and  have the .c files (test1.c) in the same directory as the Makefile, do the following:
 
-``` bash
+``` 
 $ make clean
 $ make
 
