@@ -1,2 +1,2 @@
-kernel//home/ee382n/labs/advmcu_codes/advancesmcusystems/lab3/kernal_modules/cdma_int.ko
-kernel//home/ee382n/labs/advmcu_codes/advancesmcusystems/lab3/kernal_modules/captimer_int.ko
+kernel//home/ee382n/labs/advmcu_codes/advancesmcusystems/project_sniffer/kernal_modules/cdma_int.ko
+kernel//home/ee382n/labs/advmcu_codes/advancesmcusystems/project_sniffer/kernal_modules/captimer_int.ko
