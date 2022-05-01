@@ -680,7 +680,7 @@ int main(int argc, char *argv[]) {
 #endif
 			exit(0);
 		}
-
+			
 		else{
 			waitpid(childpid, &status, WCONTINUED);
 			while(!det_int);    //be stuck until you get the interrupt
