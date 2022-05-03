@@ -22,7 +22,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-
+#define SNIFFER_BASE        0xA0028000
+#define SLV_10_OFF 	    0x00000028
+#define SLV_11_OFF 	    0x0000002C
+#define SLV_12_OFF 	    0x00000030
 #define CDMA                0xB0000000
 //#define BRAM                0xB0028000
 #define BRAM                0xB0030000
@@ -112,6 +115,8 @@ void save_file(long unsigned *array);
 //DMA Set
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
+
+uint32_t *sniffer_base, *slv_10, *slv_11, *slv_12;
 unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
 	dma_virtual_address[offset>>2] = value;
 	return 0;
@@ -168,6 +173,10 @@ void transfer(unsigned int *cdma_virtual_address, int length){
 #ifdef PRINT_COUNT
 			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 #endif
+	printf("Before Transfer slv_12 = x%.8x\n", *slv_12);
+	printf("Before Transfer slv_10 = x%.8x\n", *slv_10);
+	printf("Before Transfer slv_11 = x%.8x\n", *slv_11);
+	*slv_12 = 0x7777FFFF;
 	dma_set(cdma_virtual_address, BTT, length*4);
 #ifdef PRINT_COUNT
 			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
@@ -421,6 +430,11 @@ void change_pl_freq(int dh, int m){
 int count1, count2, count1_back, count2_back;
 void sigio_signal_handler(int signo){
 	det_int = 1;
+
+	printf("slv_12 = x%.8x\n", *slv_12);
+	printf("slv_10 = x%.8x\n", *slv_10);
+	printf("slv_11 = x%.8x\n", *slv_11);
+	*slv_12 = 0;
 	//assert(signo == SIGIO);   // Confirm correct signal #
 	sigio_signal_count ++;
 	int l = 5;
@@ -437,7 +451,6 @@ void sigio_signal_handler(int signo){
 		kill(0,SIGKILL);
 	}
 }
-
 
 
 int main(int argc, char *argv[]) {
@@ -551,7 +564,15 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			OCM_2);
-
+	 sniffer_base  = mmap(NULL, 
+			MAP_SIZE, 
+			PROT_READ | PROT_WRITE, 
+			MAP_SHARED, 
+			dh, 
+			SNIFFER_BASE & ~MAP_MASK);
+	slv_10 = sniffer_base + (((SNIFFER_BASE + SLV_10_OFF) & MAP_MASK) >> 2);
+	slv_11 = sniffer_base + (((SNIFFER_BASE + SLV_11_OFF) & MAP_MASK) >> 2);
+	slv_12 = sniffer_base + (((SNIFFER_BASE + SLV_12_OFF) & MAP_MASK) >> 2);
 	//mapping to the PL registers
 
 	slv_reg_base = mmap(NULL,
