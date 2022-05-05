@@ -115,8 +115,9 @@ void save_file(long unsigned *array);
 //DMA Set
 
 uint32_t *slv_reg_base, *slv_reg0, *slv_reg1, *slv_reg2, *slv_reg3;
+uint32_t *sniffer_base;
+uint32_t *sniffer_reg[32];
 
-uint32_t *sniffer_base, *slv_10, *slv_11, *slv_12;
 unsigned int dma_set(unsigned int* dma_virtual_address, int offset, unsigned int value) {
 	dma_virtual_address[offset>>2] = value;
 	return 0;
@@ -173,10 +174,6 @@ void transfer(unsigned int *cdma_virtual_address, int length){
 #ifdef PRINT_COUNT
 			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 			
-	printf("Before Transfer slv_12 = x%.8x\n", *slv_12);
-	printf("Before Transfer slv_10 = x%.8x\n", *slv_10);
-	printf("Before Transfer slv_11 = x%.8x\n", *slv_11);
-	*slv_12 = 0x7777FFFF;
 #endif
 	dma_set(cdma_virtual_address, BTT, length*4);
 #ifdef PRINT_COUNT
@@ -432,7 +429,6 @@ int count1, count2, count1_back, count2_back;
 void sigio_signal_handler(int signo){
 	det_int = 1;
 
-	*slv_12 = 0;
 	//assert(signo == SIGIO);   // Confirm correct signal #
 	sigio_signal_count ++;
 	int l = 5;
@@ -576,9 +572,10 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			SNIFFER_BASE & ~MAP_MASK);
-	slv_10 = sniffer_base + (((SNIFFER_BASE + SLV_10_OFF) & MAP_MASK) >> 2);
-	slv_11 = sniffer_base + (((SNIFFER_BASE + SLV_11_OFF) & MAP_MASK) >> 2);
-	slv_12 = sniffer_base + (((SNIFFER_BASE + SLV_12_OFF) & MAP_MASK) >> 2);
+        for(int s = 1; s < 32; s++){
+		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + s) & MAP_MASK) >> 2);
+                printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
+        }
 	//mapping to the PL registers
 
 	slv_reg_base = mmap(NULL,
