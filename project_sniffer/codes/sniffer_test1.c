@@ -176,6 +176,8 @@ void transfer(unsigned int *cdma_virtual_address, int length){
 			
 #endif
 	dma_set(cdma_virtual_address, BTT, length*4);
+			*sniffer_reg[1] = 0x50;	
+			printf("Hello = x%.8x\n",*sniffer_reg[1]);
 #ifdef PRINT_COUNT
 			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 #endif
@@ -452,6 +454,8 @@ int main(int argc, char *argv[]) {
 	struct sigaction sig_action;
 	memset(&sig_action, 0, sizeof sig_action);
 	sig_action.sa_handler = sigio_signal_handler;
+	//uint32_t input_slv_reg1;
+	//scanf("%d\n", input_slv_reg1);
 
 	//Block all signals while our signal handler is executing:
 	(void)sigfillset(&sig_action.sa_mask);
@@ -572,10 +576,11 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			SNIFFER_BASE & ~MAP_MASK);
-        for(int s = 1; s < 32; s++){
-		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + s) & MAP_MASK) >> 2);
+        for(int s = 0; s < 32; s++){
+		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
                 printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
         }
+
 	//mapping to the PL registers
 
 	slv_reg_base = mmap(NULL,
@@ -790,6 +795,10 @@ int main(int argc, char *argv[]) {
 				     );
 
 			       printf("Total number of Interrupts for to-and-fro transfer: %d\n", sigio_signal_count);
+        for(int s = 0; s < 32; s++){
+		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
+                printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
+        }
 			       (void)close(cdma_dev_fd);
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
