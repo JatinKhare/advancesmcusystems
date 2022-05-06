@@ -1,0 +1,8 @@
+#
+#Global configuration
+#
+psClockFreq_idx=0;
+plClockFreq_idx=0;
+numLoops=1;
+numWordsPerLoop=1024;
+#END

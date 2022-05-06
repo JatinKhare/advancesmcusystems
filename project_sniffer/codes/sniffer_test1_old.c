@@ -21,7 +21,6 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <ctype.h>
 
 #define SNIFFER_BASE        0xA0028000
 #define SLV_10_OFF 	    0x00000028
@@ -96,25 +95,9 @@ static volatile sig_atomic_t sigio_signal_processed = 0;
 volatile int sigio_signal_count = 0;
 int cdma_dev_fd  = -1;
 int det_int;
-//int GlobalCfgArgs.numLoops = 500;
+int xx = 500;
 unsigned long intr_latency_measurements_back[HIGHEST_MEAS_NUMBER];
 unsigned long intr_latency_measurements[HIGHEST_MEAS_NUMBER];
-
-
-/*! \brief
-* Global Configuration Structure
-*/
-typedef struct GlobalCfg
-{
-	unsigned int psClockFreq_idx;
-	unsigned int plClockFreq_idx;
-	unsigned int numLoops;
-	unsigned int numWordsPerLoop;
-
-} GlobalCfg_t;
-
-/* Global variable configurations from config file */
-GlobalCfg_t GlobalCfgArgs = { 0 };
 
 
 void compute_interrupt_latency_stats(
@@ -432,104 +415,13 @@ void sigio_signal_handler(int signo){
 	}
 }
 
-/* File pointer for config file*/
-FILE *configfPtr = NULL;
-
-int openConfigFile()
-{
-    /*open config file to read parameters*/
-    if (configfPtr == NULL)
-    {
-        configfPtr = fopen("config.txt", "r");
-        if (configfPtr == NULL)
-        {
-            printf("failed to open config file\n");
-            return -1;
-        }
-    }
-    return 0;
-}
-
-char *trim(char * s)
-{
-    /* Initialize start, end pointers */
-    char *s1 = s, *s2 = &s[strlen(s) - 1];
-
-    /* Trim and delimit right side */
-    while ((isspace(*s2)) && (s2 >= s1))
-        s2--;
-    *(s2 + 1) = '\0';
-
-    /* Trim left side */
-    while ((isspace(*s1)) && (s1 < s2))
-        s1++;
-
-    /* Copy finished string */
-    strcpy(s, s1);
-    return s;
-}
-
-void getGlobalConfigStatus(GlobalCfg_t *GlobalCfgArgs)
-{
-	char *s, buff[256], name[100], value[100];
-	unsigned int readAllParams = 0;
-	/*seek the pointer to starting of the file so that
-			we dont miss any parameter*/
-	fseek(configfPtr, 0, SEEK_SET);
-	/*parse the parameters by reading each line of the config file*/
-	while (((s = fgets(buff, sizeof buff, configfPtr)) != NULL)
-		&& (readAllParams == 0))
-	{
-		/* Skip blank lines and comments */
-		if (buff[0] == '\n' || buff[0] == '#')
-		{
-			continue;
-		}
-
-		/* Parse name/value pair from line */
-		s = strtok(buff, "=");
-		if (s == NULL)
-		{
-			continue;
-		}
-		else
-		{
-			strncpy(name, s, 100);
-		}
-		s = strtok(NULL, "=");
-		if (s == NULL)
-		{
-			continue;
-		}
-		else
-		{
-			strncpy(value, s, 100);
-		}
-		trim(value);
-	
-		if (strcmp(name, "psClockFreq_idx") == 0)
-			GlobalCfgArgs->psClockFreq_idx = atoi(value);
-		
-		if (strcmp(name, "plClockFreq_idx") == 0)
-			GlobalCfgArgs->plClockFreq_idx = atoi(value);
-		
-		if (strcmp(name, "numLoops") == 0)
-			GlobalCfgArgs->numLoops = atoi(value);
-
-		if (strcmp(name, "numWordsPerLoop") == 0)
-		{
-			GlobalCfgArgs->numWordsPerLoop = atoi(value);
-			readAllParams = 1;
-		}
-	}
-}
-
-int main(int argc, char *argv[]) 
-{
+int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	struct sigaction sig_action;
 	memset(&sig_action, 0, sizeof sig_action);
 	sig_action.sa_handler = sigio_signal_handler;
+	//uint32_t input_slv_reg1;
+	//scanf("%d\n", input_slv_reg1);
 
 	//Block all signals while our signal handler is executing:
 	(void)sigfillset(&sig_action.sa_mask);
@@ -567,82 +459,95 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	rc = openConfigFile();
-    if (rc != 0)
-    {
-        printf("failed to Open configuration file\n\n");
-        return -1;
-    }
+	//Reset sigio_signal_processed flag:
+	if(argc>5){
+		printf("USAGE: ./test1 (n PS Freq) (m PL Freq) (Loops)\n");
+		return -1;
+	}
 
-	/* Read all global variable configurations from config file */
-	getGlobalConfigStatus(&GlobalCfgArgs);
-
-	if(GlobalCfgArgs.psClockFreq_idx==0)
+	int n = -1, m = -1;
+	if(argc == 1){
+		printf("Default loop number = 500\n");
+	}
+	if(argc == 2){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		printf("Default loop number = 500\n");
+	}
+	if(argc == 3){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+		printf("Default loop number = 500\n");
+	}
+	if(argc == 4){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+		xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
+		printf("Setting loop number = %d\n", xx);
+	}
+	int yy = 1024;   //default value of number of words to test per loop
+	if(argc == 5){
+		n = strtoul(argv[1], 0, 0);   //taking number for PS Freq from the user
+		m = strtoul(argv[2], 0, 0);   //taking number for PL Freq from the user
+		xx = strtoul(argv[3], 0, 0);   //taking number for Loops Freq from the user
+		yy = strtoul(argv[4], 0, 0);   //taking number for Loops Freq from the user
+		printf("Setting loop number = %d\n", xx);
+		printf("Setting words per loop = %d\n", xx);
+	}
+	if(n==0)
 		printf("Setting PS Freq. to 1499 MHz\n");
-	else if(GlobalCfgArgs.psClockFreq_idx==1)
+	else if(n==1)
 		printf("Setting PS Freq. to 999 MHz\n");
-	else if(GlobalCfgArgs.psClockFreq_idx==2)
+	else if(n==2)
 		printf("Setting PS Freq. to 416.6 MHz\n");
 
-	else if(GlobalCfgArgs.psClockFreq_idx>2||GlobalCfgArgs.psClockFreq_idx==-1)
-	{
-		GlobalCfgArgs.psClockFreq_idx = 0;
+	else if(n>2||n==-1){
+		n = 0;
 		printf("PS Frequency: Enter number 0, 1, and 2 for setting PS Freq. to 1499 MHz, 999 MHz, and 416.6 MHz respectively.\nFor now, setting it to 1499 MHz..\n");
 	}
-	
-	if(GlobalCfgArgs.plClockFreq_idx==0)
-		printf("Setting PL Freq. to 250 MHz\n");
-	else if(GlobalCfgArgs.plClockFreq_idx==1)
-		printf("Setting PL Freq. to 187.5 MHz\n");
-	else if(GlobalCfgArgs.plClockFreq_idx==2)
-		printf("Setting PL Freq. to 100 MHz\n");
-	else if(GlobalCfgArgs.plClockFreq_idx>2||GlobalCfgArgs.plClockFreq_idx==-1){
-		GlobalCfgArgs.plClockFreq_idx = 0;
-		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 250 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
-	}
-	
-	printf("Setting loop number = %d\n", GlobalCfgArgs.numLoops);
-	printf("Setting words per loop = %d\n", GlobalCfgArgs.numWordsPerLoop);
-
-
-	
-
 	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
-
+	if(m==0)
+		printf("Setting PL Freq. to 250 MHz\n");
+	else if(m==1)
+		printf("Setting PL Freq. to 187.5 MHz\n");
+	else if(m==2)
+		printf("Setting PL Freq. to 100 MHz\n");
+	else if(m>2||m==-1){
+		m = 0;
+		printf("PL Frequency: Enter number 0, 1, and 2 for setting PL Freq. to 250 MHz, 187.5 MHz, and 100 MHz respectively.\nFor now, setting it to 300 MHz..\n");
+	}
 
 	if(dh == -1){
 		printf("Unable to open /dev/mem. Ensure if it exists.\n");
 		return -1;
 	}
 
-	int LOOPS = GlobalCfgArgs.numLoops, loop_count = GlobalCfgArgs.numLoops;
+	int LOOPS = xx, loop_count = xx;
 
 	sniffer_base  = mmap(NULL, 
 			MAP_SIZE, 
 			PROT_READ | PROT_WRITE, 
 			MAP_SHARED, 
-			dh,
+			dh, 
 			SNIFFER_BASE & ~MAP_MASK);
 	for(int s = 0; s < 32; s++){
 		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
 		printf("sniffer_reg[%d] = 0x%.8x\n", s, *sniffer_reg[s]);
 	}
 	//read from config file. 
-	int probe_address;
-	scanf("%x", &probe_address);
+	//int probe_address;
+	//scanf("%x", &probe_address);
+	int probe_address = 0xfffc0006;
 	//reset the count
 	int axi_size = (*sniffer_reg[2] & 0x000000F0) >> 4;
 	int axi_len = (*sniffer_reg[2] & 0x0000FF00) >> 8;
 	printf("Data Width = %d bits, Burst Length = %d transfers per transaction\n", (1<<axi_size)*8, axi_len+1);
 	int address_offset = probe_address - OCM_1;
-	printf("probe address = x%.9x\n", probe_address);
-	printf("address_offset = x%.9x\n", address_offset);
-	axi_size = 4;
+	printf("address_offset = x%.9x\n", probe_address);
+	axi_size = 7;
 	int address_count = address_offset/axi_size;
 	*sniffer_reg[1] = -1;
 	*sniffer_reg[1] = (address_offset%axi_size)? address_count : address_count-1;	
-	//*sniffer_reg[1] = 6;
 	
 	uint32_t* ocm_1 = mmap(NULL, 
 			OCM_MAP_SIZE, 
@@ -686,26 +591,27 @@ int main(int argc, char *argv[])
 	
 */	
 	while(loop_count){
-		change_ps_freq(dh,GlobalCfgArgs.psClockFreq_idx );
-		change_pl_freq(dh, GlobalCfgArgs.plClockFreq_idx);
+
+		change_ps_freq(dh, n);
+		change_pl_freq(dh, m);
 
 		int status;    
-		uint32_t data[GlobalCfgArgs.numWordsPerLoop];
-		for(int i = 0; i < GlobalCfgArgs.numWordsPerLoop; i++){
+		uint32_t data[yy];
+		for(int i = 0; i < yy; i++){
 			data[i] = i;
 			//data[i] = rand();
 		}
 
 
-		for(int i=0; i<GlobalCfgArgs.numWordsPerLoop; i++)
+		for(int i=0; i<yy; i++)
 			ocm_1[i] = data[i];
 
 		// RESET DMA
 		dma_set(cdma_virtual_address, CDMACR, 0x04);
 
 		//struct timeval start, end;
-		//printf("Source memory block:      "); memdump(cdma_virtual_address, GlobalCfgArgs.numLoops);
-		//printf("Destination memory block: "); memdump(BRAM_virtual_address, GlobalCfgArgs.numLoops);
+		//printf("Source memory block:      "); memdump(cdma_virtual_address, yy);
+		//printf("Destination memory block: "); memdump(BRAM_virtual_address, yy);
 		count1 = 0;
 		count2 = 0;
 		reset_TE();
@@ -729,7 +635,7 @@ int main(int argc, char *argv[])
 #ifdef PRINT_COUNT
 			printf("[transfer:] inside child before transfer(), slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
 #endif
-			transfer(cdma_virtual_address, GlobalCfgArgs.numWordsPerLoop);
+			transfer(cdma_virtual_address, yy);
 
 #ifdef PRINT_COUNT
 			printf("[transfer:] inside child after transfer(), slv_reg0 = x%.8x,slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
@@ -743,7 +649,7 @@ int main(int argc, char *argv[])
 			det_int = 0;
 			dma_set(cdma_virtual_address, CDMACR, 0x0000);
 #ifdef PRINT_COUNT
-			printf("OCM to BRAM: Transfer of %d words successful!\n\n", GlobalCfgArgs.numWordsPerLoop);
+			printf("OCM to BRAM: Transfer of %d words successful!\n\n", yy);
 #endif
 		count2 = *slv_reg2;
 		}
@@ -779,7 +685,7 @@ int main(int argc, char *argv[])
 #ifdef PRINT_COUNT
 			printf("[transfer back:] inside child before transfer_back(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
-			transfer_back(cdma_virtual_address, GlobalCfgArgs.numWordsPerLoop);
+			transfer_back(cdma_virtual_address, yy);
 #ifdef PRINT_COUNT
 			printf("[transfer back:] inside child after transfer(), slv_reg2 = %d, state = x%.8x\n", *slv_reg2, *slv_reg3);
 #endif
@@ -792,7 +698,7 @@ int main(int argc, char *argv[])
 			det_int = 0;
 			dma_set(cdma_virtual_address, CDMACR, 0x0000);
 #ifdef PRINT_COUNT
-			printf("BRAM to OCM: Transfer of %d words successful!\n\n", GlobalCfgArgs.numWordsPerLoop);
+			printf("BRAM to OCM: Transfer of %d words successful!\n\n", yy);
 #endif
 		count2_back = *slv_reg2;
 		}
@@ -807,7 +713,7 @@ int main(int argc, char *argv[])
 
 		i++;
 
-		for(int i=0; i<GlobalCfgArgs.numWordsPerLoop; i++)
+		for(int i=0; i<yy; i++)
 		{
 			if(ocm_2[i] != ocm_1[i])
 			{
@@ -821,7 +727,7 @@ int main(int argc, char *argv[])
 			}
 		}
 
-		//printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - GlobalCfgArgs.numLoops + 1, GlobalCfgArgs.numLoops);
+		//printf("\nDMA's OCM/BRAM traffic test loop %d with %d words successful!!!\n", LOOPS - xx + 1, yy);
 		loop_count--;
 
 			       }
@@ -834,7 +740,7 @@ int main(int argc, char *argv[])
 //			       }
 //			       printf("\n\n");
 
-			       printf("\nDMA's OCM/BRAM traffic tests with %d and %d words successful!!!\n\n", LOOPS, GlobalCfgArgs.numWordsPerLoop);
+			       printf("\nDMA's OCM/BRAM traffic tests with %d and %d words successful!!!\n\n", LOOPS, yy);
 
 			       unsigned long   min_latency;
 			       unsigned long   max_latency;
@@ -852,7 +758,7 @@ int main(int argc, char *argv[])
 					       max_latency,
 					       average_latency,
 					       std_deviation,
-					       GlobalCfgArgs.numLoops
+					       xx
 				     );
 			       //my function to save the data statistics
 			       compute_interrupt_latency_stats_back(&min_latency, &max_latency, &average_latency, &std_deviation);
@@ -866,7 +772,7 @@ int main(int argc, char *argv[])
 					       max_latency,
 					       average_latency,
 					       std_deviation,
-					       GlobalCfgArgs.numLoops
+					       xx
 				     );
 
 			       printf("Total number of Interrupts for to-and-fro transfer: %d\n", sigio_signal_count);
@@ -923,7 +829,7 @@ void compute_interrupt_latency_stats(
 	unsigned long   sum = 0;
 	unsigned long   sum_squares = 0;
 
-	for (i = 0; i < GlobalCfgArgs.numLoops; i ++) {
+	for (i = 0; i < xx; i ++) {
 		val = intr_latency_measurements[i];
 
 		if (val < min) {
@@ -941,9 +847,9 @@ void compute_interrupt_latency_stats(
 	*min_latency_p = min;
 	*max_latency_p = max;
 
-	unsigned long average = (unsigned long)sum / GlobalCfgArgs.numLoops;
+	unsigned long average = (unsigned long)sum / xx;
 
-	unsigned long std_deviation = int_sqrt((sum_squares / GlobalCfgArgs.numLoops) -
+	unsigned long std_deviation = int_sqrt((sum_squares / xx) -
 			(average * average));
 
 
@@ -965,7 +871,7 @@ void compute_interrupt_latency_stats_back(
         unsigned long   sum = 0;
         unsigned long   sum_squares = 0;
 
-        for (i = 0; i < GlobalCfgArgs.numLoops; i ++) {
+        for (i = 0; i < xx; i ++) {
                 val = intr_latency_measurements_back[i];
 
                 if (val < min) {
@@ -983,9 +889,9 @@ void compute_interrupt_latency_stats_back(
         *min_latency_p = min;
         *max_latency_p = max;
 
-        unsigned long average = (unsigned long)sum / GlobalCfgArgs.numLoops;
+        unsigned long average = (unsigned long)sum / xx;
 
-        unsigned long std_deviation = int_sqrt((sum_squares / GlobalCfgArgs.numLoops) -
+        unsigned long std_deviation = int_sqrt((sum_squares / xx) -
                         (average * average));
 
 
@@ -1003,14 +909,13 @@ fp = fopen(filename,"w+");
  
 fprintf(fp,"Sample Cycles");
  
-for(int i=0;i<GlobalCfgArgs.numLoops;i++){
+for(int i=0;i<xx;i++){
  
     fprintf(fp,",%ld ",array[i]);
     }
  
 fclose(fp);
 }
-
 
 
 
