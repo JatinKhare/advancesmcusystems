@@ -129,21 +129,6 @@ unsigned int dma_get(unsigned int* dma_virtual_address, int offset) {
 	return dma_virtual_address[offset>>2];
 }
 
-//CDMA Sync
-
-int cdma_sync(unsigned int* dma_virtual_address) {
-	unsigned int status = dma_get(dma_virtual_address, CDMASR);
-	if( (status&0x40) != 0)
-	{
-		//unsigned int desc = dma_get(dma_virtual_address, CURDESC_PNTR);
-		//printf("error address : %X\n", desc);
-	}
-	while(!(status & 1<<1)){
-		status = dma_get(dma_virtual_address, CDMASR);
-	}
-	return 0;
-}
-
 void memdump(void* virtual_address, int byte_count) {
 	char *p = virtual_address;
 	int offset;
@@ -159,28 +144,10 @@ void memdump(void* virtual_address, int byte_count) {
 void transfer(unsigned int *cdma_virtual_address, int length){
 
 	//set TE and capture_complete
-#ifdef PRINT_COUNT
-	printf("Transfering data from OCM to BRAM\n");	
-#endif
 	dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
-#ifdef PRINT_COUNT
-			printf("[inside transfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
 	dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
-#ifdef PRINT_COUNT
-			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
 	dma_set(cdma_virtual_address, CDMACR, 0x1000);
-#ifdef PRINT_COUNT
-			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-			
-#endif
 	dma_set(cdma_virtual_address, BTT, length*4);
-			*sniffer_reg[1] = 0x50;	
-			printf("Hello = x%.8x\n",*sniffer_reg[1]);
-#ifdef PRINT_COUNT
-			printf("[inside tranfer]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
 
 	//cdma_sync(cdma_virtual_address);
 }
@@ -448,7 +415,6 @@ void sigio_signal_handler(int signo){
 	}
 }
 
-
 int main(int argc, char *argv[]) {
 	srand(time(NULL));
 	struct sigaction sig_action;
@@ -557,6 +523,31 @@ int main(int argc, char *argv[]) {
 	}
 
 	int LOOPS = xx, loop_count = xx;
+
+	sniffer_base  = mmap(NULL, 
+			MAP_SIZE, 
+			PROT_READ | PROT_WRITE, 
+			MAP_SHARED, 
+			dh, 
+			SNIFFER_BASE & ~MAP_MASK);
+	for(int s = 0; s < 32; s++){
+		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
+		printf("sniffer_reg[%d] = 0x%.8x\n", s, *sniffer_reg[s]);
+	}
+	//read from config file. 
+	int probe_address;
+	scanf("%x", &probe_address);
+	//reset the count
+	int axi_size = (*sniffer_reg[2] & 0x000000F0) >> 4;
+	int axi_len = (*sniffer_reg[2] & 0x0000FF00) >> 8;
+	printf("Data Width = %d bits, Burst Length = %d transfers per transaction\n", (1<<axi_size)*8, axi_len+1);
+	int address_offset = probe_address - OCM_1;
+	printf("address_offset = x%.9x\n", probe_address);
+	axi_size = 4;
+	int address_count = address_offset/axi_size;
+	*sniffer_reg[1] = -1;
+	*sniffer_reg[1] = (address_offset%axi_size)? address_count : address_count-1;	
+	
 	uint32_t* ocm_1 = mmap(NULL, 
 			OCM_MAP_SIZE, 
 			PROT_READ | PROT_WRITE, 
@@ -570,17 +561,6 @@ int main(int argc, char *argv[]) {
 			MAP_SHARED, 
 			dh, 
 			OCM_2);
-	 sniffer_base  = mmap(NULL, 
-			MAP_SIZE, 
-			PROT_READ | PROT_WRITE, 
-			MAP_SHARED, 
-			dh, 
-			SNIFFER_BASE & ~MAP_MASK);
-        for(int s = 0; s < 32; s++){
-		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
-                printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
-        }
-
 	//mapping to the PL registers
 
 	slv_reg_base = mmap(NULL,
@@ -799,6 +779,14 @@ int main(int argc, char *argv[]) {
 		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
                 printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
         }
+			       printf("forward read transactions = %d\n", *sniffer_reg[3]);
+			       printf("forward read transfers = %d\n", *sniffer_reg[5]);
+			       printf("forward write transactions = %d\n", *sniffer_reg[4]);
+			       printf("forward write transfers = %d\n", *sniffer_reg[6]);
+			       printf("backward read transactions = %d\n", *sniffer_reg[7]);
+			       printf("backward read transfers = %d\n", *sniffer_reg[9]);
+			       printf("backward write transactions = %d\n", *sniffer_reg[8]);
+			       printf("backward write transfers = %d\n", *sniffer_reg[10]);
 			       (void)close(cdma_dev_fd);
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
