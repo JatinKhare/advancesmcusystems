@@ -632,17 +632,21 @@ int main(int argc, char *argv[])
 	int probe_address;
 	scanf("%x", &probe_address);
 	//reset the count
-	int axi_size = (*sniffer_reg[2] & 0x000000F0) >> 4;
-	int axi_len = (*sniffer_reg[2] & 0x0000FF00) >> 8;
+	int axi_size = (*sniffer_reg[0] & 0x000000F0) >> 4;
+	int axi_len = (*sniffer_reg[0] & 0x0000FF00) >> 8;
 	printf("Data Width = %d bits, Burst Length = %d transfers per transaction\n", (1<<axi_size)*8, axi_len+1);
 	int address_offset = probe_address - OCM_1;
-	printf("probe address = x%.9x\n", probe_address);
-	printf("address_offset = x%.9x\n", address_offset);
+	printf("probe address = x%.8x\n", probe_address);
+	printf("address_offset = x%.8x\n", address_offset);
 	axi_size = 4;
-	int address_count = address_offset/axi_size;
+	int address_count = address_offset / axi_size;
+	int inner_off = address_offset % axi_size;
+	printf("inner_off = x%.8x\n", inner_off);
+	*sniffer_reg[2] = 3-inner_off;
 	*sniffer_reg[1] = -1;
-	*sniffer_reg[1] = (address_offset%axi_size)? address_count : address_count-1;	
-	//*sniffer_reg[1] = 6;
+	*sniffer_reg[1] = address_count;	
+	//*sniffer_reg[2] = 2;
+	//*sniffer_reg[1] = 3;
 	
 	uint32_t* ocm_1 = mmap(NULL, 
 			OCM_MAP_SIZE, 
