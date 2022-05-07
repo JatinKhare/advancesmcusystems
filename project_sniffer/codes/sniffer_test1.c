@@ -160,13 +160,10 @@ void memdump(void* virtual_address, int byte_count) {
 
 void transfer(unsigned int *cdma_virtual_address, int length){
 
-	//set TE and capture_complete
-	dma_set(cdma_virtual_address, DA, BRAM); // Write destination address
-	dma_set(cdma_virtual_address, SA, OCM_1); // Write source address
-	dma_set(cdma_virtual_address, CDMACR, 0x1000);
-	dma_set(cdma_virtual_address, BTT, length*4);
-
-	//cdma_sync(cdma_virtual_address);
+	dma_set(cdma_virtual_address, DA, BRAM); 	// Write destination address
+	dma_set(cdma_virtual_address, SA, OCM_1); 	// Write source address
+	dma_set(cdma_virtual_address, CDMACR, 0x1000);	// Enable interrupts
+	dma_set(cdma_virtual_address, BTT, length*4);	// *initiate the transfer*
 }
 
 void reset_TE(){

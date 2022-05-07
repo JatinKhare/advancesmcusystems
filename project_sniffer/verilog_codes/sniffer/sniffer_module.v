@@ -16,17 +16,31 @@
 	(
 		// Users to add ports here
         input wire [39:0] MY_RADDRESS,
-        input wire MY_ARREADY,
-        input wire MY_ARVALID,
         input wire [39:0] MY_WADDRESS,
-        input wire MY_AWREADY,
-        input wire MY_AWVALID,    
+        input wire F_MY_ARREADY,
+        input wire F_MY_ARVALID,
+        input wire F_MY_AWREADY,
+        input wire F_MY_AWVALID,
+        input wire B_MY_ARREADY,
+        input wire B_MY_ARVALID,
+        input wire B_MY_AWREADY,
+        input wire B_MY_AWVALID,      
         input wire [1:0] MY_ARBURST,
         input wire [7:0] MY_ARLEN,
         input wire [2:0] MY_ARSIZE,
-        input wire MY_RVALID,
-        input wire MY_RREADY,
+        input wire F_MY_RVALID,
+        input wire F_MY_RREADY,
+        input wire F_MY_WVALID,
+        input wire F_MY_WREADY,
+        input wire B_MY_RVALID,
+        input wire B_MY_RREADY,
+        input wire B_MY_WVALID,
+        input wire B_MY_WREADY,
         input wire [127:0] MY_RDATA,
+        input wire MY_WLAST_F,
+        input wire MY_RLAST_F,
+        input wire MY_WLAST_B,
+        input wire MY_RLAST_B,
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -98,11 +112,26 @@
 	wire [1:0] my_arburst_value;
 	wire [7:0] my_arlen_value;
 	wire [2:0] my_arsize_value;
+	//wire [127:0] my_data_value;
+	reg [31:0] chunk_1;
+	reg [31:0] chunk_2;
+	reg [31:0] chunk_3;
+	reg [31:0] chunk_4;
+	reg [31:0] burst_info_reg;
 	reg [31:0] count;
-	reg [127:0] my_data_value;
 	reg [31:0] my_latched_address;
-	reg [31:0] read_access_count;
-	reg [31:0] write_access_count;
+	reg [31:0] f_read_access_count_ar;
+	reg [31:0] f_read_access_count_r;
+	reg [31:0] f_write_access_count_aw;
+	reg [31:0] f_write_access_count_w;
+	reg [31:0] b_read_access_count_ar;
+	reg [31:0] b_read_access_count_r;
+	reg [31:0] b_write_access_count_aw;
+	reg [31:0] b_write_access_count_w;
+	reg [31:0] my_rlast_count_f;
+	reg [31:0] my_wlast_count_f;
+	reg [31:0] my_rlast_count_b;
+	reg [31:0] my_wlast_count_b;
 	reg [C_S_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg  	axi_awready;
 	reg  	axi_wready;
@@ -162,8 +191,9 @@
 	reg [C_S_AXI_DATA_WIDTH-1:0]	 reg_data_out;
 	integer	 byte_index;
 	reg	 aw_en;
-
+	
 	// I/O Connections assignments
+	//assign my_data_value = MY_RDATA;
 	assign my_arburst_value = MY_ARBURST;
 	assign my_arlen_value = MY_ARLEN;
 	assign my_arsize_value = MY_ARSIZE;
@@ -678,22 +708,22 @@
 	        //5'h01   : reg_data_out <= slv_reg1;
 	        //5'h02   : reg_data_out <= slv_reg2;
 	        //5'h03   : reg_data_out <= slv_reg3;
-	        5'h00   : reg_data_out <= 32'hFEED0000;
-	        5'h01   : reg_data_out <= slv_reg1;
-	        5'h02   : reg_data_out <= read_access_count;
-	        5'h03   : reg_data_out <= write_access_count;
-	        5'h04   : reg_data_out <= 32'hFEED0000;
-	        5'h05   : reg_data_out <= my_arburst_value;
-	        5'h06   : reg_data_out <= my_arlen_value;
-	        5'h07   : reg_data_out <= my_arsize_value;
-	        5'h08   : reg_data_out <= my_data_value;
-	        5'h09   : reg_data_out <= count;
-	        5'h0A   : reg_data_out <= 32'hFEED0000;
-	        5'h0B   : reg_data_out <= slv_reg11;
-	        5'h0C   : reg_data_out <= slv_reg12;
-	        5'h0D   : reg_data_out <= slv_reg13;
-	        5'h0E   : reg_data_out <= slv_reg14;
-	        5'h0F   : reg_data_out <= slv_reg15;
+	        5'h00   : reg_data_out <= burst_info_reg;
+	        5'h01   : reg_data_out <= slv_reg1;    //the # transfer block number
+	        5'h02   : reg_data_out <= slv_reg2;
+	        5'h03   : reg_data_out <= f_read_access_count_ar;
+	        5'h04   : reg_data_out <= f_write_access_count_aw;
+	        5'h05   : reg_data_out <= f_read_access_count_r;
+	        5'h06   : reg_data_out <= f_write_access_count_w;
+	        5'h07   : reg_data_out <= b_read_access_count_ar;
+	        5'h08   : reg_data_out <= b_write_access_count_aw;
+	        5'h09   : reg_data_out <= b_read_access_count_r;
+	        5'h0A   : reg_data_out <= b_write_access_count_w;
+	        5'h0B   : reg_data_out <= 32'hFEED0000;
+	        5'h0C   : reg_data_out <= chunk_1;
+	        5'h0D   : reg_data_out <= chunk_2;
+	        5'h0E   : reg_data_out <= chunk_3;
+	        5'h0F   : reg_data_out <= chunk_4;
 	        5'h10   : reg_data_out <= slv_reg16;
 	        5'h11   : reg_data_out <= slv_reg17;
 	        5'h12   : reg_data_out <= slv_reg18;
@@ -737,73 +767,91 @@
 // Add user logic here
     always @(posedge S_AXI_ACLK)
     begin
-        if(S_AXI_ARESETN == 0)
+        if(S_AXI_ARESETN == 0 || slv_reg1 == 32'hFFFFFFFF)
         begin
-            read_access_count  = 0;
+            f_read_access_count_ar  = 0;
+            f_write_access_count_aw  = 0;
+            f_read_access_count_r  = 0;
+            f_write_access_count_w  = 0;
+            b_read_access_count_ar  = 0;
+            b_write_access_count_aw  = 0;
+            b_read_access_count_r  = 0;
+            b_write_access_count_w  = 0;
+            chunk_1 <= 0;
+            chunk_2 <= 0;
+            chunk_3 <= 0;
+            chunk_4 <= 0;
+            
         end
-        else if (MY_ARREADY && MY_ARVALID && MY_RADDRESS == slv_reg1)
+        if (F_MY_ARREADY && F_MY_ARVALID)
         begin
-            read_access_count = read_access_count + 1;
+            f_read_access_count_ar <= f_read_access_count_ar + 1;
         end
-        else
-            read_access_count = read_access_count;
+        if (F_MY_AWREADY && F_MY_AWVALID)
+        begin
+            f_write_access_count_aw <= f_write_access_count_aw + 1;
+        end
+        if (F_MY_RREADY && F_MY_RVALID)
+        begin
+            f_read_access_count_r <= f_read_access_count_r + 1;
+            
+            if (f_read_access_count_r == slv_reg1)
+                    begin
+                        case(slv_reg2)
+                        
+                        2'h0: chunk_1 <= MY_RDATA[127:96];
+                        2'h1: chunk_1 <= MY_RDATA[95:64];
+                        3'h2: chunk_1 <= MY_RDATA[63:32];
+                        4'h3: chunk_1 <= MY_RDATA[31:0];
+                        default: chunk_1 <= 32'hDEFADEFA;
+                        endcase
+                    end
+                    
+                    else if (slv_reg1 == 32'hFFFFFFFF)
+                    begin
+                        chunk_1 <= 0;
+                        chunk_2 <= 0;
+                        chunk_3 <= 0;
+                        chunk_4 <= 0;
+                    end
+        end
+        if (F_MY_WREADY && F_MY_WVALID)
+        begin
+            f_write_access_count_w <= f_write_access_count_w + 1;
+        end
+        if (B_MY_ARREADY && B_MY_ARVALID)
+        begin
+            b_read_access_count_ar <= b_read_access_count_ar + 1;
+        end
+        if (B_MY_AWREADY && B_MY_AWVALID)
+        begin
+            b_write_access_count_aw <= b_write_access_count_aw + 1;
+        end
+        if (B_MY_RREADY && B_MY_RVALID)
+        begin
+            b_read_access_count_r <= b_read_access_count_r + 1;
+        end
+        if (B_MY_WREADY && B_MY_WVALID)
+        begin
+            b_write_access_count_w <= b_write_access_count_w + 1;
+        end
     end
     
-    always @(posedge S_AXI_ACLK)
+ 
+  always @(S_AXI_ACLK)
     begin
         if(S_AXI_ARESETN == 0)
         begin
-            write_access_count  = 0;
-        end
-        else if (MY_AWREADY && MY_AWVALID && MY_WADDRESS == slv_reg1)
-        begin
-            write_access_count = write_access_count + 1;
-        end
-        else
-            write_access_count = write_access_count;
-    end
-    
-    always @(S_AXI_ACLK)
-    begin
-        if(S_AXI_ARESETN == 0)
-        begin
-            my_latched_address <= 0;
+            burst_info_reg <= 0;
         end
         
-        else if(MY_ARREADY && MY_ARVALID && MY_RADDRESS == slv_reg1)
+        else if(B_MY_ARREADY && B_MY_ARVALID)
         begin
-            my_latched_address <= slv_reg1;
+            burst_info_reg <= {16'hBEAD, my_arlen_value, 1'b0, my_arsize_value, 1'b0, 1'b0, my_arburst_value};
         end
    end
    
    
-   always @(S_AXI_ACLK)
-   begin
-        if(my_latched_address == slv_reg1) 
-        begin
-            if(MY_ARVALID && MY_ARREADY && MY_RADDRESS == slv_reg1)
-            begin
-                count <= 0;
-            end
-            else if(MY_RVALID && MY_RREADY)
-            begin
-                count <= count + 1;
-            end
-        end
-   end
-   
-   always @ (S_AXI_ACLK)
-   begin
-        if(S_AXI_ARESETN == 0)
-        begin
-            my_data_value <= 0;
-        end
-        
-        if(count != 0 && my_latched_address == slv_reg1)
-        begin
-              my_data_value <= MY_RDATA;
-        end
-   end
 	// User logic ends
 
 	endmodule
