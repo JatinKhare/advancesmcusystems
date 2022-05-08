@@ -886,7 +886,10 @@ int main(int argc, char *argv[])
 			       printf("BRAM to CDMA read transfers     = %d\n\n", *sniffer_reg[11]);
 			       printf("CDMA to OCM2 write transactions = %d\n", *sniffer_reg[10]);
 			       printf("CDMA to OCM2 write transfers    = %d\n\n", *sniffer_reg[12]);
-			       printf("Transfer : Transaction Ratio    = %d:1\n", *sniffer_reg[7]/(*sniffer_reg[8]));
+			       if(*sniffer_reg[7]>=*sniffer_reg[8])
+				       printf("Transfer : Transaction Ratio    = %d:1\n", *sniffer_reg[7]/(*sniffer_reg[8]));
+			       else
+				       printf("Transaction : Transfer Ratio    = 1:%d\n", *sniffer_reg[8]/(*sniffer_reg[7]));
 			       (void)close(cdma_dev_fd);
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
