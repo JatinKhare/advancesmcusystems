@@ -96,7 +96,6 @@ static volatile sig_atomic_t sigio_signal_processed = 0;
 volatile int sigio_signal_count = 0;
 int cdma_dev_fd  = -1;
 int det_int;
-//int GlobalCfgArgs.numLoops = 500;
 unsigned long intr_latency_measurements_back[HIGHEST_MEAS_NUMBER];
 unsigned long intr_latency_measurements[HIGHEST_MEAS_NUMBER];
 
@@ -179,32 +178,14 @@ void set_TE(){
 
 void transfer_back(unsigned int *cdma_virtual_address, int length){
 
-#ifdef PRINT_COUNT
-	printf("Transfering data from BRAM to OCM\n");	
-#endif
-	dma_set(cdma_virtual_address, DA, OCM_2); // Write destination address
-#ifdef PRINT_COUNT
-			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
-	dma_set(cdma_virtual_address, SA, BRAM); // Write source address
-#ifdef PRINT_COUNT
-			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
-	dma_set(cdma_virtual_address, CDMACR, 0x1000);
-#ifdef PRINT_COUNT
-			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
-	dma_set(cdma_virtual_address, BTT, length*4);
-#ifdef PRINT_COUNT
-			printf("[inside tranfer_back]: slv_reg0 = x%.8x, slv_reg2 = %d, state = x%.8x\n", *slv_reg0, *slv_reg2, *slv_reg3);
-#endif
-	//cdma_sync(cdma_virtual_address);
+	dma_set(cdma_virtual_address, DA, OCM_2);  	// Write destination address
+	dma_set(cdma_virtual_address, SA, BRAM); 	// Write source address
+	dma_set(cdma_virtual_address, CDMACR, 0x1000);	// Enable interrupts
+	dma_set(cdma_virtual_address, BTT, length*4);	// *initiate the transfer*
 }
 
 uint32_t* cdma_virtual_address;
 uint32_t* BRAM_virtual_address;
-
-
 
 void change_ps_freq(int dh, int n){
 
@@ -565,11 +546,11 @@ int main(int argc, char *argv[])
 	}
 
 	rc = openConfigFile();
-    if (rc != 0)
-    {
-        printf("failed to Open configuration file\n\n");
-        return -1;
-    }
+	    if (rc != 0)
+	    {
+		printf("failed to Open configuration file\n\n");
+		return -1;
+	    }
 
 	/* Read all global variable configurations from config file */
 	getGlobalConfigStatus(&GlobalCfgArgs);
@@ -600,13 +581,8 @@ int main(int argc, char *argv[])
 	
 	printf("Setting loop number = %d\n", GlobalCfgArgs.numLoops);
 	printf("Setting words per loop = %d\n", GlobalCfgArgs.numWordsPerLoop);
-
-
 	
-
-	//    signal(SIGINT, m_unmap_ctrl_c);
 	int dh = open("/dev/mem", O_RDWR | O_SYNC); // Open /dev/mem which represents the whole physical memory
-
 
 	if(dh == -1){
 		printf("Unable to open /dev/mem. Ensure if it exists.\n");
@@ -623,27 +599,50 @@ int main(int argc, char *argv[])
 			SNIFFER_BASE & ~MAP_MASK);
 	for(int s = 0; s < 32; s++){
 		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
-		printf("sniffer_reg[%d] = 0x%.8x\n", s, *sniffer_reg[s]);
+	//	printf("sniffer_reg[%d] = 0x%.8x\n", s, *sniffer_reg[s]);
 	}
+
 	//read from config file. 
-	int probe_address;
-	scanf("%x", &probe_address);
-	//reset the count
-	int axi_size = (*sniffer_reg[0] & 0x000000F0) >> 4;
+	int read_probe_address, write_probe_address;
+	
+	printf("\nEnter the read address to probe: ");
+	scanf("%x", &read_probe_address);
+	printf("Enter the write address to probe: ");
+	scanf("%x", &write_probe_address);
+	
+	int write_axi_size = (*sniffer_reg[0] & 0x000000F0) >> 4;
 	int axi_len = (*sniffer_reg[0] & 0x0000FF00) >> 8;
-	printf("Data Width = %d bits, Burst Length = %d transfers per transaction\n", (1<<axi_size)*8, axi_len+1);
-	int address_offset = probe_address - OCM_1;
-	printf("probe address = x%.8x\n", probe_address);
-	printf("address_offset = x%.8x\n", address_offset);
-	axi_size = 4;
-	int address_count = address_offset / axi_size;
-	int inner_off = address_offset % axi_size;
-	printf("inner_off = x%.8x\n", inner_off);
-	*sniffer_reg[2] = 3-inner_off;
+
+	printf("\nData Width = %d bits, \nBurst Length = %d transfers per transaction\n", (1<<write_axi_size)*8, axi_len + 1);
+
+	int read_address_offset = read_probe_address - OCM_1;
+	int write_address_offset = write_probe_address - OCM_2;
+
+
+	int read_axi_size = 32;
+	//int read_address_count = read_address_offset / read_axi_size;
+	int read_address_count = read_address_offset / 16;
+	//int write_address_count = write_address_offset / 16;
+	int write_address_count = write_address_offset / 64;
+	
+	printf("read_probe address = x%.8x, read_address_count = x%.8x, read_address_offset = x%.8x\n", read_probe_address, read_address_count, read_address_offset);
+	printf("write_probe address = x%.8x, write_address_count = x%.8x, write_address_offset = x%.8x\n", write_probe_address, write_address_count,  write_address_offset);
+
+	//int read_inner_off = read_address_offset % read_axi_size;
+	int read_inner_off = (read_address_offset%16)/4;
+	//int write_inner_off = write_address_offset % 16;
+	int write_inner_off = (write_address_offset%64)/4;
+	printf("inner_off = x%.8x\n", read_inner_off);
+	printf("inner_off = x%.8x\n", write_inner_off);
+
+	*sniffer_reg[2] = 3 - read_inner_off;
+	*sniffer_reg[4] = 31 - write_inner_off;
+
 	*sniffer_reg[1] = -1;
-	*sniffer_reg[1] = address_count;	
-	//*sniffer_reg[2] = 2;
-	//*sniffer_reg[1] = 3;
+	*sniffer_reg[1] = read_address_count;	
+	//*sniffer_reg[1] = 0;	
+
+	*sniffer_reg[3] = write_address_count;
 	
 	uint32_t* ocm_1 = mmap(NULL, 
 			OCM_MAP_SIZE, 
@@ -658,7 +657,6 @@ int main(int argc, char *argv[])
 			MAP_SHARED, 
 			dh, 
 			OCM_2);
-	//mapping to the PL registers
 
 	slv_reg_base = mmap(NULL,
 			MAP_SIZE,
@@ -669,7 +667,7 @@ int main(int argc, char *argv[])
 	slv_reg1 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_1_OFF) & MAP_MASK) >> 2);
 	slv_reg2 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_2_OFF) & MAP_MASK) >> 2);
 	slv_reg3 = slv_reg_base + (((SLV_REG_BASE + SLV_REG_3_OFF) & MAP_MASK) >> 2);
-	//Generating random data and address
+	
 	int i =0; 
 
 	cdma_virtual_address = mmap(NULL, 
@@ -693,8 +691,8 @@ int main(int argc, char *argv[])
 		int status;    
 		uint32_t data[GlobalCfgArgs.numWordsPerLoop];
 		for(int i = 0; i < GlobalCfgArgs.numWordsPerLoop; i++){
-			data[i] = i;
-			//data[i] = rand();
+			//data[i] = i;
+			data[i] = rand();
 		}
 
 
@@ -870,19 +868,20 @@ int main(int argc, char *argv[])
 					       GlobalCfgArgs.numLoops
 				     );
 
-			       printf("Total number of Interrupts for to-and-fro transfer: %d\n", sigio_signal_count);
-        for(int s = 0; s < 32; s++){
+			       printf("Total number of Interrupts for to-and-fro transfer: %d\n\n", sigio_signal_count);
+        for(int s = 0; s < 16; s++){
 		sniffer_reg[s] = sniffer_base + (((SNIFFER_BASE + 4*s) & MAP_MASK) >> 2);
                 printf("sniffer_reg[%d] = x%.8x\n", s, *sniffer_reg[s]);
         }
-			       printf("forward read transactions = %d\n", *sniffer_reg[3]);
-			       printf("forward read transfers = %d\n", *sniffer_reg[5]);
-			       printf("forward write transactions = %d\n", *sniffer_reg[4]);
-			       printf("forward write transfers = %d\n", *sniffer_reg[6]);
-			       printf("backward read transactions = %d\n", *sniffer_reg[7]);
-			       printf("backward read transfers = %d\n", *sniffer_reg[9]);
-			       printf("backward write transactions = %d\n", *sniffer_reg[8]);
-			       printf("backward write transfers = %d\n", *sniffer_reg[10]);
+			       printf("\nOCM1 to CDMA read transactions  = %d\n", *sniffer_reg[5]);
+			       printf("OCM1 to CDMA read transfers     = %d\n\n", *sniffer_reg[7]);
+			       printf("CDMA to BRAM write transactions = %d\n", *sniffer_reg[6]);
+			       printf("CDMA to BRAM write transfers    = %d\n\n", *sniffer_reg[8]);
+			       printf("BRAM to CDMA read transactions  = %d\n", *sniffer_reg[9]);
+			       printf("BRAM to CDMA read transfers     = %d\n\n", *sniffer_reg[11]);
+			       printf("CDMA to OCM2 write transactions = %d\n", *sniffer_reg[10]);
+			       printf("CDMA to OCM2 write transfers    = %d\n\n", *sniffer_reg[12]);
+			       printf("Transfer : Transaction Ratio    = %d:1\n", *sniffer_reg[7]/(*sniffer_reg[8]));
 			       (void)close(cdma_dev_fd);
 			       munmap(ocm_1, OCM_MAP_SIZE);
 			       munmap(ocm_2, OCM_MAP_SIZE);
