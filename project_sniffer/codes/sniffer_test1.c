@@ -611,19 +611,22 @@ int main(int argc, char *argv[])
 	scanf("%x", &write_probe_address);
 	
 	int write_axi_size = (*sniffer_reg[0] & 0x000000F0) >> 4;
-	int axi_len = (*sniffer_reg[0] & 0x0000FF00) >> 8;
+	int write_axi_len = (*sniffer_reg[0] & 0x0000FF00) >> 8;
 
-	printf("\nData Width = %d bits, \nBurst Length = %d transfers per transaction\n", (1<<write_axi_size)*8, axi_len + 1);
+	int bram_data_width = (1<<write_axi_size)*8;
+        int vivado_burst_size = write_axi_len + 1;
+
+	printf("\nData Width = %d bits, \nBurst Length = %d transfers per transaction\n\n", bram_data_width, vivado_burst_size);
 
 	int read_address_offset = read_probe_address - OCM_1;
 	int write_address_offset = write_probe_address - OCM_2;
 
-
+	int word_size = 32;
 	int read_axi_size = 32;
 	//int read_address_count = read_address_offset / read_axi_size;
 	int read_address_count = read_address_offset / 16;
 	//int write_address_count = write_address_offset / 16;
-	int write_address_count = write_address_offset / 64;
+	int write_address_count = write_address_offset/(4*bram_data_width/word_size);
 	
 	printf("read_probe address = x%.8x, read_address_count = x%.8x, read_address_offset = x%.8x\n", read_probe_address, read_address_count, read_address_offset);
 	printf("write_probe address = x%.8x, write_address_count = x%.8x, write_address_offset = x%.8x\n", write_probe_address, write_address_count,  write_address_offset);
@@ -631,9 +634,11 @@ int main(int argc, char *argv[])
 	//int read_inner_off = read_address_offset % read_axi_size;
 	int read_inner_off = (read_address_offset%16)/4;
 	//int write_inner_off = write_address_offset % 16;
-	int write_inner_off = (write_address_offset%64)/4;
+	int write_inner_off = ((write_address_offset)%(4*bram_data_width/word_size))/4;
 	printf("inner_off = x%.8x\n", read_inner_off);
 	printf("inner_off = x%.8x\n", write_inner_off);
+		
+	printf("factor = %d\n", (4*bram_data_width/word_size));
 
 	*sniffer_reg[2] = 3 - read_inner_off;
 	*sniffer_reg[4] = 31 - write_inner_off;
