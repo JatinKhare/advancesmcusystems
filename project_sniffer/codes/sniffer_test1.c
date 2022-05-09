@@ -628,8 +628,8 @@ int main(int argc, char *argv[])
 	//int write_address_count = write_address_offset / 16;
 	int write_address_count = write_address_offset/(4*bram_data_width/word_size);
 	
-	printf("read_probe address = x%.8x, read_address_count = x%.8x, read_address_offset = x%.8x\n", read_probe_address, read_address_count, read_address_offset);
-	printf("write_probe address = x%.8x, write_address_count = x%.8x, write_address_offset = x%.8x\n", write_probe_address, write_address_count,  write_address_offset);
+	printf("read_probe address = x%.8x, read_address_offset = x%.8x, read_address_count = x%.8x\n", read_probe_address, read_address_offset, read_address_count);
+	printf("write_probe address = x%.8x, write_address_offset = x%.8x, write_address_count = x%.8x\n", write_probe_address, write_address_offset,  write_address_count);
 
 	//int read_inner_off = read_address_offset % read_axi_size;
 	int read_inner_off = (read_address_offset%16)/4;

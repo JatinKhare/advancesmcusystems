@@ -1,8 +1,8 @@
 #
 #Global configuration
 #
-psClockFreq_idx=0;
-plClockFreq_idx=0;
+psClockFreq_idx=2;
+plClockFreq_idx=1;
 numLoops=1;
-numWordsPerLoop=1024;
+numWordsPerLoop=512;
 #END

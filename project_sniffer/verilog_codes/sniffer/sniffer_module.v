@@ -37,6 +37,7 @@
         input wire B_MY_WVALID,
         input wire B_MY_WREADY,
         input wire [127:0] MY_RDATA,
+        input wire [1023:0] MY_WDATA,
         input wire MY_WLAST_F,
         input wire MY_RLAST_F,
         input wire MY_WLAST_B,
@@ -113,13 +114,9 @@
 	wire [7:0] my_arlen_value;
 	wire [2:0] my_arsize_value;
 	//wire [127:0] my_data_value;
-	reg [31:0] chunk_1;
-	reg [31:0] chunk_2;
-	reg [31:0] chunk_3;
-	reg [31:0] chunk_4;
+	reg [31:0] chunk_read;
+	reg [31:0] chunk_write;
 	reg [31:0] burst_info_reg;
-	reg [31:0] count;
-	reg [31:0] my_latched_address;
 	reg [31:0] f_read_access_count_ar;
 	reg [31:0] f_read_access_count_r;
 	reg [31:0] f_write_access_count_aw;
@@ -711,19 +708,19 @@
 	        5'h00   : reg_data_out <= burst_info_reg;
 	        5'h01   : reg_data_out <= slv_reg1;    //the # transfer block number
 	        5'h02   : reg_data_out <= slv_reg2;
-	        5'h03   : reg_data_out <= f_read_access_count_ar;
-	        5'h04   : reg_data_out <= f_write_access_count_aw;
-	        5'h05   : reg_data_out <= f_read_access_count_r;
-	        5'h06   : reg_data_out <= f_write_access_count_w;
-	        5'h07   : reg_data_out <= b_read_access_count_ar;
-	        5'h08   : reg_data_out <= b_write_access_count_aw;
-	        5'h09   : reg_data_out <= b_read_access_count_r;
-	        5'h0A   : reg_data_out <= b_write_access_count_w;
-	        5'h0B   : reg_data_out <= 32'hFEED0000;
-	        5'h0C   : reg_data_out <= chunk_1;
-	        5'h0D   : reg_data_out <= chunk_2;
-	        5'h0E   : reg_data_out <= chunk_3;
-	        5'h0F   : reg_data_out <= chunk_4;
+	        5'h03   : reg_data_out <= slv_reg3;
+	        5'h04   : reg_data_out <= slv_reg4;
+	        5'h05   : reg_data_out <= f_read_access_count_ar;
+	        5'h06   : reg_data_out <= f_write_access_count_aw;
+	        5'h07   : reg_data_out <= f_read_access_count_r;
+	        5'h08   : reg_data_out <= f_write_access_count_w;
+	        5'h09   : reg_data_out <= b_read_access_count_ar;
+	        5'h0A   : reg_data_out <= b_write_access_count_aw;
+	        5'h0B   : reg_data_out <= b_read_access_count_r;
+	        5'h0C   : reg_data_out <= b_write_access_count_w;
+	        5'h0D   : reg_data_out <= 32'hFEED0000;
+	        5'h0E   : reg_data_out <= chunk_read;
+	        5'h0F   : reg_data_out <= chunk_write;
 	        5'h10   : reg_data_out <= slv_reg16;
 	        5'h11   : reg_data_out <= slv_reg17;
 	        5'h12   : reg_data_out <= slv_reg18;
@@ -777,10 +774,8 @@
             b_write_access_count_aw  = 0;
             b_read_access_count_r  = 0;
             b_write_access_count_w  = 0;
-            chunk_1 <= 0;
-            chunk_2 <= 0;
-            chunk_3 <= 0;
-            chunk_4 <= 0;
+            chunk_read <= 0;
+            chunk_write <= 0;
             
         end
         if (F_MY_ARREADY && F_MY_ARVALID)
@@ -799,25 +794,67 @@
                     begin
                         case(slv_reg2)
                         
-                        2'h0: chunk_1 <= MY_RDATA[127:96];
-                        2'h1: chunk_1 <= MY_RDATA[95:64];
-                        3'h2: chunk_1 <= MY_RDATA[63:32];
-                        4'h3: chunk_1 <= MY_RDATA[31:0];
-                        default: chunk_1 <= 32'hDEFADEFA;
+                        2'h0: chunk_read <= MY_RDATA[127:96];
+                        2'h1: chunk_read <= MY_RDATA[95:64];
+                        3'h2: chunk_read <= MY_RDATA[63:32];
+                        4'h3: chunk_read <= MY_RDATA[31:0];
+                        default: chunk_read <= 32'hDEFADEFA;
                         endcase
                     end
                     
                     else if (slv_reg1 == 32'hFFFFFFFF)
                     begin
-                        chunk_1 <= 0;
-                        chunk_2 <= 0;
-                        chunk_3 <= 0;
-                        chunk_4 <= 0;
+                        chunk_read <= 0;
                     end
         end
         if (F_MY_WREADY && F_MY_WVALID)
         begin
             f_write_access_count_w <= f_write_access_count_w + 1;
+            
+            if (f_write_access_count_w == slv_reg3)
+                    begin
+                        case(slv_reg4)
+                        
+                        5'h0: chunk_write <= MY_WDATA[1023:992];
+                        5'h1: chunk_write <= MY_WDATA[991:960];
+                        5'h2: chunk_write <= MY_WDATA[959:928];
+                        5'h3: chunk_write <= MY_WDATA[927:896];
+                        5'h4: chunk_write <= MY_WDATA[895:864];
+                        5'h5: chunk_write <= MY_WDATA[863:832];
+                        5'h6: chunk_write <= MY_WDATA[831:800];
+                        5'h7: chunk_write <= MY_WDATA[799:768];
+                        5'h8: chunk_write <= MY_WDATA[767:736];
+                        5'h9: chunk_write <= MY_WDATA[735:704];
+                        5'hA: chunk_write <= MY_WDATA[703:672];
+                        5'hB: chunk_write <= MY_WDATA[671:640];
+                        5'hC: chunk_write <= MY_WDATA[639:608];
+                        5'hD: chunk_write <= MY_WDATA[607:576];
+                        5'hE: chunk_write <= MY_WDATA[575:544];
+                        5'hF: chunk_write <= MY_WDATA[543:512];
+                        5'h10: chunk_write <= MY_WDATA[511:480];
+                        5'h11: chunk_write <= MY_WDATA[479:448];
+                        5'h12: chunk_write <= MY_WDATA[447:416];
+                        5'h13: chunk_write <= MY_WDATA[415:384];
+                        5'h14: chunk_write <= MY_WDATA[383:352];
+                        5'h15: chunk_write <= MY_WDATA[351:320];
+                        5'h16: chunk_write <= MY_WDATA[319:288];
+                        5'h17: chunk_write <= MY_WDATA[287:256];
+                        5'h18: chunk_write <= MY_WDATA[255:224];
+                        5'h19: chunk_write <= MY_WDATA[223:192];
+                        5'h1A: chunk_write <= MY_WDATA[191:160];
+                        5'h1B: chunk_write <= MY_WDATA[159:128];
+                        5'h1C: chunk_write <= MY_WDATA[127:96];
+                        5'h1D: chunk_write <= MY_WDATA[95:64];
+                        5'h1E: chunk_write <= MY_WDATA[63:32];
+                        5'h1F: chunk_write <= MY_WDATA[31:0];
+                        default: chunk_write <= 32'hDEFADEFA;
+                        endcase
+                    end
+                    
+                    else if (slv_reg3 == 32'hFFFFFFFF)
+                    begin
+                        chunk_write <= 0;
+                    end
         end
         if (B_MY_ARREADY && B_MY_ARVALID)
         begin
