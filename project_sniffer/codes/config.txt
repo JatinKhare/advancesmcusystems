@@ -4,5 +4,5 @@
 psClockFreq_idx=2;
 plClockFreq_idx=1;
 numLoops=1;
-numWordsPerLoop=512;
+numWordsPerLoop=2048;
 #END
