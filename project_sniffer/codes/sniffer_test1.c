@@ -721,7 +721,7 @@ int main(int argc, char *argv[])
 	int bram_data_width = (1<<write_axi_size)*8;
         int vivado_burst_size = write_axi_len + 1;
 
-	printf("\nData Width = %d bits, \nBurst Length = %d transfers per transaction\n\n", bram_data_width, vivado_burst_size);
+	printf("\nVivado Data Bus Width = %d bits, \nVivado Burst Size = %d transfers per transaction\n\n", bram_data_width, vivado_burst_size);
 
 	int read_address_offset = read_probe_address - OCM_1;
 	int write_address_offset = write_probe_address - OCM_2;
@@ -733,7 +733,7 @@ int main(int argc, char *argv[])
 	int write_address_count = write_address_offset/(4*bram_data_width/word_size);
 	
 	printf("read_probe address = x%.8x, read_address_offset = x%.8x, read_address_count = %d\n", read_probe_address, read_address_offset, read_address_count);
-	printf("write_probe address = x%.8x, write_address_offset = x%.8x, write_address_count = %d\n", write_probe_address, write_address_offset,  write_address_count);
+	printf("write_probe address = x%.8x, write_address_offset = x%.8x, write_address_count = %d\n\n", write_probe_address, write_address_offset,  write_address_count);
 
 	//int read_inner_off = read_address_offset % read_axi_size;
 	int read_inner_off = (read_address_offset%16)/4;
@@ -742,7 +742,7 @@ int main(int argc, char *argv[])
 	printf("read burst number in the transaction = %d, \nread word number in the transfer = %d\n\n", read_address_count%vivado_burst_size  + 1, read_inner_off + 1);
 	printf("write burst number in the transaction = %d, \nwrite word number in the transfer = %d\n\n", write_address_count%vivado_burst_size  + 1, write_inner_off + 1);
 		
-	printf("factor = %d\n", (4*bram_data_width/word_size));
+	//printf("factor = %d\n", (4*bram_data_width/word_size));
 
 	*sniffer_reg[2] = 3 - read_inner_off;
 	*sniffer_reg[4] = 31 - write_inner_off;
@@ -992,9 +992,9 @@ int main(int argc, char *argv[])
 			       printf("CDMA to OCM2 write transactions = %d\n", *sniffer_reg[10]);
 			       printf("CDMA to OCM2 write transfers    = %d\n\n", *sniffer_reg[12]);
 			       if(*sniffer_reg[7]>=*sniffer_reg[8])
-				       printf("Transfer : Transaction Ratio    = %d:1\n", *sniffer_reg[7]/(*sniffer_reg[8]));
+				       printf("Transfer : Transaction Ratio (side 1)  = %d:1\n", *sniffer_reg[7]/(*sniffer_reg[8]));
 			       else
-				       printf("Transaction : Transfer Ratio    = 1:%d\n", *sniffer_reg[8]/(*sniffer_reg[7]));
+				       printf("Transaction : Transfer Ratio (side 1)  = 1:%d\n", *sniffer_reg[8]/(*sniffer_reg[7]));
 
 
 				int transaction_count = (read_address_count + 1)/(*sniffer_reg[7]/(*sniffer_reg[5]));
