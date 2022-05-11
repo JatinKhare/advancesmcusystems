@@ -137,7 +137,7 @@ uint32_t *sniffer_reg[32];
 
 
 void update_timing_config_file(uint32_t address, uint32_t data, uint32_t data_width_bits,
-                               uint32_t current_transaction_count, uint32_t current_transfer_count, uint32_t current_data_word_count,
+                               uint32_t current_transaction_count, uint32_t current_transfer_count_ori, uint32_t current_data_word_count_ori,
                                uint32_t total_transaction_count, uint32_t total_transfer_count, uint32_t total_data_word_count)
 {
     FILE *fptr1, *fptr2;
@@ -157,13 +157,15 @@ void update_timing_config_file(uint32_t address, uint32_t data, uint32_t data_wi
             }
   
             // Open another file for writing
-            fptr2 = fopen("timing_config.txt", "w");
+            fptr2 = fopen("timing_config.json", "w");
             if (fptr2 == NULL)
             {
                 printf("Cannot open file timing_config.txt \n");
                 return;
             }
   
+	    int current_transfer_count = current_transfer_count_ori % 2 + 1 ;
+	    int current_data_word_count = current_data_word_count_ori % 4 + 1;
             // Read contents from file line by line   
 			while (getline(&line, &len, fptr1) != -1) 
 			{
@@ -175,46 +177,47 @@ void update_timing_config_file(uint32_t address, uint32_t data, uint32_t data_wi
                 }
                 else if (strstr(line, "Transfer Count") != NULL) 
                 {
-                    snprintf(str, 500, "  {name: 'Transfer Count (%d/%d Bursts)', wave: '01...1...1...1....'},\n", current_transfer_count, total_transfer_count);
+                    snprintf(str, 500, "  {name: 'Transfer Count (%d/%d Bursts)', wave: '01...1...1...1....'},\n", current_transfer_count_ori, total_transfer_count);
                     fputs(str, fptr2);
                 }
-                else if (strstr(line, "Data Word") != NULL) 
+
+          	  else if (strstr(line, "Data Word") != NULL)
                 {
                     if(current_transfer_count == 1 && current_data_word_count == 1)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 1 && current_data_word_count == 2)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 1 && current_data_word_count == 3)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 1 && current_data_word_count == 4)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 2 && current_data_word_count == 1)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 2 && current_data_word_count == 2)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 2 && current_data_word_count == 3)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     else if(current_transfer_count == 2 && current_data_word_count == 4)
                     {
-                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0x%.8X', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC', '0xCCCCCCCC']}\n", current_data_word_count, total_data_word_count, data);
+                        snprintf(str, 500, "  {name: 'Data Word (%d/%d Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x%.8X', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}\n", current_data_word_count_ori, total_data_word_count, data);
                     }
                     fputs(str, fptr2);
                 }
-                else if (strstr(line, "Address Probed") != NULL) 
+                else if (strstr(line, "Address Probed") != NULL)
                 {
                     snprintf(str, 500, "   text:'Address Probed - 0x%.8X',\n", address);
                     fputs(str, fptr2);
@@ -223,7 +226,7 @@ void update_timing_config_file(uint32_t address, uint32_t data, uint32_t data_wi
                 {
                     fputs(line, fptr2);
                 }
-			}
+                        }
 
             fclose(fptr1);
             fclose(fptr2);	
@@ -729,15 +732,15 @@ int main(int argc, char *argv[])
 	//int write_address_count = write_address_offset / 16;
 	int write_address_count = write_address_offset/(4*bram_data_width/word_size);
 	
-	printf("read_probe address = x%.8x, read_address_offset = x%.8x, read_address_count = x%.8x\n", read_probe_address, read_address_offset, read_address_count);
-	printf("write_probe address = x%.8x, write_address_offset = x%.8x, write_address_count = x%.8x\n", write_probe_address, write_address_offset,  write_address_count);
+	printf("read_probe address = x%.8x, read_address_offset = x%.8x, read_address_count = %d\n", read_probe_address, read_address_offset, read_address_count);
+	printf("write_probe address = x%.8x, write_address_offset = x%.8x, write_address_count = %d\n", write_probe_address, write_address_offset,  write_address_count);
 
 	//int read_inner_off = read_address_offset % read_axi_size;
 	int read_inner_off = (read_address_offset%16)/4;
 	//int write_inner_off = write_address_offset % 16;
 	int write_inner_off = ((write_address_offset)%(4*bram_data_width/word_size))/4;
-	printf("inner_off = x%.8x\n", read_inner_off);
-	printf("inner_off = x%.8x\n", write_inner_off);
+	printf("read burst number in the transaction = %d, \nread word number in the transfer = %d\n\n", read_address_count%vivado_burst_size  + 1, read_inner_off + 1);
+	printf("write burst number in the transaction = %d, \nwrite word number in the transfer = %d\n\n", write_address_count%vivado_burst_size  + 1, write_inner_off + 1);
 		
 	printf("factor = %d\n", (4*bram_data_width/word_size));
 
@@ -940,7 +943,7 @@ int main(int argc, char *argv[])
 //			       }
 //			       printf("\n\n");
 
-			       printf("\nDMA's OCM/BRAM traffic tests with %d and %d words successful!!!\n\n", LOOPS, GlobalCfgArgs.numWordsPerLoop);
+			       printf("\nDMA's OCM/BRAM traffic test with %d loops and %d words successful!!!\n\n", LOOPS, GlobalCfgArgs.numWordsPerLoop);
 
 			       unsigned long   min_latency;
 			       unsigned long   max_latency;
@@ -995,8 +998,8 @@ int main(int argc, char *argv[])
 
 
 				int transaction_count = (read_address_count + 1)/(*sniffer_reg[7]/(*sniffer_reg[5]));
-			        printf("Transaction count = %d\n", transaction_count);
-				update_timing_config_file(read_probe_address, *sniffer_reg[14], 128, transaction_count + 1, (read_address_count)%vivado_burst_size + 1, read_inner_off + 1,*sniffer_reg[5] , 2, 4);
+			       // printf("Transaction count = %d\n", transaction_count);
+				update_timing_config_file(read_probe_address, *sniffer_reg[15], 128, transaction_count + 1, read_address_count, read_address_count*4 + read_inner_off, *sniffer_reg[5] , *sniffer_reg[7], GlobalCfgArgs.numWordsPerLoop);
 				//update_timing_config_file(read_probe_address, *sniffer_reg[14], bram_data_width, read_address_count/(*sniffer_reg[7]/(*sniffer_reg[8]))+1, (read_address_count + 1)%vivado_burst_size, read_inner_off+1, 2, 2, 4);
 
 
