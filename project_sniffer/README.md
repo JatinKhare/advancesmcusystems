@@ -152,8 +152,8 @@ Note: the timing_config.json supports 128 data bus width with a burst size of 2.
 
 The registers store the following details, the verilog code is found in the directory '/project_sniffer/verilog_codes/sniffer':
 
-```c
-				5'h00   : reg_data_out <= burst_info_reg;
+```text
+		5'h00   : reg_data_out <= burst_info_reg;
                 5'h01   : reg_data_out <= slv_reg1;    
                 5'h02   : reg_data_out <= slv_reg2;
                 5'h03   : reg_data_out <= slv_reg3;
