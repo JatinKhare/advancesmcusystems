@@ -1,14 +1,14 @@
 {signal: [
   {name: 'AXI CLK', wave: 'n.................'},
-  {name: 'Transaction Count (206/256 Transactions)', wave: '010......10.......'},
-  {name: 'Transfer Count (409/512 Bursts)', wave: '01...1...1...1....'},
-  {name: 'Data Word (1637/2048 Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x12E58AD7', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}
+  {name: 'Transaction Count (147/256 Transactions)', wave: '010......10.......'},
+  {name: 'Transfer Count (291/512 Bursts)', wave: '01...1...1...1....'},
+  {name: 'Data Word (1165/2048 Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x2D830F35', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}
         ],
   head:{
    text:'128 bit timing diagram'
  },
  foot:{
-   text:'Address Probed - 0xFFFC1995',
+   text:'Address Probed - 0xFFFC1234',
    tock:0,
    every:1
  },
