@@ -150,22 +150,25 @@ This will generate the timing_config.json file, which is used to visualize the t
 Note: the timing_config.json supports 128 data bus width with a burst size of 2. So use this file and the WaveDromEditor only for 128_2_disabled.bit bistream. 
 
 
-The registers store the following details, the verilog code is found in the directory '/project_sniffer/verilog_codes/sniffer':
-
+The verilog code is found in the directory '/project_sniffer/verilog_codes/sniffer'.
+The registers store the following details: 
 ```text
-		5'h00   : reg_data_out <= burst_info_reg;
-                5'h01   : reg_data_out <= slv_reg1;    
-                5'h02   : reg_data_out <= slv_reg2;
-                5'h03   : reg_data_out <= slv_reg3;
-                5'h04   : reg_data_out <= slv_reg4;
-                5'h05   : reg_data_out <= f_read_access_count_ar;
-                5'h06   : reg_data_out <= f_write_access_count_aw;
-                5'h07   : reg_data_out <= f_read_access_count_r;
-                5'h08   : reg_data_out <= f_write_access_count_w;
-                5'h09   : reg_data_out <= b_read_access_count_ar;
-                5'h0A   : reg_data_out <= b_write_access_count_aw;
-                5'h0B   : reg_data_out <= b_read_access_count_r;
-                5'h0C   : reg_data_out <= b_write_access_count_w;
-                5'h0D   : reg_data_out <= 32'hFEED0000;
+		      5'h00   : reg_data_out <= burst_info_reg;
+	        5'h01   : reg_data_out <= slv_reg1;
+	        5'h02   : reg_data_out <= slv_reg2;
+	        5'h03   : reg_data_out <= slv_reg3;
+	        5'h04   : reg_data_out <= slv_reg4;
+	        5'h05   : reg_data_out <= f_read_access_count_ar;
+	        5'h06   : reg_data_out <= f_write_access_count_aw;
+	        5'h07   : reg_data_out <= f_read_access_count_r;
+	        5'h08   : reg_data_out <= f_write_access_count_w;
+	        5'h09   : reg_data_out <= b_read_access_count_ar;
+	        5'h0A   : reg_data_out <= b_write_access_count_aw;
+	        5'h0B   : reg_data_out <= b_read_access_count_r;
+	        5'h0C   : reg_data_out <= b_write_access_count_w;
+	        5'h0D   : reg_data_out <= 32'hFEED0000;
+	        5'h0E   : reg_data_out <= chunk_read;
+	        5'h0F   : reg_data_out <= chunk_write;
+
 
 ```
