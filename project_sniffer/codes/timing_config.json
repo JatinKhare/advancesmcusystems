@@ -2,7 +2,7 @@
   {name: 'AXI CLK', wave: 'n.................'},
   {name: 'Transaction Count (147/256 Transactions)', wave: '010......10.......'},
   {name: 'Transfer Count (291/512 Bursts)', wave: '01...1...1...1....'},
-  {name: 'Data Word (1165/2048 Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x2D830F35', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}
+  {name: 'Data Word (1165/2048 Words)', wave: 'x3456345634563456x', data: ['0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0x1E6B9EB2', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX', '0xXXXXXXXX']}
         ],
   head:{
    text:'128 bit timing diagram'

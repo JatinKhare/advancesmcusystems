@@ -79,13 +79,13 @@ Setting loop number = 1
 Setting words per loop = 2048
 
 Enter the read address to probe: 0xfffc1234
-Enter the write address to probe: 0xfffc2234
+Enter the write address to probe: 0xfffc3234
 
 Data Width = 128 bits, 
 Burst Length = 2 transfers per transaction
 
 read_probe address = xfffc1234, read_address_offset = x00001234, read_address_count = 291
-write_probe address = xfffc2234, write_address_offset = x00000234, write_address_count = 35
+write_probe address = xfffc3234, write_address_offset = x00001234, write_address_count = 291
 read burst number in the transaction = 2, 
 read word number in the transfer = 2
 
@@ -97,16 +97,16 @@ factor = 16
 DMA's OCM/BRAM traffic test with 1 loops and 2048 words successful!!!
 
 For OCM to BRAM:
-Minimum Latency:    2234
-Maximum Latency:    2234
-Average Latency:    2234.000000
+Minimum Latency:    2233
+Maximum Latency:    2233
+Average Latency:    2233.000000
 Standard Deviation: 0.000000
 Number of samples:  1
 
 For BRAM to OCM:
-Minimum Latency:    2189
-Maximum Latency:    2189
-Average Latency:    2189.000000
+Minimum Latency:    2187
+Maximum Latency:    2187
+Average Latency:    2187.000000
 Standard Deviation: 0.000000
 Number of samples:  1
 Total number of Interrupts for to-and-fro transfer: 2
@@ -114,7 +114,7 @@ Total number of Interrupts for to-and-fro transfer: 2
 sniffer_reg[0] = xbead0141
 sniffer_reg[1] = x00000123
 sniffer_reg[2] = x00000002
-sniffer_reg[3] = x00000023
+sniffer_reg[3] = x00000123
 sniffer_reg[4] = x0000001e
 sniffer_reg[5] = x00000100
 sniffer_reg[6] = x00000100
@@ -125,8 +125,8 @@ sniffer_reg[10] = x00000100
 sniffer_reg[11] = x00000200
 sniffer_reg[12] = x00000200
 sniffer_reg[13] = xfeed0000
-sniffer_reg[14] = x4832b329
-sniffer_reg[15] = x2d830f35
+sniffer_reg[14] = x1e6b9eb2
+sniffer_reg[15] = x1e6b9eb2
 
 OCM1 to CDMA read transactions  = 256
 OCM1 to CDMA read transfers     = 512
@@ -150,10 +150,14 @@ This will generate the timing_config.json file, which is used to visualize the t
 Note: the timing_config.json supports 128 data bus width with a burst size of 2. So use this file and the WaveDromEditor only for 128_2_disabled.bit bistream. 
 
 
+The timing diagram from WaveDromEditor is shown as:
+<img src="timing_dia.png" width="1000" />
+<hr style="border:2px solid gray"> </hr>
+
 The verilog code is found in the directory '/project_sniffer/verilog_codes/sniffer'.
 The registers store the following details: 
 ```text
-		      5'h00   : reg_data_out <= burst_info_reg;
+	        5'h00   : reg_data_out <= burst_info_reg;
 	        5'h01   : reg_data_out <= slv_reg1;
 	        5'h02   : reg_data_out <= slv_reg2;
 	        5'h03   : reg_data_out <= slv_reg3;
@@ -170,5 +174,5 @@ The registers store the following details:
 	        5'h0E   : reg_data_out <= chunk_read;
 	        5'h0F   : reg_data_out <= chunk_write;
 
-
 ```
+
